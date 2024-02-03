@@ -1,7 +1,8 @@
 from copy import deepcopy
 from prettytable import PrettyTable
 import numpy as np
-
+import os
+import json
 from CybORG.Shared.Results import Results
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
@@ -22,7 +23,9 @@ class BlueTableWrapper(BaseWrapper):
         obs = result.observation
         if agent == 'Blue':
             self._process_initial_obs(obs)
+            #print('In BlueTablewrapper, reset obs is:',obs)
             obs = self.observation_change(obs, baseline=True)
+        #print('In BlueTablewrapper, reset obs is:',obs)
         result.observation = obs
         return result
 
@@ -87,7 +90,13 @@ class BlueTableWrapper(BaseWrapper):
             ip = str(interface['IP Address'])
             hostname = host['System info']['Hostname']
             self.blue_info[hostname] = [str(subnet), str(ip), hostname, 'None', 'No']
-        #print('\n _process_initial_obs, blue_info is:',self.blue_info)
+        print('\n _process_initial_obs, blue_info is:',self.blue_info)
+        if not os.path.exists('./assets'):
+             os.makedirs('./assets')
+        file_path= './assets/blue_initial_obs.json'
+        with open(file_path, 'w') as file:
+            json.dump(self.blue_info, file)
+        
         return self.blue_info
 
     def _process_last_action(self):

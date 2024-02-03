@@ -34,7 +34,7 @@ def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
 if __name__ == "__main__":
-    exp='sim'
+    exp='emu'
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             
             #Execute blue action and get obsrvation
             blue_observation, blue_rew, done, info = cyborg_emu.step(blue_action)
-            
+            print('Blue observation is:',blue_observation)
             
             #To Do (Red) 
             #update action space and observation 
@@ -147,11 +147,7 @@ if __name__ == "__main__":
             print('Blue action is', action)
             
             
-            split_action_string=self.actions_list[i][0].split(" ")
-            host_name= split_action_string[1]
-            get_machine_config(host_name)
-            action_name=split_action_string[0]
-            blue_actions.append((host_name,action_name,blue_observation.stdout ))
+            
             
             red_observation, red_rew, done, info = cyborg_emu.step(self.actions_list[i][1])
             split_action_string=self.actions_list[i][1].split(" ")

@@ -1,0 +1,12 @@
+femitter:
+  local_address: 0.0.0.0
+  local_port: 21
+  path: /usr/sbin
+  process_type: femitter
+  properties: null
+tomcat:
+  local_address: 0.0.0.0
+  local_port: 443
+  path: null
+  process_type: webserver
+  properties: rfi

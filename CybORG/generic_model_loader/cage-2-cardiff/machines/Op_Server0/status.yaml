@@ -1,0 +1,18 @@
+haraka:
+  local_address: 0.0.0.0
+  local_port: 25
+  path: /usr/sbin
+  process_type: smtp
+  properties: null
+tomcat:
+  local_address: 0.0.0.0
+  local_port: 443
+  path: null
+  process_type: webserver
+  properties: rfi
+vsftpd:
+  local_address: 0.0.0.0
+  local_port: 80
+  path: /usr/sbin
+  process_type: webserver
+  properties: rfi

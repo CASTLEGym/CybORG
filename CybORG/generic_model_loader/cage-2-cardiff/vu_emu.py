@@ -10,7 +10,8 @@ import sys
 import subprocess
 import yaml
 import time
-
+from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
+from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
@@ -57,9 +58,9 @@ class vu_emu():
        print("=> Action name:",action_name,";Host name:",host_name)
        #open_stack_host_name= c2o.fetch_os_name(host_name)
        #print("=> Cage2 host name:",host_name,";open_stack Host name:",open_stack_host_name)
-       #if action_name in blue_action_space+red_action_space :
+       if action_name in blue_action_space+red_action_space :
          #  ->>> Execute locally
-         #outcome=execute_action_locally(action_name,host_name)
+         outcome=self.execute_action_locally(action_name,host_name)
          #  ->>> Execute on client
          #outcome= execute_action_client(action_name,open_stack_host_name)
        #else: 
@@ -80,15 +81,16 @@ class vu_emu():
             parameters = [action_name]
             server_directory = os.getcwd()
             # Get one level up
-            one_level_up = os.path.dirname(server_directory)
+            #one_level_up = os.path.dirname(server_directory)
             # Get two levels up
-            two_levels_up = os.path.dirname(one_level_up)
+            #two_levels_up = os.path.dirname(one_level_up)
             #print("Original Directory:", original_directory)
+            
             
             #Specify the subfolder you want to change to
             subfolder = host_name
             # Join the original directory with the subfolder
-            new_directory = os.path.join(two_levels_up, subfolder)
+            new_directory = os.path.join('./machines/', subfolder)
             # Change to the subfolder
             os.chdir(new_directory)
             #print("Current Working Directory (after changing to subfolder):", os.getcwd())
@@ -110,4 +112,4 @@ class vu_emu():
             os.chdir(server_directory)
             #print("Current Working Directory (after coming back to the original):", os.getcwd())
             #print("\n \n")
-            return result
+            return result.stdout

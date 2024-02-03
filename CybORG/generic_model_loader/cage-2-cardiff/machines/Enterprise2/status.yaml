@@ -1,0 +1,6 @@
+femitter:
+  local_address: 0.0.0.0
+  local_port: 21
+  path: /usr/sbin
+  process_type: femitter
+  properties: null
