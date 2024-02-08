@@ -26,11 +26,11 @@ class ChallengeWrapper2(Env, BaseWrapper):
         self.observation_space = self.env.observation_space
         self.reward_threshold = reward_threshold
         self.max_steps = max_steps
-        print('\n fron challengeWrapper2, Self env is:',self.env,'action space:',self.action_space,'obs_space:',self.observation_space)
+        #print('\n fron challengeWrapper2, Self env is:',self.env,'action space:',self.action_space,'obs_space:',self.observation_space)
         self.step_counter = None
 
     def step(self, action=None):
-        print("action from challenge wrapper is:",action)
+        #print("action from challenge wrapper is:",action)
         obs, reward, done, info = self.env.step(action=action)
         self.step_counter += 1
         if self.max_steps is not None and self.step_counter >= self.max_steps:

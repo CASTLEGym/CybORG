@@ -12,15 +12,18 @@ import yaml
 import time
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
+from utils import *
+
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
 #c2o= cage2_os()
-
+import re
 import json
 
 #from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
 
+ip2host= name_conversion("./assets/ip_map.json")
 
 credentials_file = "api_config.yaml"
 
@@ -51,24 +54,41 @@ class vu_emu():
        return None, None
 
    def step(self,action_string):
-       
+       ("In steps")
        split_action_string=action_string.split(" ")
-       host_name= split_action_string[1]
-       action_name=split_action_string[0]
-       print("=> Action name:",action_name,";Host name:",host_name)
-       #open_stack_host_name= c2o.fetch_os_name(host_name)
-       #print("=> Cage2 host name:",host_name,";open_stack Host name:",open_stack_host_name)
-       if action_name in blue_action_space+red_action_space :
-         #  ->>> Execute locally
-         outcome=self.execute_action_locally(action_name,host_name)
-         #  ->>> Execute on client
-         #outcome= execute_action_client(action_name,open_stack_host_name)
-       #else: 
-         #print("Invalid action!!")
-         #sys.exit(1)
-       return outcome, None, None, None
+       
+       #if action contains the hostname
+       if len(split_action_string)==2:
+         host_name= split_action_string[1]
+         action_name=split_action_string[0]
+         
+         print("\n in vu_emu=> Action name:",action_name,";Host name:",host_name)
+         
+         is_host_name= self.is_name(host_name)
+         print('Is host name:',is_host_name)
+         
+         if is_host_name == False:
+          print("** False host name **") 
+          host_name= ip2host.fetch_alt_name(host_name)
+          #print("=> Cage2 host name:",host_name,";open_stack Host name:",open_stack_host_name)
+         
+         if action_name in blue_action_space+red_action_space :
+            #  ->>> Execute locally
+            outcome=self.execute_action_locally(action_name,host_name)
+            print("Outcome is:",outcome)
+            #  ->>> Execute on client
+            #outcome= execute_action_client(action_name,open_stack_host_name)
+         else: 
+            print("Invalid action!!")
+            sys.exit(1)
+         return outcome, None, None, None
+       
+       #if action doesnot contains the hostname (like sleep/monitor) 
+       else: 
+         outcome=True
+         return outcome, None, None, None
 
-
+   
    def execute_action_client(self,action_name,host_name):
        command="python3 ~/work/action_executor.py "+ action_name
        run_foobar_action = RunProcessAction(credentials_file=credentials_file, hostname=host_name, command=command)
@@ -113,3 +133,21 @@ class vu_emu():
             #print("Current Working Directory (after coming back to the original):", os.getcwd())
             #print("\n \n")
             return result.stdout
+            
+   def is_name(self,s):
+    return bool(re.match(r"^[A-Za-z]+", s))
+   
+   
+   def get_machine_config(self,host_name):
+     file_path= machine_config_path+'config_'+host_name+'.yaml'
+     try:
+       with open(file_path, 'r') as file:
+            data = yaml.safe_load(file)
+            pids = [process["PID"] for process in data["Test_Host"]["Processes"]]
+     except FileNotFoundError:
+      # If the file doesn't exist, create an empty data structure.
+      print('No file found error !!')  
+    
+     print('PIDs are:',pids)
+     time.sleep(1)         
+   
