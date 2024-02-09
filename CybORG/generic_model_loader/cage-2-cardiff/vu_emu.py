@@ -13,6 +13,7 @@ import time
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
+from ipaddress import IPv4Network, IPv4Address
 
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
@@ -40,7 +41,6 @@ counter=0
 
 
 
-
 class vu_emu():
    def __init__(self):
        self.emu='True'
@@ -53,7 +53,8 @@ class vu_emu():
    def get_action_space(self,agent="Red"):
        return None, None
 
-   def step(self,action_string):
+   
+   def step(self,action_string,agent_type):
        ("In steps")
        split_action_string=action_string.split(" ")
        
@@ -81,12 +82,15 @@ class vu_emu():
          else: 
             print("Invalid action!!")
             sys.exit(1)
-         return outcome, None, None, None
        
        #if action doesnot contains the hostname (like sleep/monitor) 
        else: 
          outcome=True
-         return outcome, None, None, None
+       if agent_type=='red':
+          obs=self.parse_red_outcome(outcome)
+       elif agent_type=='blue':
+          obs=self.parse_blue_outcome(outcome)
+       return outcome, None, None, None
 
    
    def execute_action_client(self,action_name,host_name):
@@ -135,8 +139,17 @@ class vu_emu():
             return result.stdout
             
    def is_name(self,s):
-    return bool(re.match(r"^[A-Za-z]+", s))
+         return bool(re.match(r"^[A-Za-z]+", s))
    
+   
+   def parse_blue_outcome(self,outcome):
+       print("In parse blue, outcome is:",outcome)
+       return outcome
+       
+   def parse_red_outcome(self,outcome):
+       
+       print("In parse red, outcome is:",outcome)
+       return outcome   
    
    def get_machine_config(self,host_name):
      file_path= machine_config_path+'config_'+host_name+'.yaml'

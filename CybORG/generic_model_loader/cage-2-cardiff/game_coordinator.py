@@ -35,7 +35,7 @@ def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
 if __name__ == "__main__":
-    exp='emu'
+    exp='sim'
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
@@ -67,6 +67,10 @@ if __name__ == "__main__":
                 for j in range(num_steps):
                     print('%%'*76)
                     print('Iteration start:',j)
+                    
+                    red_observation=cyborg.get_observation('Red')
+                    print('\n Red observation is:',red_observation)
+                    
                     action = ml.get_action(observation, action_space)
                     #print('action is:',action, 'action space is:',action_space)
                     observation, rew, done, info = wrapped_cyborg.step(action)
@@ -74,7 +78,7 @@ if __name__ == "__main__":
                     red_action_space=cyborg.get_action_space('Red')
                     red_observation=cyborg.get_observation('Red')
                     print('\n Red observation is:',red_observation)
-                    print('\n Red Action space is:',red_action_space)
+                    #print('\n Red Action space is:',red_action_space)
                     
                     
                     # result = cyborg.step(agent_name, action)
@@ -143,38 +147,27 @@ if __name__ == "__main__":
             
             
             
-            print('\n **** blue action is:',blue_action)
-            
-            #Execute blue action and convert it to observation
-            #To get observation, we need to capture output of both red and blue action and then invoke wrappers (below to get observation)
-            blue_outcome, blue_rew, done, info = cyborg_emu.step(blue_action)
-            #print('Blue outcome is:',blue_outcome)
             
             
-            #process 
-            
-            
-            #print('cyborg action list:',dir(cyborg))
-            #To Do (Red) 
-            #update action space and observation 
+            # Red AGENT  
+            # Get action from B-line
             red_action=red_agent().get_action(red_observation, red_action_space)
             print('red action is:',red_action)
             
             
             print('\n Red observation is:',red_observation)
             
-            red_outcome, red_rew, done, info = cyborg_emu.step(str(red_action))
+            red_observation, red_rew, done, info = cyborg_emu.step(str(red_action),agent_type='red')
             
             
             
-            # Get the signature of the a method
-            # method_signature = inspect.signature(cyborg.step)
-            # print("my_method signature:", method_signature)
-
-            
-            #get red action : 
-            #print(B_lineAgent.get_action(observation, action_space))
-   
+            print('\n **** blue action is:',blue_action)
+            #Execute blue action and convert it to observation
+            #To get observation, we need to capture output of both red and blue action and then invoke wrappers (below to get observation)
+            blue_observation, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='blue')
+            #print('Blue outcome is:',blue_outcome)
+           
+           
             # define their action spaces for both red and blue
             #red_action_space = cyborg_emu.get_action_space("Red")
             #blue_action_space = cyborg_emu.get_action_space("Blue")

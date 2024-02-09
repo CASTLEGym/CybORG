@@ -1,6 +1,7 @@
+Subnet: 10.0.10.0\24
 Hosts:
- - User0
- - User1
- - User2
- - User3
- - User4
+ - User0:10.0.10.12
+ - User1:10.0.10.13
+ - User2:10.0.10.14
+ - User3:10.0.10.15
+ - User4:10.0.10.16
