@@ -14,7 +14,7 @@ from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
 from ipaddress import IPv4Network, IPv4Address
-
+import ast
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
@@ -39,7 +39,8 @@ blue_actions=[]
 red_actions=[]
 counter=0
 
-
+utils=utils()
+print(dir(utils))
 
 class vu_emu():
    def __init__(self):
@@ -60,10 +61,16 @@ class vu_emu():
        
        #if action contains the hostname
        if len(split_action_string)==2:
-         host_name= split_action_string[1]
+         action_param= split_action_string[1]
          action_name=split_action_string[0]
          
-         print("\n in vu_emu=> Action name:",action_name,";Host name:",host_name)
+         print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
+         
+         if agent_type=='red':
+            running_from='User0'
+            outcome=self.execute_action_locally(action_name,action_param,running_from)
+            outcome= self.transfrom_red_observation(action_name,outcome)
+            print('obs is:',outcome)
          
          is_host_name= self.is_name(host_name)
          print('Is host name:',is_host_name)
@@ -93,16 +100,18 @@ class vu_emu():
        return outcome, None, None, None
 
    
-   def execute_action_client(self,action_name,host_name):
-       command="python3 ~/work/action_executor.py "+ action_name
-       run_foobar_action = RunProcessAction(credentials_file=credentials_file, hostname=host_name, command=command)
+   def execute_action_client(self,action_name,action_param,running_from):
+       command="python3 ~/work/action_executor.py "+ action_name+" "+action_param
+       run_foobar_action = RunProcessAction(credentials_file=credentials_file, hostname=running_from, command=command)
        run_foobar_observation = run_foobar_action.execute(None)
        return run_foobar_observation.Stdout
 
-      
+   def transfrom_red_observation(self,action_name,data):
+       if action_name=='DiscoverRemoteSystems':
+         return utils.transform_DiscoverRemoteSystems(data)     
 
-   def execute_action_locally(self,action_name, host_name):
-            parameters = [action_name]
+   def execute_action_locally(self,action_name,action_param,running_from):
+            parameters = [action_name , action_param]
             server_directory = os.getcwd()
             # Get one level up
             #one_level_up = os.path.dirname(server_directory)
@@ -112,7 +121,7 @@ class vu_emu():
             
             
             #Specify the subfolder you want to change to
-            subfolder = host_name
+            subfolder = running_from
             # Join the original directory with the subfolder
             new_directory = os.path.join('./machines/', subfolder)
             # Change to the subfolder
@@ -123,20 +132,22 @@ class vu_emu():
             script_path = './action_executor.py'
             try:
               # Run the Python script and capture its output
+              print(['python', script_path]+parameters)
               #result = subprocess.check_output(['python', script_path]+parameters, universal_newlines=True, stderr=subprocess.STDOUT)
               result =subprocess.run(['python', script_path]+parameters, capture_output=True, text=True, check=True)
               # Print the captured output
-              print("*** Output of the script ***:",result.stdout)
+              print("*** Output of the script ***:",result)
 
               
             except subprocess.CalledProcessError as e:
               # Handle if the subprocess returns a non-zero exit code
+              #print("*** Output of the script ***:",result.stderr)
               print(f"Error: {e}")
             # Change back to the original directory
             os.chdir(server_directory)
             #print("Current Working Directory (after coming back to the original):", os.getcwd())
             #print("\n \n")
-            return result.stdout
+            return ast.literal_eval(result.stdout)
             
    def is_name(self,s):
          return bool(re.match(r"^[A-Za-z]+", s))

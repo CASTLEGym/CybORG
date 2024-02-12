@@ -9,8 +9,9 @@ random.seed(seed_value)
 
 class ActionExecutor:
 
-    def __init__(self, action,exploit):
+    def __init__(self, action,address,exploit):
         self.action_name = action
+        self.address= address
         self.exploit_name = exploit
 
 
@@ -278,13 +279,18 @@ class ActionExecutor:
         return False
     
     
-    def DiscoverRemoteSystems(self):
-      # check if it is ran on subnet/router. if yes, return the name of connected hosts.
-      # If host_name in [names of subnet]:
-      #  pass
-      content=self.read_yaml_file('config.yaml')
-      #print(content)
-      return content.get('Hosts', [])
+    def DiscoverRemoteSystems(self,subnet_ip):
+      # replaced by nmap string and invoked usign subprocess , wait for result and parse the nmap output in desired template
+  
+      subnet = subnet_ip
+      hosts = {entry.split(':')[1] for entry in parsed_yaml['Hosts']}
+
+      # Create the desired dictionary
+      data = {
+          "success": "False",
+           subnet: hosts
+             }
+      return data
     
     
     def DiscoverNetworkServices(self):
@@ -316,17 +322,24 @@ if __name__=='__main__':
         default=None,
         help="The exploit to be executed, default is None."
     )
-
+  
+  parser.add_argument(
+        "address",
+        nargs="?",
+        default=None,
+        help="The address where things need to be executed, default is None."
+    )
+  
   args = parser.parse_args()
   if len(args.action_name) == 0 :
         print(f"{sys.argv[0]}:  Action name not defined ")
         sys.exit(1)
 
-  execute_action = ActionExecutor(args.action_name, args.exploit_name)
+  execute_action = ActionExecutor(args.action_name, args.address,args.exploit_name)
   #execute_action.run()
   #print(args.action_name,args.exploit_name )
   
-  foo= getattr(execute_action,args.action_name)
+  foo= getattr(execute_action,args.action_name,args.exploit_name)
   result= foo() 
   print(result)
   

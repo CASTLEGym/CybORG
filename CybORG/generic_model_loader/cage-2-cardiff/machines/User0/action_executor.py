@@ -6,12 +6,13 @@ success_probability=0.9
 import random
 seed_value = 42
 random.seed(seed_value)
+import os
 
 class ActionExecutor:
 
-    def __init__(self, action,exploit):
+    def __init__(self, action,param):
         self.action_name = action
-        self.exploit_name = exploit
+        self.action_param = param
 
 
     def read_yaml_file(self,file_path):
@@ -278,13 +279,33 @@ class ActionExecutor:
         return False
     
     
+    def dummy_nmap(self):
+       pass
+    
     def DiscoverRemoteSystems(self):
-      # check if it is ran on subnet/router. if yes, return the name of connected hosts.
-      # If host_name in [names of subnet]:
-      #  pass
-      content=self.read_yaml_file('config.yaml')
-      #print(content)
-      return content.get('Hosts', [])
+      # replaced by nmap string and invoked usign subprocess , wait for result and parse the nmap output in desired template
+      current_directory = os.getcwd()
+      # Get one level up
+      one_level_up = os.path.dirname(current_directory)
+      new_directory = os.path.join(one_level_up,'user_subnet')
+      # Change to the subfolder
+      os.chdir(new_directory)
+      parsed_yaml = self.read_yaml_file('config.yaml')
+      #print(parsed_yaml)
+      subnet = self.action_param
+      hosts = {entry.split(':')[1] for entry in parsed_yaml['Hosts']}
+      ###
+      ##possible nmap string for all above code
+      #data_raw=namp self.action_param
+      #parse data_raw in data template
+      
+      
+      # Create the desired dictionary
+      data = {
+          "success": "False",
+           subnet: hosts
+             }
+      return data
     
     
     def DiscoverNetworkServices(self):
@@ -311,10 +332,10 @@ if __name__=='__main__':
     )
     
   parser.add_argument(
-        "exploit_name",
+        "action_param",
         nargs="?",
         default=None,
-        help="The exploit to be executed, default is None."
+        help="The action param, default is None."
     )
 
   args = parser.parse_args()
@@ -322,11 +343,13 @@ if __name__=='__main__':
         print(f"{sys.argv[0]}:  Action name not defined ")
         sys.exit(1)
 
-  execute_action = ActionExecutor(args.action_name, args.exploit_name)
-  #execute_action.run()
+  execute_action = ActionExecutor(args.action_name, args.action_param)
+  result=execute_action.DiscoverRemoteSystems()
+  
   #print(args.action_name,args.exploit_name )
   
-  foo= getattr(execute_action,args.action_name)
-  result= foo() 
+  #foo= getattr(execute_action,args.action_name,arg.action_param)
+  #result= foo() 
+  #print('from action executor::::::;')
   print(result)
   

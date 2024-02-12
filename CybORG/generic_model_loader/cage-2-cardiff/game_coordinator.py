@@ -35,7 +35,7 @@ def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
 if __name__ == "__main__":
-    exp='sim'
+    exp='emu'
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)

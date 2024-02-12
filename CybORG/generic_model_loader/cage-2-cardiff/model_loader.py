@@ -7,10 +7,11 @@ class model_loader:
     self.agent = MainAgent()
     print(f'Using agent {self.agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
     
+   
+   #Input : cyborg-cage2 comaptible blue observation and action space
+   #output : action number (cage2 compatible)
    def get_action(self,observation,action_space):
-     #print("Observation from model_loader is:",observation)
      action = self.agent.get_action(observation, action_space)
-     #print('Action from model loader is:',action)
      return action
      
    def end_episode(self):
