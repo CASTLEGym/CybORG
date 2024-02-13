@@ -283,7 +283,7 @@ class ActionExecutor:
        pass
     
     def DiscoverRemoteSystems(self):
-      # replaced by nmap string and invoked usign subprocess , wait for result and parse the nmap output in desired template
+      # replaced by nmap string and invoked using subprocess , wait for result and parse the nmap output in desired template
       current_directory = os.getcwd()
       # Get one level up
       one_level_up = os.path.dirname(current_directory)
@@ -310,11 +310,28 @@ class ActionExecutor:
     
     def DiscoverNetworkServices(self):
       # return PID,port,process_name on a host
-      content=self.read_yaml_file('config.yaml')
-      #print(content)
-      process_info = self.extract_pid_port_process_name(content['Test_Host'])
-      #print(process_info)
-      return process_info
+      # replaced by nmap string and invoked using subprocess , wait for result and parse the nmap output in desired template
+      current_directory = os.getcwd()
+      # Get one level up
+      one_level_up = os.path.dirname(current_directory)
+      new_directory = os.path.join(one_level_up,'User1')
+      # Change to the subfolder
+      os.chdir(new_directory)
+      parsed_yaml = self.read_yaml_file('config.yaml')
+      #print(parsed_yaml)
+      key = self.action_param
+      value = self.extract_ports(parsed_yaml)
+      ###
+      ##possible nmap string for all above code
+      #data_raw=namp self.action_param
+      #parse data_raw in data template
+      
+      # Create the desired dictionary
+      data = {
+          "success": "False",
+           key: value
+             }
+      return data
 
      
 

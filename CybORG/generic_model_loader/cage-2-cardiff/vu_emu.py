@@ -44,7 +44,8 @@ print(dir(utils))
 
 class vu_emu():
    def __init__(self):
-       self.emu='True'
+      self.old_outcome_blue=None
+      self.old_outcome_red=None
    
    def reset(self):
        for vm in vms:
@@ -70,33 +71,32 @@ class vu_emu():
             running_from='User0'
             outcome=self.execute_action_locally(action_name,action_param,running_from)
             outcome= self.transfrom_red_observation(action_name,outcome)
+            self.old_outcome_red=outcome
             print('obs is:',outcome)
          
-         is_host_name= self.is_name(host_name)
-         print('Is host name:',is_host_name)
+         elif agent_type=='blue':
+          is_host_name= self.is_name(action_param)
+          print('Is host name:',is_host_name)
          
-         if is_host_name == False:
-          print("** False host name **") 
-          host_name= ip2host.fetch_alt_name(host_name)
-          #print("=> Cage2 host name:",host_name,";open_stack Host name:",open_stack_host_name)
+          if is_host_name == False:
+            print("** False host name **") 
+            host_name= ip2host.fetch_alt_name(action_param)
+            # #print("=> Cage2 host name:",host_name,";open_stack Host name:",open_stack_host_name)
          
-         if action_name in blue_action_space+red_action_space :
+          if action_name in blue_action_space :
             #  ->>> Execute locally
-            outcome=self.execute_action_locally(action_name,host_name)
+            outcome=self.execute_action_locally(action_name,action_param)
             print("Outcome is:",outcome)
             #  ->>> Execute on client
             #outcome= execute_action_client(action_name,open_stack_host_name)
-         else: 
+          else: 
             print("Invalid action!!")
             sys.exit(1)
-       
-       #if action doesnot contains the hostname (like sleep/monitor) 
+          self.old_outcome_blue=outcome
+          #if action doesnot contains the hostname (like sleep/monitor) 
        else: 
          outcome=True
-       if agent_type=='red':
-          obs=self.parse_red_outcome(outcome)
-       elif agent_type=='blue':
-          obs=self.parse_blue_outcome(outcome)
+      
        return outcome, None, None, None
 
    
@@ -108,9 +108,11 @@ class vu_emu():
 
    def transfrom_red_observation(self,action_name,data):
        if action_name=='DiscoverRemoteSystems':
-         return utils.transform_DiscoverRemoteSystems(data)     
+         return utils.transform_DiscoverRemoteSystems(data)    
+       elif action_name=='DiscoverNetworkServices':
+         return utils.transform_DiscoverNetworkServices(data)  
 
-   def execute_action_locally(self,action_name,action_param,running_from):
+   def execute_action_locally(self,action_name,action_param,running_from=None):
             parameters = [action_name , action_param]
             server_directory = os.getcwd()
             # Get one level up
@@ -119,14 +121,17 @@ class vu_emu():
             #two_levels_up = os.path.dirname(one_level_up)
             #print("Original Directory:", original_directory)
             
-            
+            print('action param is:',action_param)
             #Specify the subfolder you want to change to
-            subfolder = running_from
+            if running_from!= None:
+               subfolder = running_from
+            else:
+               subfolder=action_param
             # Join the original directory with the subfolder
             new_directory = os.path.join('./machines/', subfolder)
             # Change to the subfolder
             os.chdir(new_directory)
-            #print("Current Working Directory (after changing to subfolder):", os.getcwd())
+            print("Current Working Directory (after changing to subfolder):", os.getcwd())
             
             # Specify the Python script to execute
             script_path = './action_executor.py'
