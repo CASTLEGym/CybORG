@@ -3,44 +3,36 @@ from prettytable import PrettyTable
 import numpy as np
 import os
 import json
-from CybORG.Shared.Results import Results
-from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
-from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
+from enum import Enum
+  
+class TrinaryEnum(Enum):
+    TRUE = 1
+    FALSE = 0
+    UNKNOWN = 2
 
 
-class BlueTableWrapper(BaseWrapper):
-    def __init__(self, env=None, agent=None, output_mode='table'):
-        super().__init__(env, agent)
-        self.env = TrueTableWrapper(env=env, agent=agent)
-        self.agent = agent
 
-        self.baseline = None
-        self.output_mode = output_mode
+
+class BlueEmulationWrapper():
+    def __init__(self,host_baseline_info):
+        self.baseline = host_baseline_info
         self.blue_info = {}
+        self.last_action=None
+        self.success= TrinaryEnum.UNKNOWN
 
-    def reset(self, agent='Blue'):
-        result = self.env.reset(agent)
-        obs = result.observation
-        if agent == 'Blue':
-            self._process_initial_obs(obs)
-            #print('In BlueTablewrapper, reset obs is:',obs)
-            obs = self.observation_change(obs, baseline=True)
-        print('In BlueTablewrapper, changed obs is:',obs)
-        result.observation = obs
-        return result
+    def reset(self, obs):
+        self.blue_info = obs
+        #print('\n blueEmulationwrapper, self.blue_info:',self.blue_info)	
+        obs = self.observation_change(obs, baseline=True)
+        #print('\n In BlueEmulationwrapper, obs is:',obs)
+        return obs
 
-    def step(self, agent=None, action=None) -> Results:
-        
-        print('\n action from blue table wrapper, is:',action)
-        result = self.env.step(agent, action)
-        obs = result.observation
-        #print('\n observation from blue table wraper, is:',obs)
-        if agent == 'Blue':
-            obs = self.observation_change(obs)
+    def step(self, action,obs):
+        #print('\n \n In step, action from blue emu wrapper, is:',action)
+        obs = self.observation_change(obs)
         #print('\n changed obs from blue_table wrapper, is:',obs)
-        result.observation = obs
-        result.action_space = self.action_space_change(result.action_space)
-        return result
+        self.last_action=action
+        return obs
 
     def get_table(self, output_mode='blue_table'):
         if output_mode == 'blue_table':
@@ -49,20 +41,22 @@ class BlueTableWrapper(BaseWrapper):
             return self.env.get_table()
 
     def observation_change(self, observation, baseline=False):
-        #print('\n observation from observation change, is:',observation)
+        print('\n \n self baseline is:',self.baseline)
+    
+        print('\n Input observation is:',observation)
         obs = observation if type(observation) == dict else observation.data
         obs = deepcopy(observation)
-        success = obs['success']
+        success = self.success
         self._process_last_action()
-        #print('baseline is:',baseline, "success is:",success, 'Output mode is:',self.output_mode)
+        print('\n baseline:',baseline)
         anomaly_obs = self._detect_anomalies(obs) if not baseline else obs
-        del obs['success']
+      
         # TODO check what info is for baseline
-        #print('\n from observation change, anomaly obs is:',anomaly_obs)
+        print('anomaly obs is:',anomaly_obs)
+        
         
         info = self._process_anomalies(anomaly_obs)
-        
-        #print('\n from observation change, Info is :',info)
+        print('\n Info before baseline is:',info)
         if baseline:
             for host in info:
                 info[host][-2] = 'None'
@@ -70,47 +64,17 @@ class BlueTableWrapper(BaseWrapper):
                 self.blue_info[host][-1] = 'No'
 
         self.info = info
-        #print('\n Info is :',self.info)
-        if self.output_mode == 'table':
-            return self._create_blue_table(success)
-        elif self.output_mode == 'anomaly':
-            anomaly_obs['success'] = success
-            return anomaly_obs
-        elif self.output_mode == 'raw':
-            return observation
-        elif self.output_mode == 'vector':
-            return self._create_vector(success)
-        else:
-            raise NotImplementedError('Invalid output_mode for BlueTableWrapper')
-
-    def _process_initial_obs(self, obs):
-        obs = obs.copy()
-        #print('\n _process_initial_obs, obs is:',obs)
-        self.baseline = obs
-        del self.baseline['success']
-        for hostid in obs:
-            if hostid == 'success':
-                continue
-            host = obs[hostid]
-            interface = host['Interface'][0]
-            subnet = interface['Subnet']
-            ip = str(interface['IP Address'])
-            hostname = host['System info']['Hostname']
-            self.blue_info[hostname] = [str(subnet), str(ip), hostname, 'None', 'No']
-        #print('\n _process_initial_obs, blue_info is:',self.blue_info)
-        if not os.path.exists('./assets'):
-             os.makedirs('./assets')
-        file_path= './assets/blue_initial_obs.json'
-        with open(file_path, 'w') as file:
-            json.dump(self.blue_info, file)
+        print('Info after baseline is :',self.info)
+        return self._create_vector(success)
         
-        return self.blue_info
+    
 
     def _process_last_action(self):
-        action = self.get_last_action(agent='Blue')
+        action = self.last_action
+        print('\n \n *** last action is:',action)
         if action is not None:
-            name = action.__class__.__name__
-            hostname = action.get_params()['hostname'] if name in ('Restore', 'Remove') else None
+            name = action.split(" ")[0]
+            hostname = action.split(" ")[1] if name in ('Restore', 'Remove') else None
 
             if name == 'Restore':
                 self.blue_info[hostname][-1] = 'No'
@@ -120,17 +84,17 @@ class BlueTableWrapper(BaseWrapper):
                     self.blue_info[hostname][-1] = 'Unknown'
 
     def _detect_anomalies(self, obs):
-        print('\n from detect anomalies, obs is:',obs)
+        print('\n from detect anomalies, input obs is:',obs)
         if self.baseline is None:
             raise TypeError(
                 'BlueTableWrapper was unable to establish baseline. This usually means the environment was not reset before calling the step method.')
 
         anomaly_dict = {}
-        print('\n \n self.baseline:',self.baseline)
+        print('self.baseline:',self.baseline)
         for hostid, host in obs.items():
             if hostid == 'success':
                 continue
-            print('host id is:',hostid)
+
             host_baseline = self.baseline[hostid]
             print('\n Host baseline is:',host_baseline)
             if host == host_baseline:
@@ -150,7 +114,7 @@ class BlueTableWrapper(BaseWrapper):
 
             if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
-                print('\n Baseline processes:',baseline_processes)
+                #print('\n Baseline processes:',baseline_processes)
                 anomalous_processes = []
                 for p in host['Processes']:
                     if p not in baseline_processes:
@@ -160,7 +124,7 @@ class BlueTableWrapper(BaseWrapper):
                 #print('\n anomalous processes:',anomalous_processes)
             if host_anomalies:
                 anomaly_dict[hostid] = host_anomalies
-        print('\n anomaly dict is:',anomaly_dict,'\n')
+        print('\n in detect anomaly, anomaly dict is:',anomaly_dict,'\n')
         return anomaly_dict
 
     def _process_anomalies(self, anomaly_dict):
@@ -207,21 +171,6 @@ class BlueTableWrapper(BaseWrapper):
 
         return anomaly
 
-    # def _malware_analysis(self,obs,hostname):
-    # anomaly_dict = {hostname: {'Files': []}}
-    # if hostname in obs:
-    # if 'Files' in obs[hostname]:
-    # files = obs[hostname]['Files']
-    # else:
-    # return anomaly_dict
-    # else:
-    # return anomaly_dict
-
-    # for f in files:
-    # if f['Density'] >= 0.9:
-    # anomaly_dict[hostname]['Files'].append(f)
-
-    # return anomaly_dict
 
     def _create_blue_table(self, success):
         table = PrettyTable([
@@ -289,7 +238,7 @@ class BlueTableWrapper(BaseWrapper):
         return self.env.get_action_space(agent)
 
     def get_last_action(self, agent):
-        return self.get_attr('get_last_action')(agent)
+        return self.last_action
 
     def get_ip_map(self):
         return self.get_attr('get_ip_map')()

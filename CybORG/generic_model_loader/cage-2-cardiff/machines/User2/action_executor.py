@@ -221,7 +221,7 @@ class ActionExecutor:
       # Write the modified data back to the YAML file.
       with open(status_file_path, 'w') as file:
         yaml.dump(data, file, default_flow_style=False)
-      return True
+      return {"success":True}
       
     def Restore(self): 
       # Clean the status file to the fresh one.

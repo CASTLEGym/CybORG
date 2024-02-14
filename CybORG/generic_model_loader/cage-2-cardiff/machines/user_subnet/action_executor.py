@@ -281,13 +281,13 @@ class ActionExecutor:
     
     def DiscoverRemoteSystems(self,subnet_ip):
       # replaced by nmap string and invoked usign subprocess , wait for result and parse the nmap output in desired template
-  
+      print("\n\n ** running from user subent")
       subnet = subnet_ip
       hosts = {entry.split(':')[1] for entry in parsed_yaml['Hosts']}
 
       # Create the desired dictionary
       data = {
-          "success": "False",
+          "success": "True",
            subnet: hosts
              }
       return data

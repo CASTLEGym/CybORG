@@ -302,7 +302,7 @@ class ActionExecutor:
       
       # Create the desired dictionary
       data = {
-          "success": "False",
+          "success": True,
            subnet: hosts
              }
       return data
@@ -328,7 +328,7 @@ class ActionExecutor:
       
       # Create the desired dictionary
       data = {
-          "success": "False",
+          "success": True,
            key: value
              }
       return data

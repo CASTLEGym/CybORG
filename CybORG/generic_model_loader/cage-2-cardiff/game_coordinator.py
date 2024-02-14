@@ -7,6 +7,7 @@ from CybORG import CybORG, CYBORG_VERSION
 from CybORG.Agents import B_lineAgent, SleepAgent
 from CybORG.Agents.SimpleAgents.Meander import RedMeanderAgent
 from Wrappers.ChallengeWrapper2 import ChallengeWrapper2
+from Wrappers.BlueEmulationWrapper import BlueEmulationWrapper
 from model_loader import model_loader
 import random
 from vu_emu import vu_emu
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
-    steps=10
+    steps=2
     # Model loader load the model
     ml =model_loader()
     
@@ -98,18 +99,18 @@ if __name__ == "__main__":
         cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
         wrapped_cyborg = wrap(cyborg)   
       
- 
         #this intialisation information is coming from Cyborg
         blue_observation = wrapped_cyborg.reset()      
         blue_action_space = wrapped_cyborg.get_action_space(agent_name)
         
-        #Getting intial red_observation
+        # Getting intial red_observation
         red_observation=cyborg.get_observation('Red')
         red_action_space= cyborg.get_action_space('Red')
         print("\n red observation is:",red_observation)
         
         
         cyborg_emu = vu_emu()
+        cyborg_emu.reset()
         # Reset the environments, return intial observation for both red and blue and fill/replace the ips,subnets,sessions, pids, and  
         # red_observation,blue_observation = cyborg_emu.reset()
         #print("\n !! All machines are restored to original state !! \n")
@@ -122,13 +123,15 @@ if __name__ == "__main__":
         #print('\n blue action list:',blue_action_list)
         print('\n ^^^ ^^^^^ blue initial obs:',initial_blue_obs)
         parse_and_store_ips_host_map(initial_blue_obs)
-        
+        emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
+        #translate intial obs in vectorised format to feed into NN
+        blue_observation=emu_wrapper.reset(initial_blue_obs)
         
         
         for i in range(steps):
             print('%%'*76)
             print('Iteration start:',i)
-            
+            #print('\n from gc, Blue obs is:',blue_observation, 'n its action space is:',blue_action_space)
             action = ml.get_action(blue_observation, blue_action_space)
             #print('\n **** blue action code is:',action)
             
@@ -155,7 +158,7 @@ if __name__ == "__main__":
             print('red action is:',red_action)
             
             
-            print('\n Red observation is:',red_observation)
+            #print('\n Red observation is:',red_observation)
             
             red_observation, red_rew, done, info = cyborg_emu.step(str(red_action),agent_type='red')
             
@@ -164,11 +167,13 @@ if __name__ == "__main__":
             print('\n **** blue action is:',blue_action)
             #Execute blue action and convert it to observation
             #To get observation, we need to capture output of both red and blue action and then invoke wrappers (below to get observation)
-            blue_observation, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='blue')
-            #print('Blue outcome is:',blue_outcome)
+            blue_outcome, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='blue')
+            blue_observation= emu_wrapper.step(blue_action,blue_outcome)
+            #print('\n Blue observation is:',blue_observation)
+            #print('\n Red observation is:',red_observation)
            
            
-            # define their action spaces for both red and blue
+            #define their action spaces for both red and blue
             #red_action_space = cyborg_emu.get_action_space("Red")
             #blue_action_space = cyborg_emu.get_action_space("Blue")
 

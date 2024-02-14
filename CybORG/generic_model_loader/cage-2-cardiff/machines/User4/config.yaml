@@ -87,7 +87,7 @@ Test_Host:
           Group Name: GreenAgent
       UID: 1001
       Username: GreenAgent
-   info:
+  info:
    - Enterprise0:
      Interfaces: IP Address
      User4:

@@ -21,7 +21,7 @@ def parse_and_store_ips_host_map(blue_initial_obs):
   #print('Subnet labels are:',subnet_labels)
   if not os.path.exists('./assets'):
        os.makedirs('./assets')
-  file_path= './assets/ip_map.json'
+  file_path= './assets/cyborg_complete_ip_map.json'
   
   with open(file_path, 'w') as file:
       json.dump(subnet_labels, file)
@@ -41,8 +41,8 @@ class utils:
     print('data in get success is:',data)
     print('data is:',data['success'])
     success_map = {
-        "True": TrinaryEnum.TRUE,
-        "False": TrinaryEnum.FALSE
+        True: TrinaryEnum.TRUE,
+        False: TrinaryEnum.FALSE
     }
     # Use the map to return the corresponding TrinaryEnum value, defaulting to UNKNOWN
     return {'success': success_map.get(data['success'], TrinaryEnum.UNKNOWN)}
@@ -124,7 +124,7 @@ class name_conversion():
        
 if __name__=='__main__':
    
-
+  utils=utils()
   # Original data
   data = {
     "success":"False", 
@@ -136,14 +136,14 @@ if __name__=='__main__':
     "10.0.214.187": {'21', '22'}
    }
   # Convert the original data
-  converted_data = transform_DiscoverNetworkServices(data1)
+  converted_data = utils.transform_DiscoverNetworkServices(data1)
   print(converted_data)
  # Convert the original data
-  converted_data = transform_ExploitRemoteService(data1)
+  converted_data = utils.transform_ExploitRemoteService(data)
   print(converted_data)
 
   # Convert the original data
-  converted_data = transform_PrivilegeEscalate(data1)
+  converted_data = utils.transform_PrivilegeEscalate(data1)
   print(converted_data)
 
 

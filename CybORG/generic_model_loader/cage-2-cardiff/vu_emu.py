@@ -24,7 +24,7 @@ import json
 
 #from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
 
-ip2host= name_conversion("./assets/ip_map.json")
+#cyborg_ip2host= name_conversion("./assets/cyborg_complete_ip_map.json")
 
 credentials_file = "api_config.yaml"
 
@@ -48,8 +48,13 @@ class vu_emu():
       self.old_outcome_red=None
    
    def reset(self):
+       self.baseline={}
        for vm in vms:
-         self.step("Restore "+vm)
+          #curr_dir=os.getcwd()
+          host_dir= os.path.join('./machines/', vm)
+          #print('Host dir is:',host_dir)
+          self.baseline[vm]=self.get_machine_intial_state(host_dir)
+       #print("self.baseline  is:",self.baseline)  
        return None, None
        
    def get_action_space(self,agent="Red"):
@@ -65,18 +70,18 @@ class vu_emu():
          action_param= split_action_string[1]
          action_name=split_action_string[0]
          
-         print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
+         #print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
          
          if agent_type=='red':
             running_from='User0'
             outcome=self.execute_action_locally(action_name,action_param,running_from)
             outcome= self.transfrom_red_observation(action_name,outcome)
             self.old_outcome_red=outcome
-            print('obs is:',outcome)
+            #print('obs is:',outcome)
          
          elif agent_type=='blue':
           is_host_name= self.is_name(action_param)
-          print('Is host name:',is_host_name)
+          #print('Is host name:',is_host_name)
          
           if is_host_name == False:
             print("** False host name **") 
@@ -86,7 +91,7 @@ class vu_emu():
           if action_name in blue_action_space :
             #  ->>> Execute locally
             outcome=self.execute_action_locally(action_name,action_param)
-            print("Outcome is:",outcome)
+            #print("Outcome is:",outcome)
             #  ->>> Execute on client
             #outcome= execute_action_client(action_name,open_stack_host_name)
           else: 
@@ -121,7 +126,7 @@ class vu_emu():
             #two_levels_up = os.path.dirname(one_level_up)
             #print("Original Directory:", original_directory)
             
-            print('action param is:',action_param)
+            #print('action param is:',action_param)
             #Specify the subfolder you want to change to
             if running_from!= None:
                subfolder = running_from
@@ -167,16 +172,17 @@ class vu_emu():
        print("In parse red, outcome is:",outcome)
        return outcome   
    
-   def get_machine_config(self,host_name):
-     file_path= machine_config_path+'config_'+host_name+'.yaml'
+   def get_machine_intial_state(self,path):
+     file_path= path+'/config.yaml'
+     print('file path is:',file_path)
      try:
        with open(file_path, 'r') as file:
             data = yaml.safe_load(file)
             pids = [process["PID"] for process in data["Test_Host"]["Processes"]]
+            formatted_pid = {'Processes:':[{'pid': pid} for pid in pids]}
      except FileNotFoundError:
       # If the file doesn't exist, create an empty data structure.
       print('No file found error !!')  
-    
-     print('PIDs are:',pids)
-     time.sleep(1)         
+     return formatted_pid
+           
    
