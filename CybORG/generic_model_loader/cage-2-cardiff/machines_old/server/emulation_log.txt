@@ -1,0 +1,459 @@
+-> Hello from Emulation coordinator !!
+=> Action name: Restore ;Host name: User0
+The value of 'User0' is: user-host-1
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: User2
+The value of 'User2' is: user-host-3
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: User4
+The value of 'User4' is: user-host-5
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Enterprise0
+The value of 'Enterprise0' is: ent-server-0
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Enterprise2
+The value of 'Enterprise2' is: ent-server-2
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Op_Host0
+The value of 'Op_Host0' is: ops-host-1
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Op_Host1
+The value of 'Op_Host1' is: ops-host-2
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Op_Host2
+The value of 'Op_Host2' is: ops-host-3
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Op_Server0
+The value of 'Op_Server0' is: ops-server
+*** Output of the script ***: True
+
+=> Action name: Restore ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+
+ !! All machines are restored to original state !! 
+
+=> Action name: DecoyFemitter ;Host name: User2
+The value of 'User2' is: user-host-3
+*** Output of the script ***: True
+
+=> Action name: DiscoverRemoteSystems ;Host name: user_subnet
+The value of 'user_subnet' is: user-subnet
+*** Output of the script ***: ['User0', 'User1', 'User2', 'User3', 'User4']
+
+=> Action name: DecoyTomcat ;Host name: User2
+The value of 'User2' is: user-host-3
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (3344, 21, 'femitter.exe')]
+
+=> Action name: DecoyHarakaSMPT ;Host name: Enterprise0
+The value of 'Enterprise0' is: ent-server-0
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: DecoyFemitter ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: DecoyHarakaSMPT ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: DecoyTomcat ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: DecoyApache ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: False
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: DecoyVsftpd ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Restore ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: DecoyHarakaSMPT ;Host name: Op_Server0
+The value of 'Op_Server0' is: ops-server
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: DecoyFemitter ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: DecoyApache ;Host name: Op_Server0
+The value of 'Op_Server0' is: ops-server
+*** Output of the script ***: False
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: DecoyTomcat ;Host name: Op_Server0
+The value of 'Op_Server0' is: ops-server
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: DecoyVsftpd ;Host name: Op_Server0
+The value of 'Op_Server0' is: ops-server
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: DecoyVsftpd ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: DecoySSHD ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: DecoyFemitter ;Host name: Enterprise2
+The value of 'Enterprise2' is: ent-server-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Restore ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: DecoyFemitter ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User3
+The value of 'User3' is: user-host-4
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Restore ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: DecoyFemitter ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: DiscoverNetworkServices ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: [(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]
+
+=> Action name: Remove ;Host name: User1
+The value of 'User1' is: user-host-2
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Restore ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: True
+
+=> Action name: PrivilegeEscalate ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+=> Action name: Remove ;Host name: Defender
+The value of 'Defender' is: defender
+*** Output of the script ***: True
+
+=> Action name: ExploitRemoteService ;Host name: Enterprise1
+The value of 'Enterprise1' is: ent-server-1
+*** Output of the script ***: False
+
+--> Blue actions and its outcome are: [('User2', 'DecoyFemitter', 'True\n'), ('User2', 'DecoyTomcat', 'True\n'), ('Enterprise0', 'DecoyHarakaSMPT', 'True\n'), ('Enterprise1', 'DecoyFemitter', 'True\n'), ('User3', 'Remove', 'True\n'), ('Defender', 'DecoyHarakaSMPT', 'True\n'), ('Defender', 'DecoyTomcat', 'True\n'), ('User3', 'Remove', 'True\n'), ('Defender', 'DecoyApache', 'False\n'), ('Defender', 'DecoyVsftpd', 'True\n'), ('Enterprise1', 'Restore', 'True\n'), ('User1', 'Remove', 'True\n'), ('Op_Server0', 'DecoyHarakaSMPT', 'True\n'), ('Enterprise1', 'DecoyFemitter', 'True\n'), ('User1', 'Remove', 'True\n'), ('Op_Server0', 'DecoyApache', 'False\n'), ('Op_Server0', 'DecoyTomcat', 'True\n'), ('User3', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('Op_Server0', 'DecoyVsftpd', 'True\n'), ('User3', 'DecoyVsftpd', 'True\n'), ('User3', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User3', 'DecoySSHD', 'True\n'), ('Enterprise2', 'DecoyFemitter', 'True\n'), ('User3', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('Enterprise1', 'Restore', 'True\n'), ('Defender', 'Remove', 'True\n'), ('Defender', 'Remove', 'True\n'), ('Enterprise1', 'DecoyFemitter', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User3', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User3', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('Enterprise1', 'Restore', 'True\n'), ('Defender', 'Remove', 'True\n'), ('Defender', 'Remove', 'True\n'), ('Enterprise1', 'DecoyFemitter', 'True\n'), ('User1', 'Remove', 'True\n'), ('User1', 'Remove', 'True\n'), ('Enterprise1', 'Restore', 'True\n'), ('Defender', 'Remove', 'True\n')]
+--> Red actions and its outcome are: [('user_subnet', 'DiscoverRemoteSystems', "['User0', 'User1', 'User2', 'User3', 'User4']\n"), ('User1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (3344, 21, 'femitter.exe')]\n"), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('Enterprise1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('Enterprise1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('Enterprise1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('User1', 'ExploitRemoteService', 'False\n'), ('User1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'DiscoverNetworkServices', "[(3368, 22, 'sshd.exe'), (832, 135, 'svchost.exe'), (4400, 3389, 'svchost.exe'), (4, 445, 'smss.exe'), (4, 139, 'smss.exe'), (3404, 80, 'tomcat8.exe'), (3404, 443, 'tomcat8.exe')]\n"), ('Enterprise1', 'ExploitRemoteService', 'False\n'), ('Enterprise1', 'PrivilegeEscalate', 'False\n'), ('Enterprise1', 'ExploitRemoteService', 'False\n')]
+

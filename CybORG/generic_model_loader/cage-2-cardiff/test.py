@@ -118,3 +118,74 @@ print('Subnet labels are:',subnet_labels)
     # Add more conditions here if there are other types
 
 
+
+import json
+from ipaddress import IPv4Address, IPv4Network
+
+# Updated first dictionary with the correct enums replaced by their names as strings
+data = {
+    'success': 'UNKNOWN',
+    'User0': {
+        'Interface': [{
+            'Interface Name': 'eth0',
+            'IP Address': IPv4Address('10.0.214.186'),
+            'Subnet': IPv4Network('10.0.214.176/28')
+        }],
+        'Sessions': [{
+            'Username': 'SYSTEM',
+            'ID': 0,
+            'Timeout': 0,
+            'PID': 2384,
+            'Type': 'RED_ABSTRACT_SESSION',
+            'Agent': 'Red'
+        }],
+        'Processes': [{'PID': 2384, 'Username': 'SYSTEM'}],
+        'System info': {
+            'Hostname': 'User0',
+            'OSType': 'WINDOWS',
+            'OSDistribution': 'WINDOWS_SVR_2008',
+            'OSVersion': 'W6_1_7601',
+            'Architecture': 'x64'
+        }
+    }
+}
+
+# Second dictionary for IP mapping
+ip_mapping = {
+    "10.0.20.200": "Defender",
+    "10.10.20.0/24": "enterprise_subnet",
+    "10.10.20.10": "Enterprise0",
+    "10.10.20.11": "Enterprise1",
+    "10.10.20.12": "Enterprise2",
+    "10.10.30.0/24": "operation_subnet",
+    "10.10.10.17": "Op_Host0",
+    "10.10.10.18": "Op_Host1",
+    "10.10.10.19": "Op_Host2",
+    "10.10.10.20": "Op_Server0",
+    "10.10.10.0/24": "user_subnet",
+    "10.10.10.12": "User0",
+    "10.10.10.13": "User1",
+    "10.10.10.14": "User2",
+    "10.10.10.15": "User3",
+    "10.10.10.16": "User4"
+}
+
+# Replace IP addresses and subnet based on hostname
+
+for key, value in ip_mapping.items():
+        if value == 'User0':
+            new_ip= key
+        elif value == 'user_subnet':
+            new_subnet= key
+print('new ip is:',new_ip,'subnet is:',new_subnet)
+print(data['User0']['Interface'][0])
+data['User0']['Interface'][0]['Ip Address']= IPv4Address(new_ip)
+data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
+      
+
+# Print the updated dictionary
+print(data )
+
+
+
+

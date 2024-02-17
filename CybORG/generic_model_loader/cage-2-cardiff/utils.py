@@ -27,22 +27,44 @@ def parse_and_store_ips_host_map(blue_initial_obs):
       json.dump(subnet_labels, file)
   return subnet_labels
 
-  
+
+#To map default Ip from Cyborg to actual ip  
+def translate_intial_red_obs(data):
+    with open('./assets/openstack_ip_map.json', 'r') as file:
+      ip_mapping=json.load(file)
+    # Replace IP addresses and subnet based on hostname
+    print(ip_mapping)
+    
+    for key, value in ip_mapping.items():
+        if value == 'User0':
+            new_ip= key
+        elif value == 'user_subnet':
+            new_subnet= key
+    print('new ip is:',new_ip,'subnet is:',new_subnet)
+    print(data['User0']['Interface'][0])
+    data['User0']['Interface'][0]['IP Address']= IPv4Address(new_ip)
+    data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
+    print('\n Data is:',data)
+    return data
+    
+    
 class TrinaryEnum(Enum):
     TRUE = 1
     FALSE = 0
     UNKNOWN = 2
 
 class utils:
-  
+  def __init___(self):
+     TrinaryEnum= TrinaryEnum(Enum)
+    
 
   def get_success_status(self,data):
     # Map string representations to TrinaryEnum values
-    print('data in get success is:',data)
-    print('data is:',data['success'])
+    #print('data in get success is:',data)
+    #print('\n \n **** data is:',data['success'])
     success_map = {
-        True: TrinaryEnum.TRUE,
-        False: TrinaryEnum.FALSE
+        True: True,
+        False: False
     }
     # Use the map to return the corresponding TrinaryEnum value, defaulting to UNKNOWN
     return {'success': success_map.get(data['success'], TrinaryEnum.UNKNOWN)}
@@ -69,7 +91,7 @@ class utils:
     formatted_data = {}
     for key, value in data.items():
         if key == "success":
-            formatted_data[key] = get_success_status(data)
+            formatted_data[key] = self.get_success_status(data)
         else:
             # Convert set of ports into the required list of dictionaries
             processes = []

@@ -70,7 +70,7 @@ if __name__ == "__main__":
                     print('Iteration start:',j)
                     
                     red_observation=cyborg.get_observation('Red')
-                    print('\n Red observation is:',red_observation)
+                    #print('\n Red observation is:',red_observation)
                     
                     action = ml.get_action(observation, action_space)
                     #print('action is:',action, 'action space is:',action_space)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
                     
                     red_action_space=cyborg.get_action_space('Red')
                     red_observation=cyborg.get_observation('Red')
-                    print('\n Red observation is:',red_observation)
+                    #print('\n Red observation is:',red_observation)
                     #print('\n Red Action space is:',red_action_space)
                     
                     
@@ -106,27 +106,27 @@ if __name__ == "__main__":
         # Getting intial red_observation
         red_observation=cyborg.get_observation('Red')
         red_action_space= cyborg.get_action_space('Red')
-        print("\n red observation is:",red_observation)
-        
+        red_observation=translate_intial_red_obs(red_observation)
+        print("\n ***** Red observation after reset is:",red_observation)
+
         
         cyborg_emu = vu_emu()
         cyborg_emu.reset()
-        # Reset the environments, return intial observation for both red and blue and fill/replace the ips,subnets,sessions, pids, and  
-        # red_observation,blue_observation = cyborg_emu.reset()
-        #print("\n !! All machines are restored to original state !! \n")
+       
         
         #read assets
         blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
         with open('./assets/blue_initial_obs.json', 'r') as file:
            initial_blue_obs = json.load(file)
         
-        #print('\n blue action list:',blue_action_list)
-        print('\n ^^^ ^^^^^ blue initial obs:',initial_blue_obs)
-        parse_and_store_ips_host_map(initial_blue_obs)
+        # print('\n blue action list:',blue_action_list)
+        print('\n Blue observation after reset:',initial_blue_obs)
+        #parse_and_store_ips_host_map(initial_blue_obs)
         emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
-        #translate intial obs in vectorised format to feed into NN
-        blue_observation=emu_wrapper.reset(initial_blue_obs)
         
+        # Translate intial obs in vectorised format to feed into NN
+        blue_observation=emu_wrapper.reset(initial_blue_obs)
+        red_agent=red_agent()
         
         for i in range(steps):
             print('%%'*76)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
             
             # Red AGENT  
             # Get action from B-line
-            red_action=red_agent().get_action(red_observation, red_action_space)
+            red_action=red_agent.get_action(red_observation, red_action_space)
             print('red action is:',red_action)
             
             
