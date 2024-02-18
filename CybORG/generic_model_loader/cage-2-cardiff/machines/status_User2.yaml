@@ -1,0 +1,21 @@
+femitter:
+  local_address: 0.0.0.0
+  local_port: 21
+  path: /usr/sbin
+  pid: 61479
+  process_type: femitter
+  properties: null
+haraka:
+  local_address: 0.0.0.0
+  local_port: 25
+  path: /usr/sbin
+  pid: 62963
+  process_type: smtp
+  properties: null
+tomcat:
+  local_address: 0.0.0.0
+  local_port: 443
+  path: null
+  pid: 62653
+  process_type: webserver
+  properties: rfi

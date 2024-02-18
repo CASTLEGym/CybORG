@@ -8,8 +8,8 @@ Test_Host:
     PID: 4
     PPID: 372
     Process Name: smss.exe
-    Username: SYSTEM
     Process Type: smb
+    Username: SYSTEM
   - Connections:
     - local_address: 0.0.0.0
       local_port: 135
@@ -38,17 +38,23 @@ Test_Host:
     Username: Administrator
   - UID: S-1-5-21-1983491181-1743339912-3520046837-1019
     Username: GreenAgent
-  - Groups:
+  - Bruteforceable: true
+    Groups:
     - GID: 0
       Group Name: ADMINISTRATORS
+    Password: vagrant
     UID: S-1-5-21-1983491181-1743339912-3520046837-1000
     Username: vagrant
-    Password: vagrant
-    Bruteforceable: True
   - Username: SYSTEM
   info:
-  - Enterprise1:
+  - Enterprise1: null
     Interfaces: IP Address
     User2:
     - Interfaces: All
   - AvailabilityValue: None
+femitter:
+  local_address: 0.0.0.0
+  local_port: 21
+  path: /usr/sbin
+  process_type: femitter
+  properties: null

@@ -49,7 +49,7 @@ class BlueTableWrapper(BaseWrapper):
             return self.env.get_table()
 
     def observation_change(self, observation, baseline=False):
-        #print('\n observation from observation change, is:',observation)
+        print('\n observation from observation change, is:',observation)
         obs = observation if type(observation) == dict else observation.data
         obs = deepcopy(observation)
         success = obs['success']

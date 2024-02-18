@@ -24,7 +24,7 @@ class BlueEmulationWrapper():
         self.blue_info = obs
         #print('\n blueEmulationwrapper, self.blue_info:',self.blue_info)	
         obs = self.observation_change(obs, baseline=True)
-        #print('\n In BlueEmulationwrapper, obs is:',obs)
+        print('\n In BlueEmulationwrapper, obs is:',obs)
         return obs
 
     def step(self, action,obs):

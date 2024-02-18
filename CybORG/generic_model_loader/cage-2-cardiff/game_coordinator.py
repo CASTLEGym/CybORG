@@ -40,7 +40,7 @@ if __name__ == "__main__":
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
-    steps=2
+    steps=100
     # Model loader load the model
     ml =model_loader()
     

@@ -74,12 +74,12 @@ class vu_emu():
          is_host_name= self.is_name(action_param)
          if is_host_name == False:
             print("** False host name **") 
-            host_name= ip2host.fetch_alt_name(action_param)
-            print("=> Action param is",action_param,"; Host name:",host_name)
+            action_param= ip2host.fetch_alt_name(action_param)
+            print("=> Action param is",action_param)
             
          if agent_type=='red':
             #running_from='User0'
-            outcome=self.execute_action_locally(action_name,host_name)
+            outcome=self.execute_action_locally(action_name,action_param)
             outcome= self.transfrom_red_observation(action_name,outcome)
             self.old_outcome_red=outcome
             #print('obs is:',outcome)
@@ -87,7 +87,7 @@ class vu_emu():
          elif agent_type=='blue':
           if action_name in blue_action_space :
             #  ->>> Execute locally
-            outcome=self.execute_action_locally(action_name,host_name)
+            outcome=self.execute_action_locally(action_name,action_param)
             #print("Outcome is:",outcome)
             #  ->>> Execute on client
             #outcome= execute_action_client(action_name,open_stack_host_name)
@@ -95,9 +95,11 @@ class vu_emu():
             print("Invalid action!!")
             sys.exit(1)
           self.old_outcome_blue=outcome
-          #if action doesnot contains the hostname (like sleep/monitor) 
+       #if action doesnot contains the hostname (like sleep/monitor) 
        else: 
-         outcome=True
+         if agent_type=='red': outcome=self.old_outcome_red
+         elif agent_type=='blue': outcome= self.old_outcome_blue
+      
       
        return outcome, None, None, None
 
@@ -154,6 +156,7 @@ class vu_emu():
             os.chdir(server_directory)
             #print("Current Working Directory (after coming back to the original):", os.getcwd())
             #print("\n \n")
+            #return result.stdout
             return ast.literal_eval(result.stdout)
             
    def is_name(self,s):
