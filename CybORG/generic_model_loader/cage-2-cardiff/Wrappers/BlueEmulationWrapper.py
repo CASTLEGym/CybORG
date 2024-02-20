@@ -28,9 +28,10 @@ class BlueEmulationWrapper():
         return obs
 
     def step(self, action,obs):
-        #print('\n \n In step, action from blue emu wrapper, is:',action)
+        print('\n=> action from blue emu wrapper, is:',action)
+        print('\n-> i/p obs from blue table wraper, is:',obs)
         obs = self.observation_change(obs)
-        #print('\n changed obs from blue_table wrapper, is:',obs)
+        print('\n-> o/p obs from blue_table wrapper, is:',obs)
         self.last_action=action
         return obs
 
@@ -41,22 +42,17 @@ class BlueEmulationWrapper():
             return self.env.get_table()
 
     def observation_change(self, observation, baseline=False):
-        print('\n \n self baseline is:',self.baseline)
-    
-        print('\n Input observation is:',observation)
         obs = observation if type(observation) == dict else observation.data
         obs = deepcopy(observation)
         success = self.success
         self._process_last_action()
-        print('\n baseline:',baseline)
+        
         anomaly_obs = self._detect_anomalies(obs) if not baseline else obs
       
-        # TODO check what info is for baseline
-        print('anomaly obs is:',anomaly_obs)
+        # TODO check what info is for baselineclear
         
         
         info = self._process_anomalies(anomaly_obs)
-        print('\n Info before baseline is:',info)
         if baseline:
             for host in info:
                 info[host][-2] = 'None'
@@ -64,14 +60,14 @@ class BlueEmulationWrapper():
                 self.blue_info[host][-1] = 'No'
 
         self.info = info
-        print('Info after baseline is :',self.info)
+        print('self.Info is :',self.info)
         return self._create_vector(success)
         
     
 
     def _process_last_action(self):
         action = self.last_action
-        print('\n \n *** last action is:',action)
+        #print('\n \n *** last action is:',action)
         if action is not None:
             name = action.split(" ")[0]
             hostname = action.split(" ")[1] if name in ('Restore', 'Remove') else None
@@ -82,28 +78,29 @@ class BlueEmulationWrapper():
                 compromised = self.blue_info[hostname][-1]
                 if compromised != 'No':
                     self.blue_info[hostname][-1] = 'Unknown'
+        print('\n-> self.blue info is:',self.blue_info)
 
     def _detect_anomalies(self, obs):
-        print('\n from detect anomalies, input obs is:',obs)
+        #print('\n from detect anomalies, input obs is:',obs)
         if self.baseline is None:
             raise TypeError(
                 'BlueTableWrapper was unable to establish baseline. This usually means the environment was not reset before calling the step method.')
 
         anomaly_dict = {}
-        print('self.baseline:',self.baseline)
         for hostid, host in obs.items():
             if hostid == 'success':
                 continue
 
             host_baseline = self.baseline[hostid]
-            print('\n Host baseline is:',host_baseline)
+            print('\n=> From blue, Host id is:',hostid)
+            print('-> Host baseline is:',host_baseline)
             if host == host_baseline:
                 continue
 
             host_anomalies = {}
             if 'Files' in host:
                 baseline_files = host_baseline.get('Files', [])
-                #print('\n Baseline files:',baseline_files)
+                print('\n-> Baseline files:',baseline_files)
                 anomalous_files = []
                 for f in host['Files']:
                     if f not in baseline_files:
@@ -114,7 +111,7 @@ class BlueEmulationWrapper():
 
             if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
-                #print('\n Baseline processes:',baseline_processes)
+                print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []
                 for p in host['Processes']:
                     if p not in baseline_processes:
@@ -124,7 +121,7 @@ class BlueEmulationWrapper():
                 #print('\n anomalous processes:',anomalous_processes)
             if host_anomalies:
                 anomaly_dict[hostid] = host_anomalies
-        print('\n in detect anomaly, anomaly dict is:',anomaly_dict,'\n')
+        print('\n anomaly dict is:',anomaly_dict)
         return anomaly_dict
 
     def _process_anomalies(self, anomaly_dict):

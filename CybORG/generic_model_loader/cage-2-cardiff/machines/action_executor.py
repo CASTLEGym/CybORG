@@ -1,8 +1,7 @@
 import sys
 import argparse
 import yaml
-status_file_path= 'status.yaml'
-success_probability=0.9
+success_probability=0.1
 import random
 #seed_value = 42
 #random.seed(seed_value)
@@ -10,13 +9,14 @@ import os
 from utils import *
 import re
 
-name_conversion=name_conversion('./assets/openstack_ip_map.json')
+
 
 class ActionExecutor:
 
     def __init__(self, action,param):
         self.action_name = action
         self.action_param = param
+        self.name_conversion=name_conversion('./assets/openstack_ip_map.json')
 
 
     def read_yaml_file(self,file_path):
@@ -263,10 +263,22 @@ class ActionExecutor:
         yaml.dump(data, file, default_flow_style=False)
       data = {
           "success": True,
-           self.action_param:self.get_machine_state(self.action_param)
-             }
+           self.action_param: {
+            'Processes': [
+              {
+                'PID': pid,
+                'PPID': 1,
+                'Service Name':service_name,
+                'Username':'XYZ'             
+              }
+            ]
+           }
+          }
       return data
       
+    
+   
+    
     def get_machine_state(self,path):
      file_path='./config_'+path+'.yaml'
      #print('file path is:',file_path)
@@ -306,6 +318,8 @@ class ActionExecutor:
     def Remove(self):
       # Kill the suspicious reverse shell processes started by the red agent.
       target_port='reverse_shell'
+      status_file_path='status_'+self.action_param+'.yaml'
+      
       with open(status_file_path, 'r') as file:
             data = yaml.safe_load(file)
       #print("Data is:",data)
@@ -322,37 +336,103 @@ class ActionExecutor:
 
     def PrivilegeEscalate(self):
       if random.random()>success_probability:
-        return True
+        return {'success': True}
       else:
-        return False
+        return {'success': False}
    
     def ExploitRemoteService(self):
       # Check valid exploits and execute them.
-      available_exploits=["EternalBlue","BlueKeep","HTTPRFI","HTTPSRFI","SSHBruteForce","SQLInjection","HarakaRCE","FTPDirectoryTraversal"]
-      if self.exploit_name in available_exploits:
-       if random.random()>success_probability:
-        with open(status_file_path, 'r') as file:
-            data = yaml.safe_load(file)
-        if data==None:
-          # If the file doesn't exist, create an empty data structure
-          data = {}
-        #print(self.exploit_name)
+      available_exploit=self.find_the_possible_exploit()
+      exploit=available_exploit[0]; port= available_exploit[1]
+      print('***Available exploit:',available_exploit[0])
+      if random.random()>success_probability:
+        data = {
+          "success": True}
+        alt_name=self.name_conversion.fetch_alt_name(self.action_param)
         # Add or update the key-value pair
-        data[self.exploit_name]= {}
-        data[self.exploit_name]['file_density'] = 0.9 
-        data[self.exploit_name]['file_signed'] = False 
-        data[self.exploit_name]['process_name'] = 'reverse_shell'
-        data[self.exploit_name]['port'] = random.randint(4000, 5000)
-        with open(status_file_path, 'w') as file:
-          yaml.dump(data, file, default_flow_style=False)
-        return True
-       else:
-        return False
+        exploited_port=random.randint(50000,52000)
+        attacker_node= self.name_conversion.fetch_alt_name('User0')
+        data[alt_name]= {
+        'Processes': [
+            {
+                'Connections': [
+                    {
+                        'local_port': exploited_port,
+                        'remote_port': 4444,
+                        'local_address': IPv4Address(alt_name),
+                        'remote_address': IPv4Address(attacker_node)
+                    }
+                ],
+                'Process Type': 'ProcessType.REVERSE_SESSION'
+            },
+            {
+                'Connections': [
+                    {
+                        'local_port': port,
+                        'local_address': IPv4Address(alt_name),
+                        'Status': 'ProcessState.OPEN'
+                    }
+                ],
+                'Process Type': 'ProcessType.XXX'
+            }
+        ],
+        'Interface': [{'IP Address': IPv4Address(alt_name)}],
+        'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
+        'System info': {'Hostname': self.action_param, 'OSType': 'OperatingSystemType.WINDOWS'}
+         }
+        data[attacker_node]={
+         'Processes': [
+            {
+                'Connections': [
+                    {
+                        'local_port': 4444,
+                        'remote_port': exploited_port,
+                        'local_address': IPv4Address(attacker_node),
+                        'remote_address': IPv4Address(alt_name)
+                    }
+                ],
+                'Process Type': 'ProcessType.REVERSE_SESSION'
+            }]
+        }
+        print('Data is:',data)
+        
+      else:
+        data = {
+          "success": False}
+      return data
 
     
-    
-    def dummy_nmap(self):
-       pass
+    def find_the_possible_exploit(self):
+       content=self.read_yaml_file('config_'+self.action_param+'.yaml')
+       # Find ports: 
+       ports = self.extract_ports(content['Test_Host'])
+       print(ports)
+       # Based on the port sucess and failure of exploits. The weights are also assigned. 
+       exploit_options=[]
+       if 139 in ports:
+         exploit_options.append(("EternalBlue",139))
+       elif 3389 in ports: 
+         exploit_options.append(("BlueKeep",3389))
+       elif 80 in ports:
+         exploit_options.append(("HTTPRFI",80))
+       elif 443 in ports:
+         exploit_options.append(("HTTPSRFI",443))
+       elif 22 in ports:
+         exploit_options.append(("SSHBruteForce",22))
+       elif (3390 in ports) and (80 in ports or 443 in ports):
+         exploit_options.append(("SQLInjection",80))
+       elif 25 in ports:  
+         exploit_options.append(("HarakaRCE",25))
+       elif 21 in ports:
+         exploit_options.append(("FTPDirectoryTraversal",21))
+       print("-> exploit options are:", exploit_options)
+      
+       if len(exploit_options) >0: 
+         return random.choice(exploit_options)
+       else:
+         return False
+
+
     
     def DiscoverRemoteSystems(self):
       # replaced by nmap string and invoked using subprocess , wait for result and parse the nmap output in desired template
@@ -391,10 +471,8 @@ class ActionExecutor:
       #parse data_raw in data template
       
       name_type=self.is_name(self.action_param)
-      if name_type==True: key=name_conversion.fetch_alt_name(self.action_param)
+      if name_type==True: key=self.name_conversion.fetch_alt_name(self.action_param)
          
-      
-      
       # Create the desired dictionary
       data = {
           "success": True,

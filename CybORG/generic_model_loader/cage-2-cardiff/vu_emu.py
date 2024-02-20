@@ -46,7 +46,9 @@ class vu_emu():
    def __init__(self):
       self.old_outcome_blue=None
       self.old_outcome_red=None
-   
+      self.last_red_action=None
+      self.last_red_action_param=None
+      
    def reset(self):
        self.baseline={}
        for vm in vms:
@@ -82,12 +84,15 @@ class vu_emu():
             outcome=self.execute_action_locally(action_name,action_param)
             outcome= self.transfrom_red_observation(action_name,outcome)
             self.old_outcome_red=outcome
+            self.last_red_action=action_name
+            self.last_red_action_param=action_param
             #print('obs is:',outcome)
          
          elif agent_type=='blue':
           if action_name in blue_action_space :
             #  ->>> Execute locally
             outcome=self.execute_action_locally(action_name,action_param)
+            outcome=modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
             #print("Outcome is:",outcome)
             #  ->>> Execute on client
             #outcome= execute_action_client(action_name,open_stack_host_name)

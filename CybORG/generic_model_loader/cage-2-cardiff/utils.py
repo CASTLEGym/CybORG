@@ -4,6 +4,7 @@ import yaml
 import ipaddress
 from ipaddress import IPv4Address, IPv4Network
 from enum import Enum
+import random
 
 def parse_and_store_ips_host_map(blue_initial_obs):
   # Initialize a dictionary to hold subnet labels
@@ -46,7 +47,58 @@ def translate_intial_red_obs(data):
     data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
     print('\n Data is:',data)
     return data
-    
+
+
+
+
+
+
+
+def modify_blue_by_red(blue_outcome,red_outcome,red_action,red_action_param):
+    if red_action=='DiscoverRemoteSystems':
+      return blue_outcome
+    elif red_action=='DiscoverNetworkServices':
+      print('red_outcome is:',red_outcome, 'red_action_param is:',red_action_param) 
+      info={
+        red_action_param:parse_DNS_data(red_outcome)
+      }
+      print('\n blue outcome is:',blue_outcome)
+      blue_outcome.update(info)
+      print('\n **Blue Info is:',blue_outcome)
+      return blue_outcome
+
+
+def parse_DNS_data(input_data):
+    result = {}
+    for key, value in input_data.items():
+        if key != 'success':
+            result[key] = {
+                'Processes': [],
+                'Interface': [{'IP Address': IPv4Address(key)}]
+            }
+            for process in value['Processes']:
+                for connection in process['Connections']:
+                    result[key]['Processes'].append({
+                        'Connections': [{
+                            'local_port': connection['local_port'],
+                            'remote_port': random.randint(40000, 50000),
+                            'local_address': connection['local_address']
+                        }]
+                    })
+    return result[key]
+
+
+def merge_dictionaries(dict1, dict2):
+    merged_dict = {}
+    for key in set(dict1.keys()).union(dict2.keys()):
+      if key != 'success':  
+        merged_dict[key] = []
+        if key in dict1:
+            merged_dict[key].append(dict1[key])
+        if key in dict2:
+            merged_dict[key].append(dict2[key])
+    return merged_dict
+
     
 class TrinaryEnum(Enum):
     TRUE = 1

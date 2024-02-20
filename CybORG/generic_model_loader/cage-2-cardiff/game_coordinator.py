@@ -40,7 +40,7 @@ if __name__ == "__main__":
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
-    steps=100
+    steps=10
     # Model loader load the model
     ml =model_loader()
     
@@ -92,7 +92,7 @@ if __name__ == "__main__":
                 total_reward.append(sum(r))
                 actions.append(a)
                 # observation = cyborg.reset().observation
-                observation = wrapped_cyborg.reset()
+                #observation = wrapped_cyborg.reset()
             #print(f'Average reward for red agent {red_agent.__name__} and steps {num_steps} is: {mean(total_reward)} with a standard deviation of {stdev(total_reward)}')
     elif exp=='emu':
       for red_agent in [B_lineAgent]:

@@ -21,23 +21,22 @@ class BlueTableWrapper(BaseWrapper):
     def reset(self, agent='Blue'):
         result = self.env.reset(agent)
         obs = result.observation
+        print('=>In BlueTablewrapper reset, i/p obs is:',obs)
         if agent == 'Blue':
-            self._process_initial_obs(obs)
-            #print('In BlueTablewrapper, reset obs is:',obs)
+            self._process_initial_obs(obs)            
             obs = self.observation_change(obs, baseline=True)
-        print('In BlueTablewrapper, changed obs is:',obs)
+        print('In BlueTablewrapper, o/p obs is:',obs)
         result.observation = obs
         return result
 
     def step(self, agent=None, action=None) -> Results:
-        
-        print('\n action from blue table wrapper, is:',action)
         result = self.env.step(agent, action)
         obs = result.observation
-        #print('\n observation from blue table wraper, is:',obs)
+        print('\n=> action from blue table wrapper, is:',action)
+        print('\n-> i/p obs from blue table wraper, is:',obs)
         if agent == 'Blue':
             obs = self.observation_change(obs)
-        #print('\n changed obs from blue_table wrapper, is:',obs)
+        print('\n-> o/p obs from blue_table wrapper, is:',obs)
         result.observation = obs
         result.action_space = self.action_space_change(result.action_space)
         return result
@@ -49,12 +48,12 @@ class BlueTableWrapper(BaseWrapper):
             return self.env.get_table()
 
     def observation_change(self, observation, baseline=False):
-        print('\n observation from observation change, is:',observation)
+        
         obs = observation if type(observation) == dict else observation.data
         obs = deepcopy(observation)
         success = obs['success']
         self._process_last_action()
-        #print('baseline is:',baseline, "success is:",success, 'Output mode is:',self.output_mode)
+        
         anomaly_obs = self._detect_anomalies(obs) if not baseline else obs
         del obs['success']
         # TODO check what info is for baseline
@@ -70,7 +69,7 @@ class BlueTableWrapper(BaseWrapper):
                 self.blue_info[host][-1] = 'No'
 
         self.info = info
-        #print('\n Info is :',self.info)
+        print('\n -> self.Info is :',self.info)
         if self.output_mode == 'table':
             return self._create_blue_table(success)
         elif self.output_mode == 'anomaly':
@@ -118,28 +117,29 @@ class BlueTableWrapper(BaseWrapper):
                 compromised = self.blue_info[hostname][-1]
                 if compromised != 'No':
                     self.blue_info[hostname][-1] = 'Unknown'
+        print('\n-> self blue info is:',self.blue_info)
 
     def _detect_anomalies(self, obs):
-        print('\n from detect anomalies, obs is:',obs)
         if self.baseline is None:
             raise TypeError(
                 'BlueTableWrapper was unable to establish baseline. This usually means the environment was not reset before calling the step method.')
 
         anomaly_dict = {}
-        print('\n \n self.baseline:',self.baseline)
+        #clear
+        #print('\n \n self.baseline:',self.baseline)
         for hostid, host in obs.items():
             if hostid == 'success':
                 continue
-            print('host id is:',hostid)
+            print('\n=>From blue,  host id is:',hostid)
             host_baseline = self.baseline[hostid]
-            print('\n Host baseline is:',host_baseline)
+            print('->Host baseline is:',host_baseline)
             if host == host_baseline:
                 continue
 
             host_anomalies = {}
             if 'Files' in host:
                 baseline_files = host_baseline.get('Files', [])
-                #print('\n Baseline files:',baseline_files)
+                print('\n-> Baseline files:',baseline_files)
                 anomalous_files = []
                 for f in host['Files']:
                     if f not in baseline_files:
@@ -150,7 +150,7 @@ class BlueTableWrapper(BaseWrapper):
 
             if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
-                print('\n Baseline processes:',baseline_processes)
+                print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []
                 for p in host['Processes']:
                     if p not in baseline_processes:
