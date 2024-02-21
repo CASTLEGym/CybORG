@@ -120,6 +120,8 @@ class vu_emu():
          return utils.transform_DiscoverRemoteSystems(data)    
        elif action_name=='DiscoverNetworkServices':
          return utils.transform_DiscoverNetworkServices(data)  
+       elif action_name=='ExploitRemoteService':
+         return utils.transform_ExploitRemoteService(data)  
 
    def execute_action_locally(self,action_name,action_param,running_from=None):
             parameters = [action_name , action_param]

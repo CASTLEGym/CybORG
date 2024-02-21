@@ -47,12 +47,7 @@ def translate_intial_red_obs(data):
     data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
     print('\n Data is:',data)
     return data
-
-
-
-
-
-
+    
 
 def modify_blue_by_red(blue_outcome,red_outcome,red_action,red_action_param):
     if red_action=='DiscoverRemoteSystems':
@@ -109,7 +104,6 @@ class utils:
   def __init___(self):
      TrinaryEnum= TrinaryEnum(Enum)
     
-
   def get_success_status(self,data):
     # Map string representations to TrinaryEnum values
     #print('data in get success is:',data)
@@ -120,7 +114,6 @@ class utils:
     }
     # Use the map to return the corresponding TrinaryEnum value, defaulting to UNKNOWN
     return {'success': success_map.get(data['success'], TrinaryEnum.UNKNOWN)}
-
 
   def transform_DiscoverRemoteSystems(self,data):
     # Parsing and setting success on the input data
@@ -164,18 +157,71 @@ class utils:
             }
     return formatted_data
 
-
-
-
   # Convert the Exploit remote services data to the required format
   def transform_ExploitRemoteService(self,data):
-    pass
-
+        formatted_data = {}
+        for key, value in data.items():
+          if key == "success":
+            formatted_data[key] = self.get_success_status(data)
+          else: 
+            exploit=data["available_exploit"]
+            port= data["exploited_port"]
+            alt_name= data["host_name"]
+            port_for_reverse_shell= data["port_for_reverse_shell"]
+            remote_port_on_attacker= 4444
+            attacker_node= self.name_conversion.fetch_alt_name('User0')
+            
+            formatted_data[alt_name]= {
+            'Processes': [
+               {
+                'Connections': [
+                    {
+                        'local_port': port_for_reverse_shell,
+                        'remote_port': remote_port_on_attacker,
+                        'local_address': IPv4Address(alt_name),
+                        'remote_address': IPv4Address(attacker_node)
+                    }
+                ],
+                'Process Type': 'ProcessType.REVERSE_SESSION'
+               },
+               {
+                'Connections': [
+                    {
+                        'local_port': port,
+                        'local_address': IPv4Address(alt_name),
+                        'Status': 'ProcessState.OPEN'
+                    }
+                ],
+                'Process Type': 'ProcessType.XXX'
+               }
+               ],
+            'Interface': [{'IP Address': IPv4Address(alt_name)}],
+            'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
+            'System info': {'Hostname': self.action_param, 'OSType': 'OperatingSystemType.WINDOWS'}
+             }
+           formatted_data[attacker_node]={
+            'Processes': [
+               {
+                'Connections': [
+                    {
+                        'local_port': remote_port_on_attacker,
+                        'remote_port': port_for_reverse_shell,
+                        'local_address': IPv4Address(attacker_node),
+                        'remote_address': IPv4Address(alt_name)
+                    }
+                ],
+                'Process Type': 'ProcessType.REVERSE_SESSION'
+               }]
+               }
+        return formatted_data
  
   # Convert the Exploit remote services data to the required format
   def transform_PrivilegeEscalate(self,data):
-    pass
-
+    formatted_data = {}
+        for key, value in data.items():
+          if key == "success":
+            formatted_data[key] = self.get_success_status(data)
+    return formatted_data
 
 
 

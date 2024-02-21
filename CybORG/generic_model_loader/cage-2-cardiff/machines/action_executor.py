@@ -335,67 +335,29 @@ class ActionExecutor:
     ############################## 
 
     def PrivilegeEscalate(self):
+      # Output from emulator => success/failure and outcome of explore host {interface: IpAdddress}.   
       if random.random()>success_probability:
-        return {'success': True}
+        return {'success': True, "explored_host": 'IPAddress'}
       else:
         return {'success': False}
    
     def ExploitRemoteService(self):
       # Check valid exploits and execute them.
+      #Emulation returns => {success,available_exploit, exploited port, port on which reverse shell runs, remote port on attcker node where reverse shell connects }  
       available_exploit=self.find_the_possible_exploit()
       exploit=available_exploit[0]; port= available_exploit[1]
       print('***Available exploit:',available_exploit[0])
+      alt_name=self.name_conversion.fetch_alt_name(self.action_param)
+      
       if random.random()>success_probability:
         data = {
-          "success": True}
-        alt_name=self.name_conversion.fetch_alt_name(self.action_param)
-        # Add or update the key-value pair
-        exploited_port=random.randint(50000,52000)
-        attacker_node= self.name_conversion.fetch_alt_name('User0')
-        data[alt_name]= {
-        'Processes': [
-            {
-                'Connections': [
-                    {
-                        'local_port': exploited_port,
-                        'remote_port': 4444,
-                        'local_address': IPv4Address(alt_name),
-                        'remote_address': IPv4Address(attacker_node)
-                    }
-                ],
-                'Process Type': 'ProcessType.REVERSE_SESSION'
-            },
-            {
-                'Connections': [
-                    {
-                        'local_port': port,
-                        'local_address': IPv4Address(alt_name),
-                        'Status': 'ProcessState.OPEN'
-                    }
-                ],
-                'Process Type': 'ProcessType.XXX'
-            }
-        ],
-        'Interface': [{'IP Address': IPv4Address(alt_name)}],
-        'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
-        'System info': {'Hostname': self.action_param, 'OSType': 'OperatingSystemType.WINDOWS'}
-         }
-        data[attacker_node]={
-         'Processes': [
-            {
-                'Connections': [
-                    {
-                        'local_port': 4444,
-                        'remote_port': exploited_port,
-                        'local_address': IPv4Address(attacker_node),
-                        'remote_address': IPv4Address(alt_name)
-                    }
-                ],
-                'Process Type': 'ProcessType.REVERSE_SESSION'
-            }]
-        }
-        print('Data is:',data)
-        
+          "success": True,
+          "available_exploit":exploit,
+          "exploited_port":port,
+          "host_name":alt_name,
+          "port_for_reverse_shell":random.randint(50000,52000),
+          "remote_port_on_attacker":4444
+          }  
       else:
         data = {
           "success": False}
@@ -435,7 +397,8 @@ class ActionExecutor:
 
     
     def DiscoverRemoteSystems(self):
-      # replaced by nmap string and invoked using subprocess , wait for result and parse the nmap output in desired template
+      # Emulation=> {success, subnet:{hosts}} 
+      #replaced by nmap string and invoked using subprocess , wait for result and parse the nmap output in desired template
       config_file_name= 'config_'+self.action_param+'.yaml'
       parsed_yaml = self.read_yaml_file(config_file_name)
       #print(parsed_yaml)
@@ -456,19 +419,12 @@ class ActionExecutor:
     
     
     def DiscoverNetworkServices(self):
-      # return PID,port,process_name on a host
-      # replaced by nmap string and invoked using subprocess , wait for result and parse the nmap output in desired template
+      #Emulation=> {success, host:{ports}}  
       config_file_name= 'config_'+self.action_param+'.yaml'
-      #print('config_file name:',config_file_name)
       data = self.read_yaml_file(config_file_name)
-      #print('parsed yaml:',data)
       key = self.action_param
       value = self.extract_ports(data["Test_Host"])
-      #print('Values are:',value)
-      ###
-      ##possible nmap string for all above code
-      #data_raw=namp self.action_param
-      #parse data_raw in data template
+      
       
       name_type=self.is_name(self.action_param)
       if name_type==True: key=self.name_conversion.fetch_alt_name(self.action_param)
