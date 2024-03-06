@@ -309,11 +309,16 @@ class ActionExecutor:
     def is_name(self,s):
          return bool(re.match(r"^[A-Za-z]+", s))
     
+    
+    def Analyse(self):
+  
+       return {"success":False}
+    
     def Restore(self): 
       # Clean the status file to the fresh one.
       with open(status_file_path, 'w') as file:
         file.truncate()
-      return True
+      return {'success': True}
       
     def Remove(self):
       # Kill the suspicious reverse shell processes started by the red agent.
@@ -327,7 +332,7 @@ class ActionExecutor:
         cleaned_data = {key: value for key, value in data.items() if value.get('process_name') != target_port}
         with open(status_file_path, 'w') as file:
           yaml.dump(cleaned_data, file, default_flow_style=False)
-      return True 
+      return {'success': True}
 
 
     ##############################

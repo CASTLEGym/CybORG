@@ -117,15 +117,15 @@ if __name__ == "__main__":
         #read assets
         blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
         with open('./assets/blue_initial_obs.json', 'r') as file:
-           initial_blue_obs = json.load(file)
-        
+           initial_blue_info = json.load(file)
+        initial_blue_info= translate_initial_blue_info(initial_blue_info)
         # print('\n blue action list:',blue_action_list)
-        print('\n Blue observation after reset:',initial_blue_obs)
+        print('\n Blue info after reset:',initial_blue_info)
         #parse_and_store_ips_host_map(initial_blue_obs)
         emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
         
         # Translate intial obs in vectorised format to feed into NN
-        blue_observation=emu_wrapper.reset(initial_blue_obs)
+        blue_observation=emu_wrapper.reset(initial_blue_info)
         red_agent=red_agent()
         
         for i in range(steps):

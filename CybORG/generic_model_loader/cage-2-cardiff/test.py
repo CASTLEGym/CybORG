@@ -1,5 +1,7 @@
 import inspect
 
+
+"""
 def wrap():
     print("In inspection")
     pass
@@ -185,7 +187,14 @@ data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
 
 # Print the updated dictionary
 print(data )
+"""
 
+
+host= {'Processes': [{'PID': 12122, 'PPID': 1, 'Service Name': 'femitter', 'Username': 'SYSTEM'}]}
+host_baseline={'Processes:': [{'pid': 4}, {'pid': 832}, {'pid': 4400}]}
+if 'Processes' in host:
+                baseline_processes = host_baseline.get('Processes', [])
+                print('\n-> Baseline processes:',baseline_processes)
 
 
 

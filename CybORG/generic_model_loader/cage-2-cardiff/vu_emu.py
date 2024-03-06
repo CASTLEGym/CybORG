@@ -92,7 +92,12 @@ class vu_emu():
           if action_name in blue_action_space :
             #  ->>> Execute locally
             outcome=self.execute_action_locally(action_name,action_param)
-            outcome=modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
+            
+            #modify blue only if red is taking following actions:
+            red_actions_that_affect_blue= ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverNetworkServices']
+            if action_name in red_actions_that_affect_blue: 
+               outcome=modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
+            
             #print("Outcome is:",outcome)
             #  ->>> Execute on client
             #outcome= execute_action_client(action_name,open_stack_host_name)
@@ -186,7 +191,7 @@ class vu_emu():
        with open(file_path, 'r') as file:
             data = yaml.safe_load(file)
             pids = [process["PID"] for process in data["Test_Host"]["Processes"]]
-            formatted_pid = {'Processes:':[{'pid': pid} for pid in pids]}
+            formatted_pid = {'Processes':[{'pid': pid} for pid in pids]}
      except FileNotFoundError:
       # If the file doesn't exist, create an empty data structure.
       print('No file found error !!')  

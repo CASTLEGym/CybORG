@@ -48,11 +48,9 @@ class BlueEmulationWrapper():
         self._process_last_action()
         
         anomaly_obs = self._detect_anomalies(obs) if not baseline else obs
-      
-        # TODO check what info is for baselineclear
-        
-        
+     
         info = self._process_anomalies(anomaly_obs)
+        
         if baseline:
             for host in info:
                 info[host][-2] = 'None'
@@ -93,7 +91,8 @@ class BlueEmulationWrapper():
 
             host_baseline = self.baseline[hostid]
             print('\n=> From blue, Host id is:',hostid)
-            print('-> Host baseline is:',host_baseline)
+            print('--> Host is:',host)
+            print('\n-> Host baseline is:',host_baseline)
             if host == host_baseline:
                 continue
 
@@ -110,6 +109,7 @@ class BlueEmulationWrapper():
                     host_anomalies['Files'] = anomalous_files
 
             if 'Processes' in host:
+                
                 baseline_processes = host_baseline.get('Processes', [])
                 print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []

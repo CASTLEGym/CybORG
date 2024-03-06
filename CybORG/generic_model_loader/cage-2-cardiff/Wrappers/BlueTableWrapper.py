@@ -131,8 +131,9 @@ class BlueTableWrapper(BaseWrapper):
             if hostid == 'success':
                 continue
             print('\n=>From blue,  host id is:',hostid)
+            print('--> Host is:',host)
             host_baseline = self.baseline[hostid]
-            print('->Host baseline is:',host_baseline)
+            print('\n->Host baseline is:',host_baseline)
             if host == host_baseline:
                 continue
 

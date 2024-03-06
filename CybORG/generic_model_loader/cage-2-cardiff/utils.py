@@ -6,6 +6,9 @@ from ipaddress import IPv4Address, IPv4Network
 from enum import Enum
 import random
 
+with open('./assets/openstack_ip_map.json', 'r') as file:
+      ip_mapping=json.load(file)
+
 def parse_and_store_ips_host_map(blue_initial_obs):
   # Initialize a dictionary to hold subnet labels
   subnet_labels = {}
@@ -29,12 +32,30 @@ def parse_and_store_ips_host_map(blue_initial_obs):
   return subnet_labels
 
 
+
+def translate_initial_blue_info(data):  
+    info_dict=ip_mapping    
+    update_dict=data
+    for key in update_dict:
+        if key in info_dict:
+            ip_subnet = update_dict[key][0]
+            ip_address = update_dict[key][1]
+
+            # Update subnet if it's a network segment
+            if '/' in ip_subnet:
+                subnet_key = key + '_subnet'
+                if subnet_key in info_dict:
+                    update_dict[key][0] = info_dict[subnet_key]
+
+            # Update IP address
+            update_dict[key][1] = info_dict[key]
+
+    return update_dict
+  
+
+
 #To map default Ip from Cyborg to actual ip  
 def translate_intial_red_obs(data):
-    with open('./assets/openstack_ip_map.json', 'r') as file:
-      ip_mapping=json.load(file)
-    # Replace IP addresses and subnet based on hostname
-    print(ip_mapping)
     
     for key, value in ip_mapping.items():
         if value == 'User0':
@@ -199,8 +220,8 @@ class utils:
             'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
             'System info': {'Hostname': self.action_param, 'OSType': 'OperatingSystemType.WINDOWS'}
              }
-           formatted_data[attacker_node]={
-            'Processes': [
+            formatted_data[attacker_node]={
+             'Processes': [
                {
                 'Connections': [
                     {
@@ -218,9 +239,9 @@ class utils:
   # Convert the Exploit remote services data to the required format
   def transform_PrivilegeEscalate(self,data):
     formatted_data = {}
-        for key, value in data.items():
-          if key == "success":
-            formatted_data[key] = self.get_success_status(data)
+    for key, value in data.items():
+       if key == "success":
+          formatted_data[key] = self.get_success_status(data)
     return formatted_data
 
 
