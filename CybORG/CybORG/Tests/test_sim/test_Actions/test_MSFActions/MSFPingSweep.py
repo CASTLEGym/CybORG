@@ -3,16 +3,14 @@ from ipaddress import IPv4Network, IPv4Address
 from pprint import pprint
 
 from CybORG import CybORG
-from CybORG.Shared.Actions import SSHLoginExploit, MeterpreterIPConfig, MSFPingsweep, MSFPortscan, UpgradeToMeterpreter, \
+from CybORG.Simulator.Actions import SSHLoginExploit, MeterpreterIPConfig, MSFPingsweep, MSFPortscan, UpgradeToMeterpreter, \
     MSFAutoroute, MS17_010_PSExec
 from CybORG.Shared.Enums import OperatingSystemDistribution, OperatingSystemKernelVersion, OperatingSystemType, \
     Architecture, SessionType, ProcessState, AppProtocol, ProcessType
 from CybORG.Tests.EphemeralPort import LinuxEphemeralPort, Win2008EphemeralPort
 
-def test_pingsweep():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
+def test_pingsweep(cyborg_scenario1):
+    cyborg = cyborg_scenario1
     agent = 'Red'
     initial_result = cyborg.get_observation(agent)
 

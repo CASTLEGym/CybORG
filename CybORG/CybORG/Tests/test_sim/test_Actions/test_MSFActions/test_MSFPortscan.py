@@ -1,13 +1,11 @@
 import inspect
 
 from CybORG import CybORG
-from CybORG.Shared.Actions import MSFPortscan, SSHLoginExploit, MSFPingsweep, MeterpreterIPConfig, UpgradeToMeterpreter
+from CybORG.Simulator.Actions import MSFPortscan, SSHLoginExploit, MSFPingsweep, MeterpreterIPConfig, UpgradeToMeterpreter
 
 
-def test_MSFPortscan():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
+def test_MSFPortscan(cyborg_scenario1):
+    cyborg = cyborg_scenario1
     agent = 'Red'
     initial_result = cyborg.get_observation(agent)
     # create ssh session on pretend pi host
@@ -26,10 +24,8 @@ def test_MSFPortscan():
     assert results.observation == expected_result
 
 
-def test_MSFPortscan_NACL_block():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
+def test_MSFPortscan_NACL_block(cyborg_scenario1):
+    cyborg = cyborg_scenario1
     agent = 'Red'
     initial_result = cyborg.get_observation(agent)
     # create ssh session on pretend pi host

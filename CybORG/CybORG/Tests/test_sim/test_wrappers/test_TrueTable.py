@@ -7,8 +7,9 @@ from prettytable import PrettyTable
 from CybORG import CybORG
 from CybORG.Shared.Enums import TrinaryEnum
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
-from CybORG.Shared.Actions.AbstractActions import DiscoverRemoteSystems, DiscoverNetworkServices, ExploitRemoteService, PrivilegeEscalate, Impact, Monitor
+from CybORG.Simulator.Actions.AbstractActions import DiscoverRemoteSystems, DiscoverNetworkServices, ExploitRemoteService, PrivilegeEscalate, Impact, Monitor
 from CybORG.Agents import B_lineAgent
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 
 def get_table(rows):    
@@ -27,11 +28,8 @@ def get_table(rows):
     return table    
 
 @pytest.mark.skip
-def test_TrueTableWrapper():
-    path = str(inspect.getfile(CybORG))    
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'    
-    
-    cyborg = TrueTableWrapper(env=CybORG(path, 'sim'), observer_mode=False)
+def test_TrueTableWrapper(cyborg_scenario1b):
+    cyborg = TrueTableWrapper(env=cyborg_scenario1b, observer_mode=False)
     agent_name = 'Red'
 
     def get_ip(host):
@@ -150,11 +148,11 @@ def test_TrueTableWrapper():
     assert observation.get_string() == expected_table.get_string()
 
 @pytest.fixture(params=[True,False])
-def cyborg(request,agents = {'Red':B_lineAgent},seed = 1):
+def cyborg(request,agents = {'Red':B_lineAgent()},seed = 1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = TrueTableWrapper(CybORG(path, 'sim', agents=agents),observer_mode=request.param)
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = TrueTableWrapper(CybORG(sg, 'sim', agents=agents, seed=seed),observer_mode=request.param)
     return cyborg
 
 def test_get_attr(cyborg):

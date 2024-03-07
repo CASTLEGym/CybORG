@@ -3,13 +3,12 @@ import random
 
 from CybORG import CybORG
 from CybORG.Agents.Wrappers.IntListToAction import IntListToActionWrapper
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 
-def test_step_zeroes():
+def test_step_zeroes(create_cyborg_sim):
     agent = 'Red'
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = IntListToActionWrapper(CybORG(path, 'sim'))
+    cyborg = IntListToActionWrapper(create_cyborg_sim)
     action_space = cyborg.get_action_space(agent)
     assert type(action_space) is list
     for element in action_space:
@@ -20,9 +19,10 @@ def test_step_zeroes():
 def test_step_random():
     agent = 'Red'
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1.yaml'
+    sg = FileReaderScenarioGenerator(path)
     for i in range(100):
-        cyborg = IntListToActionWrapper(CybORG(path, 'sim'))
+        cyborg = IntListToActionWrapper(CybORG(scenario_generator=sg))
         action_space = cyborg.get_action_space(agent)
 
         action = []

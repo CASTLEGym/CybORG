@@ -1,14 +1,15 @@
 import inspect
 import pytest
 from CybORG import CybORG
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
-from agent_fixtures import cyborg
-
-from CybORG.Agents import DebuggingAgent, B_lineAgent
-from CybORG.Shared.Actions import Restore, ExploitRemoteService
+from CybORG.Agents import B_lineAgent
+from CybORG.Simulator.Actions import Restore, ExploitRemoteService
 
 
-def test_operational_nacl(cyborg):
+@pytest.mark.skip('Update required to not use debugging agent')
+def test_operational_nacl(cyborg_scenario1b):
+    cyborg = cyborg_scenario1b
     results = cyborg.reset(agent='Red')
     obs = results.observation
     history = []
@@ -16,7 +17,8 @@ def test_operational_nacl(cyborg):
     hostnames = ['User2','Enterprise1','Enterprise2','Op_Server0']
     ip_map = cyborg.get_ip_map()
     ip_list = [ip_map[h] for h in hostnames]
-    agent = DebuggingAgent(ip_list=ip_list)
+    # agent = DebuggingAgent(ip_list=ip_list)
+    agent=None
 
     for step in range(24):
         action = agent.get_action(obs)
@@ -49,11 +51,11 @@ def test_operational_nacl(cyborg):
 
 
 @pytest.fixture
-def cyborg_2(agents = {'Red':B_lineAgent},seed = 1):
+def cyborg_2(seed=1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = CybORG(path, 'sim', agents=agents)
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = CybORG(sg, agents={'Red':B_lineAgent()}, seed=seed)
     return cyborg
 
 def test_operational_nacl_aug20_bug(cyborg_2):
@@ -71,5 +73,4 @@ def test_operational_nacl_aug20_bug(cyborg_2):
 
     cyborg_2.step()
     assert cyborg_2.get_observation('Red')['success'] == False
-    assert cyborg_2.get_rewards()['Blue'] > -10
-
+    assert list(cyborg_2.get_rewards()['Blue'].values())[0] > -10

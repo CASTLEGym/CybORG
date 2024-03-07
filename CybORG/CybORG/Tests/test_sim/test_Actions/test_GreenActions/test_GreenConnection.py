@@ -11,10 +11,10 @@ from CybORG import CybORG
 import inspect
 import pytest
 
-from CybORG.Shared.Actions import Sleep
-from CybORG.Shared.Actions.GreenActions.GreenConnection import GreenConnection
-from CybORG.Shared.Actions.AbstractActions.Monitor import Monitor
-from CybORG.Agents.SimpleAgents.BlueMonitorAgent import BlueMonitorAgent
+from CybORG.Simulator.Actions import Sleep
+from CybORG.Simulator.Actions.GreenActions.GreenConnection import GreenConnection
+from CybORG.Simulator.Actions.AbstractActions.Monitor import Monitor
+from CybORG.Agents import MonitorAgent
 
 from CybORG.Shared.Enums import TrinaryEnum, OperatingSystemVersion, OperatingSystemType, OperatingSystemDistribution, \
     Architecture
@@ -25,8 +25,8 @@ from CybORG.Tests.EphemeralPort import LinuxEphemeralPort
 def test_GreenConnection():
     # Create cyborg environment
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = CybORG(path, 'sim',agents={'Blue':BlueMonitorAgent})
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    cyborg = CybORG(path, 'sim',agents={'Blue':MonitorAgent})
 
     # Test GreenConnection
     session = 0

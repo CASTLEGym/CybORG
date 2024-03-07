@@ -4,15 +4,13 @@ from ipaddress import IPv4Address
 import pytest
 
 from CybORG import CybORG
-from CybORG.Shared.Actions import UpgradeToMeterpreter, SSHLoginExploit, MSFPortscan, MSFAutoroute, MSFPingsweep
+from CybORG.Simulator.Actions import UpgradeToMeterpreter, SSHLoginExploit, MSFPortscan, MSFAutoroute, MSFPingsweep
 from CybORG.Shared.Enums import SessionType, AppProtocol
 from CybORG.Tests.EphemeralPort import LinuxEphemeralPort
 
 
-def test_upgrade_msf_shell():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
+def test_upgrade_msf_shell(cyborg_scenario1):
+    cyborg = cyborg_scenario1
 
     agent = 'Red'
     initial_result = cyborg.get_observation(agent)
@@ -70,10 +68,8 @@ def test_upgrade_msf_shell():
     assert results.reward == 0
     assert results.observation == expected_result
 
-def test_interesting_sim_behaviour():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
+def test_interesting_sim_behaviour(cyborg_scenario1):
+    cyborg = cyborg_scenario1
 
     agent = 'Red'
     initial_result = cyborg.get_observation(agent)

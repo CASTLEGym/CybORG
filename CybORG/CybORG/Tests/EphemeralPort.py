@@ -6,8 +6,26 @@ class EphemeralPort:
             return True
         return False
 
+    @classmethod
+    def matches(self, other):
+
+        if issubclass(type(other), EphemeralPort):
+            return True
+
+        return False
+
 class IANAEphemeralPort(EphemeralPort):
     def __eq__(self, other):
+        if issubclass(type(other), EphemeralPort):
+            return True
+        if type(other) is int:
+            if other >= 49152 and other <= 65535:
+                return True
+        return False
+
+    @classmethod
+    def matches(self, other):
+
         if issubclass(type(other), EphemeralPort):
             return True
         if type(other) is int:
@@ -24,6 +42,34 @@ class Win2008EphemeralPort(EphemeralPort):
                 return True
         return False
 
+    @classmethod
+    def matches(self, other):
+
+        if issubclass(type(other), EphemeralPort):
+            return True
+        if type(other) is int:
+            if other >= 1025 and other <= 60000:
+                return True
+        return False
+
+class LinuxNonSystemPort(EphemeralPort):
+    def __eq__(self, other):
+        if issubclass(type(other), EphemeralPort):
+            return True
+        if type(other) is int:
+            if other >= 1024 and other <= 60999:
+                return True
+        return False
+
+    @classmethod
+    def matches(self, other):
+        if issubclass(type(other), EphemeralPort):
+            return True
+        if type(other) is int:
+            if other >= 1024 and other <= 60999:
+                return True
+        return False
+
 class LinuxEphemeralPort(EphemeralPort):
     def __eq__(self, other):
         if issubclass(type(other), EphemeralPort):
@@ -33,8 +79,30 @@ class LinuxEphemeralPort(EphemeralPort):
                 return True
         return False
 
+    @classmethod
+    def matches(self, other):
+
+        if issubclass(type(other), EphemeralPort):
+            return True
+        if type(other) is int:
+            if other >= 32768 and other <= 60999:
+                return True
+        return False
+
+
+
 class BSDEphemeralPort(EphemeralPort):
     def __eq__(self, other):
+        if issubclass(type(other), EphemeralPort):
+            return True
+        if type(other) is int:
+            if other >= 1024 and other <= 5000:
+                return True
+        return False
+
+    @classmethod
+    def matches(self, other):
+
         if issubclass(type(other), EphemeralPort):
             return True
         if type(other) is int:

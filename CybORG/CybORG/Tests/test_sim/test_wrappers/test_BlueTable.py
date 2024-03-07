@@ -6,14 +6,16 @@ from prettytable import PrettyTable
 import numpy as np
 
 from CybORG import CybORG
-from CybORG.Shared.Actions import Remove
+from CybORG.Simulator.Actions import Remove
 from CybORG.Shared.Enums import TrinaryEnum
 from CybORG.Agents.SimpleAgents.B_line import B_lineAgent
 from CybORG.Agents.Wrappers.BlueTableWrapper import BlueTableWrapper
-from CybORG.Shared.Actions.AbstractActions import Monitor
-from CybORG.Agents import BlueMonitorAgent
+from CybORG.Simulator.Actions.AbstractActions import Monitor
+from CybORG.Agents import MonitorAgent
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
-def get_table(rows):    
+
+def get_table(rows):
     table = PrettyTable([    
         'Subnet',    
         'IP Address',    
@@ -25,14 +27,15 @@ def get_table(rows):
         table.add_row(rows[r])
 
     table.sortby = 'Hostname'
-    return table    
+    return table
+
 
 @pytest.mark.skip
 def test_BlueTableWrapper():
     path = str(inspect.getfile(CybORG))    
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'    
-    
-    cyborg = BlueTableWrapper(env=CybORG(path, 'sim',agents={'Red': B_lineAgent}))
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = BlueTableWrapper(env=CybORG(sg, 'sim',agents={'Red': B_lineAgent()}, seed=123))
     agent_name = 'Blue'
 
     def get_ip(host):
@@ -160,9 +163,9 @@ def test_BlueTableWrapper():
 
 def test_blue_vector():
     path = str(inspect.getfile(CybORG))    
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'    
-    
-    cyborg = BlueTableWrapper(env=CybORG(path, 'sim',agents = {'Red':B_lineAgent}), output_mode='vector')    
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = BlueTableWrapper(env=CybORG(sg, 'sim',agents = {'Red':B_lineAgent()}), output_mode='vector')
     agent_name = 'Blue'
     results = cyborg.reset(agent=agent_name)
     observation = results.observation
@@ -180,11 +183,11 @@ def test_blue_vector():
         assert len(results.observation) == len(expected_vector)
 
 @pytest.fixture(params=['table','raw'])
-def cyborg(request,agents = {'Blue':BlueMonitorAgent,'Red':B_lineAgent},seed = 1):
+def cyborg(request,agents = {'Blue':MonitorAgent(),'Red':B_lineAgent()},seed = 1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = BlueTableWrapper(env=CybORG(path, 'sim', agents=agents),output_mode=request.param)
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = BlueTableWrapper(env=CybORG(sg, 'sim', agents=agents, seed=seed),output_mode=request.param)
     return cyborg
 
 def test_get_attr(cyborg):

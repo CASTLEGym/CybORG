@@ -3,12 +3,12 @@
 # from CybORG import CybORG
 # from CybORG.Agents import RedMeanderAgent, B_lineAgent
 # from CybORG.Agents.Wrappers import ChallengeWrapper
-# from CybORG.Shared.Actions import Remove
+# from CybORG.Simulator.Actions import Remove
 
 # path = str(inspect.getfile(CybORG))
-# path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
+# path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario2.yaml'
 # agents = {'Red':RedMeanderAgent}
-# # agents = {'Red': B_lineAgent}
+# # agents = {'Red': B_lineAgent()}
 # cyborg = CybORG(path, 'sim', agents=agents)
 # env = ChallengeWrapper(env=cyborg, agent_name='Blue')
 

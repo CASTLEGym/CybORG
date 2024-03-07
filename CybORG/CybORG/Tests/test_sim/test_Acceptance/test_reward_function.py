@@ -1,11 +1,9 @@
 import pytest
 import inspect
 
-from CybORG.Tests.test_sim.test_Acceptance.agent_fixtures import cyborg
-
 from CybORG import CybORG
-from CybORG.Agents import DebuggingAgent, BlueMonitorAgent
-from CybORG.Shared.Actions import Restore
+from CybORG.Agents import MonitorAgent
+from CybORG.Simulator.Actions import Restore
 
 @pytest.fixture
 def security_values():
@@ -71,7 +69,7 @@ def test_security_reward(cyborg,security_values):
 
     ip_map = cyborg.get_ip_map()
     ip_list = [ip_map[h] for h in hostnames]
-    agent = DebuggingAgent(ip_list=ip_list)
+    # agent = DebuggingAgent(ip_list=ip_list)
 
     previous_reward = 0
     for step in range(41):
@@ -99,7 +97,7 @@ def test_security_reward_repeat(cyborg,security_values):
 
     ip_map = cyborg.get_ip_map()
     ip_list = [ip_map[h] for h in hostnames]
-    agent = DebuggingAgent(ip_list=ip_list)
+    # agent = DebuggingAgent(ip_list=ip_list)
 
     # Initial pass through the network
     previous_reward = 0
@@ -148,7 +146,7 @@ def test_availability_reward_impact(cyborg,availability_values):
 
     ip_map = cyborg.get_ip_map()
     ip_list = [ip_map[h] for h in hostnames]
-    agent = DebuggingAgent(ip_list=ip_list)
+    # agent = DebuggingAgent(ip_list=ip_list)
 
     previous_reward = 0
     for step in range(24):
@@ -179,7 +177,7 @@ def test_availability_reward_restore_solo(cyborg,availability_values):
 
     ip_map = cyborg.get_ip_map()
     ip_list = [ip_map[h] for h in hostnames]
-    agent = DebuggingAgent(ip_list=ip_list)
+    # agent = DebuggingAgent(ip_list=ip_list)
 
     for host in hostnames:
         action = Restore(session=0,agent='Blue',hostname=host)
@@ -202,7 +200,7 @@ def test_availability_reward_restore(cyborg,availability_values,security_values)
 
     ip_map = cyborg.get_ip_map()
     ip_list = [ip_map[h] for h in hostnames]
-    agent = DebuggingAgent(ip_list=ip_list)
+    # agent = DebuggingAgent(ip_list=ip_list)
 
     # Pollute hosts with red's presence
     previous_reward = 0

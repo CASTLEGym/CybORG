@@ -1,20 +1,22 @@
-import pytest
 import inspect
+
+import pytest
+import numpy as np
 from gym import spaces
+
 from CybORG import CybORG
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
 from CybORG.Agents.Wrappers.FixedFlatWrapper import FixedFlatWrapper
 from CybORG.Agents.Wrappers.EnumActionWrapper import EnumActionWrapper
 from CybORG.Agents.Wrappers import BlueTableWrapper
-from CybORG.Agents import BlueMonitorAgent, B_lineAgent 
+from CybORG.Agents import MonitorAgent, B_lineAgent
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 
-def test_steps():
+def test_steps(cyborg_scenario1b):
     agent = 'Red'
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
     cyborg = OpenAIGymWrapper(agent_name=agent,
-                              env=FixedFlatWrapper(EnumActionWrapper(CybORG(path, 'sim'))))
+                              env=FixedFlatWrapper(cyborg_scenario1b))
     cyborg.reset()
     action = cyborg.action_space.sample()
     obs, reward, done, info = cyborg.step(action)
@@ -27,7 +29,7 @@ def test_steps():
 
     # Check spaces
     assert isinstance(cyborg.action_space, spaces.Discrete)
-    assert cyborg.action_space.n == 56
+    assert cyborg.action_space.n == 68
 
     assert isinstance(cyborg.observation_space, spaces.Box)
     # TODO: Replace 14116 with the maximum observation length variable
@@ -36,12 +38,10 @@ def test_steps():
 
 
 @pytest.mark.skip("Deprecated")
-def test_steps_multi_discrete():
+def test_steps_multi_discrete(cyborg_scenario1b):
     agent = 'Red'
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
     cyborg = OpenAIGymWrapper(agent_name=agent,
-                              env=FixedFlatWrapper(EnumActionWrapper(CybORG(path, 'sim'))))
+                              env=FixedFlatWrapper(cyborg_scenario1b))
     cyborg.reset()
     action = cyborg.action_space.sample()
     obs, reward, done, info = cyborg.step(action)
@@ -62,11 +62,11 @@ def test_steps_multi_discrete():
     # Make sure the length of the observation does not exceed the maximum observation.
     assert cyborg.observation_space.shape == (11293,)
 
-def test_steps_random():
+def test_steps_random(cyborg_scenario1b):
     agent = 'Red'
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = OpenAIGymWrapper(agent_name=agent, env=FixedFlatWrapper(EnumActionWrapper(CybORG(path, 'sim'))))
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    cyborg = OpenAIGymWrapper(agent_name=agent, env=FixedFlatWrapper(cyborg_scenario1b))
     cyborg.reset()
     original_action = cyborg.action_space.n
     for i in range(100):
@@ -86,11 +86,9 @@ def test_steps_random():
         cyborg.reset()
 
 @pytest.mark.skip("Deprecated")
-def test_steps_random_multi_discrete():
+def test_steps_random_multi_discrete(cyborg_scenario1b):
     agent = 'Red'
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = OpenAIGymWrapper(agent_name=agent, env=FixedFlatWrapper(EnumActionWrapper(CybORG(path, 'sim'))))
+    cyborg = OpenAIGymWrapper(agent_name=agent, env=FixedFlatWrapper(cyborg_scenario1b))
     cyborg.reset()
     original_action = cyborg.action_space.nvec
     for i in range(100):
@@ -110,12 +108,12 @@ def test_steps_random_multi_discrete():
         cyborg.reset()
 
 @pytest.fixture(params=['Red','Blue'])
-def cyborg(request,agents = {'Blue':BlueMonitorAgent,'Red':B_lineAgent},seed = 1):
+def cyborg(request,agents = {'Blue':MonitorAgent(),'Red':B_lineAgent()},seed = 1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    env = FixedFlatWrapper(EnumActionWrapper(CybORG(path, 'sim', agents=agents)))
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    env = FixedFlatWrapper(CybORG(sg, 'sim', agents=agents, seed=seed))
     cyborg = OpenAIGymWrapper(env=env,agent_name=request.param)
-    cyborg.set_seed(seed)
     return cyborg
 
 def test_get_attr(cyborg):
@@ -140,7 +138,7 @@ def test_get_agent_state(cyborg):
     assert cyborg.get_agent_state('Blue') == cyborg.get_attr('get_agent_state')('Blue')
 
 def test_get_action_space(cyborg):
-    red_space = cyborg.get_action_space(cyborg.agent)
+    red_space = cyborg.get_action_space(cyborg.agent_name)
     assert type(red_space) == int
 
 def test_get_last_action(cyborg):

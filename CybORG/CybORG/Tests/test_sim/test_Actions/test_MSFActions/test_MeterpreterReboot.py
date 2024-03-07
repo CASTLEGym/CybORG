@@ -3,15 +3,7 @@ import inspect
 import pytest
 
 from CybORG import CybORG
-from CybORG.Shared.Actions import MeterpreterReboot, GetUid
-
-
-@pytest.fixture()
-def set_up_state():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
-    return cyborg
+from CybORG.Simulator.Actions import MeterpreterReboot, GetUid
 
 
 @pytest.mark.parametrize(["host", "user", "session_type", "expected_observation", "expected_observation_after"],
@@ -32,18 +24,18 @@ def set_up_state():
                          }), ("Internal", "SYSTEM", "meterpreter", {"success": True}, {
                              "success": False
                          })])
-def test_sim_execute(set_up_state, host, user, session_type, expected_observation, expected_observation_after):
-    cyborg = set_up_state
+def test_execute(cyborg_scenario1, host, user, session_type, expected_observation, expected_observation_after):
+    cyborg = cyborg_scenario1
     state = cyborg.environment_controller.state
     parent = state.sessions['Red'][0]
-    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
+    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
     action = MeterpreterReboot(session=parent.ident, target_session=session.ident, agent="Red")
     observation = cyborg.step(agent='Red', action=action, skip_valid_action_check=True).observation
     assert observation == expected_observation
 
     action = GetUid(session=parent.ident, target_session=session.ident, agent="Red")
 
-    observation = action.sim_execute(state).data
+    observation = action.execute(state).data
 
     if (user == "root" or user == "user" or user == "SYSTEM") and session_type == "meterpreter":
         observation3 = cyborg.get_agent_state('True')
@@ -54,44 +46,44 @@ def test_sim_execute(set_up_state, host, user, session_type, expected_observatio
     assert observation== expected_observation_after
 
 
-def test_sim_execute_inactive(set_up_state):
+def test_execute_inactive(cyborg_scenario1):
     expected_observation = {"success": False}
     host = "Gateway"
     user = "root"
     session_type = "meterpreter"
-    cyborg = set_up_state
+    cyborg = cyborg_scenario1
     state = cyborg.environment_controller.state
 
     parent = None
     if session_type != 'shell':
         parent = state.sessions['Red'][0]
-    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
-    session2 = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
+    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
+    session2 = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
     file = state.add_file(host=host, name="file", path="/tmp/", user=user)
     tmp_file = state.add_file(host=host, name="file2", path="/tmp/", user=user)
 
     session.active = False
     action = MeterpreterReboot(session=parent.ident, target_session=session.ident, agent="Red")
-    observation = action.sim_execute(state).data
+    observation = action.execute(state).data
     assert observation== expected_observation
 
 
-def test_sim_execute_dead(set_up_state):
+def test_execute_dead(cyborg_scenario1):
     expected_observation = {"success": False}
     host = "Gateway"
     user = "root"
     session_type = "meterpreter"
-    cyborg = set_up_state
+    cyborg = cyborg_scenario1
     state = cyborg.environment_controller.state
     parent = None
     if session_type != 'shell':
         parent = state.sessions['Red'][0]
-    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
-    session2 = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
+    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
+    session2 = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
     file = state.add_file(host=host, name="file", path="/some/random/path", user=user)
     tmp_file = state.add_file(host=host, name="file2", path='/tmp/', user=user)
 
-    state.remove_process(session.host, session.pid)
+    state.remove_process(session.hostname, session.pid)
     action = MeterpreterReboot(session=parent.ident, target_session=session.ident, agent="Red")
-    observation = action.sim_execute(state).data
+    observation = action.execute(state).data
     assert observation== expected_observation

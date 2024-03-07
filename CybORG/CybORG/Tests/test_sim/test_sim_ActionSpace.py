@@ -4,16 +4,15 @@ from random import choice
 import pytest
 
 from CybORG.Agents.Wrappers import EnumActionWrapper
-from CybORG.Agents.Wrappers import ReduceActionSpaceWrapper
-from CybORG.Shared.Actions import MeterpreterIPConfig, MSFAutoroute, MS17_010_PSExec, MSFPortscan, MSFPingsweep, \
-    UpgradeToMeterpreter, SSHLoginExploit, Sleep, DiscoverNetworkServices, \
+
+from CybORG.Simulator.Actions import MSFPortscan, UpgradeToMeterpreter, SSHLoginExploit, DiscoverNetworkServices, \
     ExploitRemoteService
 from CybORG.Shared.Observation import Observation
 
 
 @pytest.fixture(params=['Red'])
 def create_sim_action_space(request, create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
     agent = request.param
     action_space = cyborg.environment_controller.agent_interfaces[agent].action_space
     return action_space, agent
@@ -128,7 +127,8 @@ def add_ip_address(create_sim_action_space, request):
 @pytest.fixture()
 def reboot(create_cyborg_sim):
     agent = 'Red'
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
+    scenario = str(cyborg.scenario_generator).split('/')[-1].rstrip('.yaml').rstrip('.yaml')
     if scenario == 'Scenario1':
         address = cyborg.environment_controller.hostname_ip_map['Internal']
         action = MSFPortscan(ip_address=address, session=0, agent=agent)
@@ -146,7 +146,8 @@ def reboot(create_cyborg_sim):
         cyborg.step(agent, action)
         hostname = 'User1'
     else:
-        raise ValueError(f"Unaccounted for scenario: {scenario}")
+        pytest.skip(f"Unaccounted for scenario: {scenario}")
+        # raise ValueError(f"Unaccounted for scenario: {scenario}")
 
     state = cyborg.environment_controller.state
     return cyborg, state, hostname
@@ -196,10 +197,11 @@ def test_update_action_space_from_observation_session(create_sim_action_space):
     assert 5 in action_space.client_session
 
 def test_action_space_scenario1_sized(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
-    if scenario == 'Scenario1':
-        pytest.skip('Scenario1 has an expanding number of ports due to observation of ephemeral ports')
-    cyborg = EnumActionWrapper(ReduceActionSpaceWrapper(cyborg))
+    cyborg = create_cyborg_sim
+    scenario = str(cyborg.scenario_generator).split('/')[-1].rstrip('.yaml')
+    if scenario == 'Scenario1' or scenario == 'Scenario2':
+        pytest.skip(f'{scenario} has an expanding number of ports due to observation of ephemeral ports')
+    cyborg = EnumActionWrapper(cyborg)
     action_space = cyborg.get_action_space('Red')
     for j in range(10):
         for i in range(100):

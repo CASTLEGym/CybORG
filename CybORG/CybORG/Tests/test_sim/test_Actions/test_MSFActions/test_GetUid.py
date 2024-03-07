@@ -3,17 +3,9 @@ import inspect
 import pytest
 
 from CybORG import CybORG
-from CybORG.Shared.Actions.MSFActionsFolder import GetUid
+from CybORG.Simulator.Actions.MSFActionsFolder import GetUid
 from CybORG.Shared.Enums import BuiltInGroups
-
-
-@pytest.fixture()
-def set_up_state():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
-    cyborg = CybORG(path, 'sim')
-    state = cyborg.environment_controller.state
-    return state
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 
 @pytest.mark.parametrize(["host", "user", "session_type", "expected_observation"],
@@ -58,48 +50,48 @@ def set_up_state():
                                  ]
                              }
                          })])
-def test_sim_execute(set_up_state, host, user, session_type, expected_observation):
-    state = set_up_state
+def test_execute(cyborg_scenario1_state, host, user, session_type, expected_observation):
+    state = cyborg_scenario1_state
     parent = state.sessions['Red'][0]
-    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
+    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
 
     action = GetUid(session=parent.ident, target_session=session.ident, agent="Red")
-    observation = action.sim_execute(state)
+    observation = action.execute(state)
 
     assert observation.get_dict() == expected_observation
 
 
-def test_sim_execute_inactive(set_up_state):
+def test_execute_inactive(cyborg_scenario1_state):
     expected_observation = {"success": False}
     host = "Gateway"
     user = "root"
     session_type = "meterpreter"
-    state = set_up_state
+    state = cyborg_scenario1_state
 
     parent = None
     if session_type != 'shell':
         parent = state.sessions['Red'][0]
-    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
+    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
 
     session.active = False
     action = GetUid(session=parent.ident, target_session=session.ident, agent="Red")
-    observation = action.sim_execute(state)
+    observation = action.execute(state)
     assert observation.get_dict() == expected_observation
 
 
-def test_sim_execute_dead(set_up_state):
+def test_execute_dead(cyborg_scenario1_state):
     expected_observation = {"success": False}
     host = "Gateway"
     user = "root"
     session_type = "meterpreter"
-    state = set_up_state
+    state = cyborg_scenario1_state
 
     parent = None
     if session_type != 'shell':
         parent = state.sessions['Red'][0]
-    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent)
+    session = state.add_session(host=host, agent="Red", user=user, session_type=session_type, parent=parent.ident)
 
-    state.remove_process(session.host, session.pid)
+    state.remove_process(session.hostname, session.pid)
     action = GetUid(session=parent.ident, target_session=session.ident, agent="Red")
-    observation = action.sim_execute(state)
+    observation = action.execute(state)
     assert observation.get_dict() == expected_observation

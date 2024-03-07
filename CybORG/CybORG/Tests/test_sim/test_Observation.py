@@ -5,7 +5,7 @@ import numpy as np
 
 from CybORG.Shared.Enums import TrinaryEnum, ProcessName, ProcessType, ProcessVersion, AppProtocol, OperatingSystemType, \
     OperatingSystemVersion, OperatingSystemDistribution, Architecture, SessionType, Path, ProcessState, \
-    FileType, Vulnerability, Vendor, FileExt, BuiltInGroups, PasswordHashType
+    FileType, Vulnerability, Vendor, BuiltInGroups, PasswordHashType
 from CybORG.Shared.Observation import Observation
 
 import pytest

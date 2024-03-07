@@ -1,5 +1,8 @@
 import copy
 
+import numpy as np
+
+
 class PID:
     def __eq__(self, other):
         if issubclass(type(other), PID):
@@ -7,6 +10,7 @@ class PID:
         if type(other) is int:
             return True
         return False
+
 
 def compare_fundamental_observations(obs1: dict, obs2: dict, translation: dict):
     assert type(obs1) is dict
@@ -28,7 +32,7 @@ def compare_fundamental_observations(obs1: dict, obs2: dict, translation: dict):
                 assert key in host_info2, f"key {key} not in obs2"
                 value2 = host_info2.pop(key)
                 if key == 'System info':
-                    assert value == value2, f"{value} != {value2}"
+                    np.testing.assert_equal(value,value2, f"{value} != {value2}")
                 if key == 'Interface':
                     assert len(value) == len(value2), f"{value} != {value2}"
                     for interface in value:
@@ -71,3 +75,100 @@ def compare_fundamental_observations(obs1: dict, obs2: dict, translation: dict):
 
     assert obs2 == {}, f'Not all values in obs2 are in obs1 \nRemaining data: {obs2}'
     return True
+
+
+#TODO create custom generators and use in tests
+class CustomGenerator:
+    """Abstract class for generating specific 'random' behaviours"""
+    @staticmethod
+    def choice(a, size=None, replace=True, p=None, axis=0, shuffle=True):
+        raise NotImplementedError
+
+    @staticmethod
+    def integers(low, high=None, size=None, dtype=np.int64, endpoint=False):
+        raise NotImplementedError
+
+    @classmethod
+    def randint(cls, low, high=None, size=None, dtype=np.int64, endpoint=False):
+        return cls.integers(low, high, size, dtype, endpoint)
+
+    @staticmethod
+    def random(size=None, dtype=np.float64, out=None):
+        raise NotImplementedError
+
+    @staticmethod
+    def uniform(low=0.0, high=1.0, size=None):
+        raise NotImplementedError
+
+
+class AlwaysTrueGenerator(CustomGenerator):
+    """Class that always returns an always True 'random' value"""
+    @staticmethod
+    def choice(a, size=None, replace=True, p=None, axis=0, shuffle=True):
+        if size is None:
+            return a[0]
+        if replace:
+            return [a[0] for _ in range(size)]
+        else:
+            return a[:size]
+
+    @staticmethod
+    def integers(low, high=None, size=None, dtype=np.int64, endpoint=False):
+        if high is None:
+            high = low
+        if size is None:
+            return high
+        else:
+            return [high for _ in range(size)]
+
+    @staticmethod
+    def random(size=None, dtype=np.float64, out=None):
+        if size is None:
+            return dtype(1.)
+        else:
+            return [dtype(1.) for _ in range(size)]
+
+    @staticmethod
+    def uniform(low=0.0, high=1.0, size=None):
+        if size is None:
+            return high
+        else:
+            return np.array([high for _ in range(size)])
+
+    @staticmethod
+    def shuffle(a):
+        return a
+
+
+class AlwaysFalseGenerator(CustomGenerator):
+    """Class that always returns an always False 'random' value"""
+    @staticmethod
+    def choice(a, size=None, replace=True, p=None, axis=0, shuffle=True):
+        raise NotImplementedError
+
+    @staticmethod
+    def integers(low, high=None, size=None, dtype=np.int64, endpoint=False):
+        if high is None:
+            low = 0
+        if size is None:
+            return low
+        else:
+            return [low for _ in range(size)]
+
+    @staticmethod
+    def random(size=None, dtype=np.float64, out=None):
+        if size is None:
+            return dtype(0.)
+        else:
+            return [dtype(0.) for _ in range(size)]
+
+    @staticmethod
+    def uniform(low=0.0, high=1.0, size=None):
+        if size is None:
+            return low
+        else:
+            return low
+
+    @staticmethod
+    def shuffle(a):
+        return a.reverse()

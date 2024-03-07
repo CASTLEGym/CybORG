@@ -3,7 +3,6 @@ import inspect
 import pytest
 
 from CybORG import CybORG
-from CybORG.Agents import DebuggingAgent
 from CybORG.Shared.Enums import TrinaryEnum
 
 HOSTNAMES = ['User0', 'User1', 'User2', 'User3', 'User4','Enterprise0','Enterprise1','Enterprise2',
@@ -12,9 +11,8 @@ HOSTNAMES = ['User0', 'User1', 'User2', 'User3', 'User4','Enterprise0','Enterpri
 @pytest.fixture
 def cyborg(agents = {},seed = 1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
-    cyborg = CybORG(path, 'sim', agents=agents)
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario2.yaml'
+    cyborg = CybORG(path, 'sim', agents=agents, seed=seed)
     return cyborg
 
 @pytest.fixture

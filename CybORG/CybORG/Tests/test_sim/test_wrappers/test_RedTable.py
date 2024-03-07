@@ -9,8 +9,9 @@ from CybORG import CybORG
 from CybORG.Agents.SimpleAgents.BlueReactAgent import BlueReactRemoveAgent
 from CybORG.Shared.Enums import TrinaryEnum
 from CybORG.Agents.Wrappers.RedTableWrapper import RedTableWrapper
-from CybORG.Shared.Actions.AbstractActions import DiscoverRemoteSystems, DiscoverNetworkServices, ExploitRemoteService, PrivilegeEscalate, Impact
-from CybORG.Agents import BlueMonitorAgent, B_lineAgent
+from CybORG.Simulator.Actions.AbstractActions import DiscoverRemoteSystems, DiscoverNetworkServices, ExploitRemoteService, PrivilegeEscalate, Impact
+from CybORG.Agents import MonitorAgent, B_lineAgent
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 
 def get_table(rows):    
@@ -27,12 +28,8 @@ def get_table(rows):
     table.sortby = 'IP Address'
     return table    
 
-@pytest.mark.skip
-def test_RedTableWrapper():
-    path = str(inspect.getfile(CybORG))    
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'    
-    
-    cyborg = RedTableWrapper(env=CybORG(path, 'sim'), output_mode='table')    
+def test_RedTableWrapper(cyborg_scenario1b):
+    cyborg = RedTableWrapper(env=cyborg_scenario1b, output_mode='table')
     agent_name = 'Red'
 
     def get_ip(host):
@@ -154,14 +151,12 @@ def test_RedTableWrapper():
     # Expected table same as previous
     assert observation.get_string() == expected_table.get_string()
 
-@pytest.mark.skip
 def test_RedTableWrapper_blue_remove_agent():
 
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-
-    cyborg = RedTableWrapper(env=CybORG(path, 'sim', agents={'Blue': BlueReactRemoveAgent}), output_mode='table')
-    cyborg.set_seed(0)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = RedTableWrapper(env=CybORG(sg, 'sim', agents={'Blue': BlueReactRemoveAgent()}, seed=123), output_mode='table')
     agent_name = 'Red'
 
     def get_ip(host):
@@ -281,11 +276,8 @@ def test_RedTableWrapper_blue_remove_agent():
     # Expected table same as previous
     assert observation.get_string() == expected_table.get_string()
 
-def test_red_vector():
-    path = str(inspect.getfile(CybORG))    
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'    
-    
-    cyborg = RedTableWrapper(env=CybORG(path, 'sim'), output_mode='vector')    
+def test_red_vector(cyborg_scenario1b):
+    cyborg = RedTableWrapper(env=cyborg_scenario1b, output_mode='vector')
     agent_name = 'Red'
     results = cyborg.reset(agent=agent_name)
     observation = results.observation
@@ -296,11 +288,11 @@ def test_red_vector():
     assert all(observation == expected_vector)
 
 @pytest.fixture(params=['table','raw'])
-def cyborg(request,agents = {'Blue':BlueMonitorAgent,'Red':B_lineAgent},seed = 1):
+def cyborg(request,agents = {'Blue':MonitorAgent(),'Red':B_lineAgent()},seed = 1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = RedTableWrapper(env=CybORG(path, 'sim', agents=agents),output_mode=request.param)
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = RedTableWrapper(env=CybORG(sg, 'sim', agents=agents, seed=seed),output_mode=request.param)
     return cyborg
 
 def test_get_attr(cyborg):

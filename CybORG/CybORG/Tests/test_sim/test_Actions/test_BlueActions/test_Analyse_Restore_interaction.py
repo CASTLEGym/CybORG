@@ -2,45 +2,21 @@ import inspect
 
 import pytest
 
-from CybORG import CybORG
-from CybORG.Shared.Actions import *
+from CybORG.Tests.test_sim.sim_fixtures import compromised_cyborg, SCENARIOS
+from CybORG.Simulator.Actions import *
 from CybORG.Agents import RedMeanderAgent
 
+SCENARIO = 'Scenario2'
+HOSTS = SCENARIOS[SCENARIO]['Hosts']
 
-hosts = [
-        'User0',
-        'User1',
-        'User2',
-        'User3',
-        'User4',
-        'Enterprise0',
-        'Enterprise1',
-        'Enterprise2',
-        'Defender',
-        'Op_Server0',
-        'Op_Host0',
-        'Op_Host1',
-        'Op_Host2',
-        ]
-
-@pytest.fixture
+@pytest.fixture(scope='module')
 def cyborg():
-    path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
-    return CybORG(path, 'sim', agents={'Red':RedMeanderAgent})
+    return compromised_cyborg(SCENARIO, stop_host=HOSTS[-1], stop_value=4)
 
 def test_restore_removes_malware(cyborg):
-    history = []
-    for i in range(50):
-        cyborg.step()
-        act = cyborg.get_last_action('Red')
-        history.append(act)
-        if act.__class__.__name__ == 'Impact':
-            break
-
     params = {'session':0, 'agent':'Blue'}
     malware_hosts = []
-    for host in hosts:
+    for host in HOSTS:
         action = Restore(hostname=host, **params)
         cyborg.step(action=action, agent='Blue')
         action = Analyse(hostname=host, **params)

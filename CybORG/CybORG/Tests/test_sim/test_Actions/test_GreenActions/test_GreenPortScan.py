@@ -8,11 +8,12 @@ from ipaddress import IPv4Network, IPv4Address
 from CybORG import CybORG
 import inspect
 
-from CybORG.Shared.Actions.GreenActions.GreenPortScan import GreenPortScan
-from CybORG.Shared.Actions import Monitor
-from CybORG.Agents.SimpleAgents.BlueMonitorAgent import BlueMonitorAgent
+from CybORG.Simulator.Actions.GreenActions.GreenPortScan import GreenPortScan
+from CybORG.Simulator.Actions import Monitor
+from CybORG.Agents import MonitorAgent
 
 from CybORG.Shared.Enums import TrinaryEnum, ProcessType, ProcessState, SessionType, OperatingSystemType, OperatingSystemDistribution, OperatingSystemVersion, Architecture
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 from CybORG.Tests.EphemeralPort import Win2008EphemeralPort
 import pytest
 
@@ -39,8 +40,9 @@ def process_connections(obs, local_address, remote_address, ports):
 def test_GreenPortScan():
     # Create cyborg environment
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = CybORG(path, 'sim',agents={'Blue':BlueMonitorAgent})
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = CybORG(scenario_generator=sg, agents={'Blue':MonitorAgent()})
 
     # Setup Agent
     for i in range(2):

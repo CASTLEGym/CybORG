@@ -8,8 +8,8 @@ from ipaddress import IPv4Network, IPv4Address
 from CybORG import CybORG
 import inspect
 
-from CybORG.Shared.Actions.GreenActions.GreenPingSweep import GreenPingSweep
-from CybORG.Shared.Actions.AbstractActions.Monitor import Monitor
+from CybORG.Simulator.Actions.GreenActions.GreenPingSweep import GreenPingSweep
+from CybORG.Simulator.Actions.AbstractActions.Monitor import Monitor
 
 from CybORG.Shared.Enums import TrinaryEnum, ProcessType, ProcessState, SessionType
 from CybORG.Tests.EphemeralPort import Win2008EphemeralPort
@@ -19,7 +19,7 @@ import pytest
 def test_GreenPingSweep():
     # Create cyborg environment
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
     cyborg = CybORG(path, 'sim')
 
     # Setup Agent

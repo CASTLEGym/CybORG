@@ -13,7 +13,7 @@ import random
 from vu_emu import vu_emu
 import json
 from utils import *
-from CybORG.Simulator.Scenarios import FileReaderScenarioGenerator
+#from CybORG.Simulator.Scenarios import FileReaderScenarioGenerator
 
 #path = inspect.getfile(CybORG)
 #path = dirname(path) + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
@@ -51,14 +51,14 @@ if __name__ == "__main__":
     
     path = str(inspect.getfile(CybORG))
     print(path)
-    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/{scenario}.yaml'
-    sg = FileReaderScenarioGenerator(path)
+    path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
+    #sg = FileReaderScenarioGenerator(path)
     # B_lineAgent
     if exp=='sim':
       for num_steps in [steps]:
         for red_agent in [B_lineAgent]:
 
-            cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
+            cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
             wrapped_cyborg = wrap(cyborg)
 
             observation = wrapped_cyborg.reset()
@@ -103,7 +103,7 @@ if __name__ == "__main__":
             #print(f'Average reward for red agent {red_agent.__name__} and steps {num_steps} is: {mean(total_reward)} with a standard deviation of {stdev(total_reward)}')
     elif exp=='emu':
       for red_agent in [B_lineAgent]:
-        cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
+        cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
         wrapped_cyborg = wrap(cyborg)   
       
         #this intialisation information is coming from Cyborg

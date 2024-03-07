@@ -18,30 +18,30 @@ from ipaddress import IPv4Address
 import pytest
 
 from CybORG import CybORG
-from CybORG.Shared.Actions import (
+from CybORG.Simulator.Actions import (
     DiscoverNetworkServices,
     DiscoverRemoteSystems,
     ExploitRemoteService,
     Misinform,
 )
 
-from CybORG.Shared.Actions.ConcreteActions.EscalateAction import EscalateAction
+from CybORG.Simulator.Actions.ConcreteActions.EscalateActions.EscalateAction import EscalateAction
 from CybORG.Simulator.State import State
 from CybORG.Simulator.Host import Host
 from CybORG.Simulator.Process import Process
 
 from CybORG.Agents import B_lineAgent
 
-from CybORG.Shared.Actions.AbstractActions.Misinform import (
+from CybORG.Simulator.Actions.AbstractActions.Misinform import (
         tomcat_decoy_factory,
         DecoyFactory,
         Decoy
         )
 
-from CybORG.Shared.Actions.AbstractActions.PrivilegeEscalate import (
+from CybORG.Simulator.Actions.AbstractActions.PrivilegeEscalate import (
         EscalateActionSelector, PrivilegeEscalate
         )
-from CybORG.Shared.Actions.ConcreteActions.V4L2KernelExploit import V4L2KernelExploit
+from CybORG.Simulator.Actions.ConcreteActions.EscalateActions.V4L2KernelExploit import V4L2KernelExploit
 from CybORG.Shared.Enums import TrinaryEnum, DecoyType
 from CybORG.Shared import Observation
 
@@ -49,7 +49,7 @@ class DummyEscalateAction(EscalateAction):
     """
     Requires smss.exe to be running and valid
     """
-    def sim_execute(self, state: State) -> Observation:
+    def execute(self, state: State) -> Observation:
         """
         Escalates to SYSTEM
         """
@@ -80,7 +80,7 @@ class DummyEscalateActionSelector(EscalateActionSelector):
         # pylint: disable=no-self-use
         del hostname
         session_obj = state.sessions[agent][target_session]
-        target_host: Host = state.hosts[session_obj.host]
+        target_host: Host = state.hosts[session_obj.hostname]
 
         for proc in target_host.processes:
             if proc.name == "smss.exe":
@@ -250,9 +250,8 @@ def _misinform_with_tomcat(cyborg: CybORG, blue_session, *, allows_exploit=False
 
 def _prep_test_env(seed):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1c.yaml'
-    cyborg = CybORG(path, 'sim')
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1c.yaml'
+    cyborg = CybORG(path, 'sim', seed=seed)
 
     cyborg.get_observation('Red')
     initial_result_blue = cyborg.get_observation('Blue')
@@ -416,8 +415,8 @@ def test_blue_misinform_sandboxing_exploit():
     """
 
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    env = CybORG(path,'sim', agents={'Red':B_lineAgent})
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    env = CybORG(path,'sim', agents={'Red':B_lineAgent()})
     env.reset('Blue')
 
     for host in ['User1', 'User2']:
@@ -435,9 +434,8 @@ def test_blue_misinform_sandboxing_exploit():
 @pytest.mark.skip
 def test_stopping_process_on_priv_esc_on_decoy():
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    env = CybORG(path, 'sim')
-    env.set_seed(1)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    env = CybORG(path, 'sim', seed=1)
     subnet = env.get_observation('Red')['User0']['Interface'][0]['Subnet']
 
     # set up an exploited decoy

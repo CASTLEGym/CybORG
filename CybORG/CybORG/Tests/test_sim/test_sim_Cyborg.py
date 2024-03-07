@@ -13,21 +13,23 @@
 #    Team Project Lead: Martin Lucas
 #    e-mail Address:    Martin.Lucas@dst.defence.gov.au
 ##################################################################
-
-from CybORG.Agents import TestAgent
+from CybORG import CybORG
+from CybORG.Agents import RandomAgent
 from CybORG.Agents.Wrappers import FixedFlatWrapper
 from CybORG.Agents.Wrappers.IntListToAction import IntListToActionWrapper
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
 from CybORG.Agents.training_example import run_training_example
+from CybORG.Simulator.Scenarios import DroneSwarmScenarioGenerator
+from CybORG.Shared.Scenarios.ScenarioGenerator import ScenarioGenerator
 from CybORG.Simulator.SimulationController import SimulationController
 from CybORG.Tests.utils import compare_fundamental_observations
 import pytest
 
 
 def test_cyborg_params(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
-    assert cyborg.scenario_file is not None
-    assert type(cyborg.scenario_file) is str
+    cyborg = create_cyborg_sim
+    assert cyborg.scenario_generator is not None
+    assert issubclass(type(cyborg.scenario_generator),ScenarioGenerator)
     assert cyborg.environment_controller is not None
     assert type(cyborg.environment_controller) is SimulationController
 
@@ -178,24 +180,24 @@ def test_cyborg_params(create_cyborg_sim):
 
 
 def test_step(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
     cyborg.step()
 
 
 def test_start(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
     done = cyborg.start(100)
 
 
 def test_play(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
     for i in range(10):
         done = cyborg.start(10)
         cyborg.reset()
 
 
 def test_reset_step(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
     original_state = cyborg.get_agent_state('True')
     # Make some changes to the state
     cyborg.step()
@@ -221,7 +223,7 @@ def test_reset_step(create_cyborg_sim):
 
 
 def test_reset_start(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
+    cyborg = create_cyborg_sim
     original_state = cyborg.get_agent_state('True')
     # Make some changes to the state
     cyborg.start(steps=1000)
@@ -248,27 +250,25 @@ def test_reset_start(create_cyborg_sim):
 
 # def test_custom_agent_loading():
 #     path = str(inspect.getfile(CybORG))
-#     path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
+#     path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1.yaml'
 #     cyborg = CybORG(path, 'sim', agents={'Red': {"agent_type": 'SleepAgent'}})
 #     cyborg.start(100)
 
-def test_agent_train(create_cyborg_sim):
-    cyborg, scenario = create_cyborg_sim
-    agent_name = 'Red'
-    cyborg = OpenAIGymWrapper(agent_name=agent_name, env=IntListToActionWrapper(FixedFlatWrapper(cyborg)))
+def test_random_agent_with_train(open_ai_wrapped_cyborg):
+    cyborg = open_ai_wrapped_cyborg
 
-
-    observation = cyborg.reset(agent=agent_name)
-    action_space = cyborg.get_action_space(agent_name)
+    observation = cyborg.reset()
+    action_space = cyborg.action_space
     action_count = 0
-    agent = TestAgent()
-    for i in range(100):
+    agent = RandomAgent()
+    agent.set_initial_values(action_space, observation)
+    for i in range(10):
         # print(f"\rTraining Game: {i}", end='', flush=True)
         reward = 0
         for j in range(20):
             action = agent.get_action(observation, action_space)
             next_observation, r, done, info = cyborg.step(action)
-            action_space = info['action_space']
+            action_space = cyborg.action_space
             reward += r
 
             agent.train(observation)
@@ -276,9 +276,12 @@ def test_agent_train(create_cyborg_sim):
             if done or j == 20 - 1:
                 # print(f"Training reward: {reward}")
                 break
-        observation = cyborg.reset(agent=agent_name)
         agent.end_episode()
+        observation = cyborg.reset()
+        action_space = cyborg.action_space
+        agent.set_initial_values(action_space, observation)
 
-@pytest.mark.parametrize('scenario', ['Scenario1', 'Scenario1b'])
+
+@pytest.mark.parametrize('scenario', ['Scenario1', 'Scenario1b', 'Scenario2'])
 def test_training_example(scenario):
     run_training_example(scenario)

@@ -3,7 +3,7 @@ from ipaddress import IPv4Network
 
 from CybORG import CybORG
 from CybORG.Agents.SimpleAgents.BlueReactAgent import BlueReactRemoveAgent
-from CybORG.Shared.Actions import Impact, PrivilegeEscalate, ExploitRemoteService, DiscoverNetworkServices, \
+from CybORG.Simulator.Actions import Impact, PrivilegeEscalate, ExploitRemoteService, DiscoverNetworkServices, \
     DiscoverRemoteSystems
 from CybORG.Shared.Enums import TrinaryEnum, SessionType, ProcessType, ProcessState, OperatingSystemType
 from CybORG.Tests.EphemeralPort import LinuxEphemeralPort, Win2008EphemeralPort, PID
@@ -15,9 +15,8 @@ import pytest
 def test_react_blue_agent(seed):
     # create cyborg environment
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = CybORG(path, 'sim', agents={'Blue': BlueReactRemoveAgent})
-    cyborg.set_seed(seed)
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    cyborg = CybORG(path, 'sim', agents={'Blue': BlueReactRemoveAgent}, seed=seed)
 
     # test discover remote systems
     # act on all subnets in action space

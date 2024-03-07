@@ -3,7 +3,7 @@
 #
 # from CybORG import CybORG
 # from ipaddress import IPv4Address
-# from CybORG.Shared.Actions import MSFPortscan, SSHLoginExploit, UpgradeToMeterpreter, ServicePersistenceWindows, \
+# from CybORG.Simulator.Actions import MSFPortscan, SSHLoginExploit, UpgradeToMeterpreter, ServicePersistenceWindows, \
 #     MeterpreterReboot
 # from CybORG.Shared.Enums import SessionType
 # from CybORG.Simulator.LocalGroup import LocalGroup
@@ -18,7 +18,7 @@
 # @pytest.fixture()
 # def set_up_state():
 #     path = str(inspect.getfile(CybORG))
-#     path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
+#     path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1.yaml'
 #     agent = 'Red'
 #     cyborg = CybORG(path, 'sim')
 #     address = IPv4Address(cyborg.environment_controller.state.hosts['Internal'].interfaces[1].ip_address)
@@ -33,7 +33,7 @@
 #
 #
 # @pytest.fixture()
-# def set_up_state_admin(set_up_state):
+# def set_up_state_admin(cyborg_scenario1_state):
 #     # change the session owner to a user with admin
 #     group = LocalGroup(name='ADMINISTRATORS')
 #     admin_user = User(username='kylo_ren', uid=0)
@@ -48,7 +48,7 @@
 # @pytest.fixture()
 # def set_up_state_linux():
 #     path = str(inspect.getfile(CybORG))
-#     path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
+#     path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1.yaml'
 #     agent = 'Red'
 #     cyborg = CybORG(path, 'sim')
 #     address = IPv4Address(cyborg.environment_controller.state.hosts['Gateway'].interfaces[1].ip_address)
@@ -71,7 +71,7 @@
 #     return namedtuple("Setup", "state meterpreter_session")(state, 2, )
 #
 #
-# def test_on_non_admin(set_up_state):
+# def test_on_non_admin(cyborg_scenario1_state):
 #     # Change the session owner to a user without admin privileges
 #     user = User(username='kylo_ren', uid=0)
 #
@@ -79,22 +79,22 @@
 #     set_up_state.state.sessions['Red'][set_up_state.meterpreter_session].user = user
 #
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state.meterpreter_session)
-#     observation = action.sim_execute(set_up_state.state)
+#     observation = action.execute(cyborg_scenario1_state.state)
 #     assert observation.action_succeeded is False
 #
 #
-# def test_os(set_up_state_linux):
+# def test_os(cyborg_scenario1_state_linux):
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state_linux.meterpreter_session)
-#     observation = action.sim_execute(set_up_state_linux.state)
+#     observation = action.execute(cyborg_scenario1_state_linux.state)
 #     assert observation.action_succeeded is False
 #
 #
-# def test_on_admin(set_up_state_admin):
+# def test_on_admin(cyborg_scenario1_state_admin):
 #     target_host = set_up_state_admin.state.hosts['Internal']
 #
 #     k_ip_address = set_up_state_admin.state.hosts['Attacker'].interfaces[0].ip_address
 #     pp_ip_address = target_host.interfaces[0].ip_address
-#     num_sessions = len(set_up_state_admin.state.sessions['Red'])
+#     num_sessions = len(cyborg_scenario1_state_admin.state.sessions['Red'])
 #     num_services = len(target_host.services)
 #
 #     expected_result = {str(num_sessions - 1): {'Interface': [{'IP Address': pp_ip_address}],
@@ -119,7 +119,7 @@
 #                        'success': True}
 #
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state_admin.meterpreter_session)
-#     observation = action.sim_execute(set_up_state_admin.state)
+#     observation = action.execute(cyborg_scenario1_state_admin.state)
 #     new_service_name = list(target_host.services.keys())[-1]
 #
 #     assert observation == expected_result
@@ -128,60 +128,60 @@
 #     assert target_host.services[new_service_name]['active'] is True
 #
 #
-# def test_on_system(set_up_state):
+# def test_on_system(cyborg_scenario1_state):
 #     # change the session owner to the SYSTEM user
 #     admin_user = User(username='SYSTEM', uid=0)
 #
 #     set_up_state.state.sessions['Red'][set_up_state.meterpreter_session].user = admin_user
 #
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state.meterpreter_session)
-#     observation = action.sim_execute(set_up_state.state)
+#     observation = action.execute(cyborg_scenario1_state.state)
 #     assert observation.action_succeeded is True
 #
 #
-# def test_reboot(set_up_state_admin):
+# def test_reboot(cyborg_scenario1_state_admin):
 #     target_host = set_up_state_admin.state.hosts['Internal']
 #
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state_admin.meterpreter_session)
-#     observation = action.sim_execute(set_up_state_admin.state)
+#     observation = action.execute(cyborg_scenario1_state_admin.state)
 #
-#     new_process = observation[str(set_up_state_admin.meterpreter_session)]['Processes'][0]
+#     new_process = observation[str(cyborg_scenario1_state_admin.meterpreter_session)]['Processes'][0]
 #     new_process_name = new_process['Process Name']
 #     new_process_pid = new_process['PID']
 #
-#     num_sessions = len(set_up_state_admin.state.sessions['Red'])
+#     num_sessions = len(cyborg_scenario1_state_admin.state.sessions['Red'])
 #
 #     action = MeterpreterReboot(session=0, agent='Red', target_session=set_up_state_admin.meterpreter_session)
-#     action.sim_execute(set_up_state_admin.state)
+#     action.execute(cyborg_scenario1_state_admin.state)
 #
 #     restarted_process = next((process for process in target_host.processes if process.name == new_process_name), None)
 #
 #     assert restarted_process is not None    # The process has restarted
 #     assert restarted_process.pid != new_process_pid  # Restarted process has new PID
-#     assert len(set_up_state_admin.state.sessions['Red']) == num_sessions - 2 # lost original meterpreter and ssh gained service meterpreter
+#     assert len(cyborg_scenario1_state_admin.state.sessions['Red']) == num_sessions - 2 # lost original meterpreter and ssh gained service meterpreter
 #     # invalid test because the original meterpreter session is dead and the new meterpreter session has a different ID
 #     # assert set_up_state_admin.state.sessions['Red'][set_up_state_admin.meterpreter_session].process.pid == restarted_process.pid
 #
 #
-# def test_service(set_up_state_admin):
+# def test_service(cyborg_scenario1_state_admin):
 #     target_host = set_up_state_admin.state.hosts['Internal']
-#     num_sessions = len(set_up_state_admin.state.sessions['Red'])
+#     num_sessions = len(cyborg_scenario1_state_admin.state.sessions['Red'])
 #
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state_admin.meterpreter_session)
-#     observation = action.sim_execute(set_up_state_admin.state)
+#     observation = action.execute(cyborg_scenario1_state_admin.state)
 #
-#     new_process = observation[str(set_up_state_admin.meterpreter_session)]['Processes'][0]
+#     new_process = observation[str(cyborg_scenario1_state_admin.meterpreter_session)]['Processes'][0]
 #     new_process_pid = new_process['PID']
 #     new_process_name = new_process['Process Name']
 #     new_service_name = list(target_host.services.keys())[-1]
 #
 #     assert new_process_pid in [process.pid for process in target_host.processes]
-#     assert len(set_up_state_admin.state.sessions['Red']) == num_sessions + 1
+#     assert len(cyborg_scenario1_state_admin.state.sessions['Red']) == num_sessions + 1
 #
 #     set_up_state_admin.state.stop_service(target_host.hostname, new_service_name)
 #
 #     assert new_process_pid not in [process.pid for process in target_host.processes]
-#     assert len(set_up_state_admin.state.sessions['Red']) == num_sessions
+#     assert len(cyborg_scenario1_state_admin.state.sessions['Red']) == num_sessions
 #
 #     set_up_state_admin.state.start_service(target_host.hostname, new_service_name)
 #
@@ -189,16 +189,16 @@
 #
 #     assert restarted_process is not None
 #     assert restarted_process.pid != new_process_pid  # Restarted process has new PID
-#     assert len(set_up_state_admin.state.sessions['Red']) == num_sessions + 1  # Gained meterpreter
+#     assert len(cyborg_scenario1_state_admin.state.sessions['Red']) == num_sessions + 1  # Gained meterpreter
 #
 #
-# def test_process_kill(set_up_state_admin):
+# def test_process_kill(cyborg_scenario1_state_admin):
 #     target_host = set_up_state_admin.state.hosts['Internal']
 #
 #     action = ServicePersistenceWindows(session=0, agent='Red', target_session=set_up_state_admin.meterpreter_session)
-#     observation = action.sim_execute(set_up_state_admin.state)
+#     observation = action.execute(cyborg_scenario1_state_admin.state)
 #
-#     new_process = observation[str(set_up_state_admin.meterpreter_session)]['Processes'][0]
+#     new_process = observation[str(cyborg_scenario1_state_admin.meterpreter_session)]['Processes'][0]
 #     new_process_name = new_process['Process Name']
 #     new_process_pid = new_process['PID']
 #

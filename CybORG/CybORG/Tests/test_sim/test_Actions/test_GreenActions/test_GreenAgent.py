@@ -11,14 +11,16 @@ import inspect
 from CybORG.Agents.SimpleAgents.GreenAgent import GreenAgent
 
 from CybORG.Shared.Enums import TrinaryEnum, ProcessType, ProcessState, SessionType
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 from CybORG.Tests.EphemeralPort import Win2008EphemeralPort
 import pytest
 
 def test_GreenAgent():
     # Create cyborg environment
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-    cyborg = CybORG(path, 'sim',agents={'Green': GreenAgent})
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = CybORG(scenario_generator=sg, agents={'Green': GreenAgent()})
 
     # Setup Agent
     action_space = cyborg.get_action_space('Green')

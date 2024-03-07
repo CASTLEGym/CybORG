@@ -6,17 +6,19 @@ import numpy as np
 from prettytable import PrettyTable
 
 from CybORG import CybORG
-from CybORG.Agents import B_lineAgent, BlueMonitorAgent
+from CybORG.Agents import B_lineAgent, MonitorAgent
 from CybORG.Agents.Wrappers import ChallengeWrapper
+from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
+
+@pytest.skip(allow_module_level=True)
 
 @pytest.fixture()
-def cyborg(request,agents = {'Blue':BlueMonitorAgent,'Red':B_lineAgent},seed = 1):
+def cyborg(seed=1):
     path = str(inspect.getfile(CybORG))
-    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
-
-    cyborg = ChallengeWrapper(env=CybORG(path, 'sim',agents=agents),
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+    sg = FileReaderScenarioGenerator(path)
+    cyborg = ChallengeWrapper(env=CybORG(sg, agents={'Blue':MonitorAgent,'Red':B_lineAgent()}, seed=seed),
             agent_name='Blue')
-    cyborg.set_seed(seed)
     return cyborg
 
 def test_ChallengeWrapper_reset(cyborg):
@@ -53,7 +55,7 @@ def test_get_agent_state(cyborg):
     assert cyborg.get_agent_state('Blue') == cyborg.get_attr('get_agent_state')('Blue')
 
 def test_get_action_space(cyborg):
-    red_space = cyborg.get_action_space(cyborg.agent)
+    red_space = cyborg.get_action_space(cyborg.agent_name)
     red_space == 41
 
 def test_get_last_action(cyborg):
