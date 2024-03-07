@@ -1,6 +1,0 @@
-haraka:
-  local_address: 0.0.0.0
-  local_port: 25
-  path: /usr/sbin
-  process_type: smtp
-  properties: null
