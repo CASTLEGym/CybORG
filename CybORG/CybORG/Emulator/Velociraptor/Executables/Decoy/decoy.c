@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <time.h>
@@ -31,6 +32,27 @@ int main(int argc, char *argv[]) {
       return 1;
     }
   }
+
+  pid_t pid = fork();
+
+  // MAKE A DAEMON
+  if (pid < 0) {
+    exit(EXIT_FAILURE);
+  }
+
+  if (pid > 0) {
+    exit(EXIT_SUCCESS);
+  }
+
+  if (setsid() < 0) {
+    exit(EXIT_FAILURE);
+  }
+
+  // NOT CHANGING DIRECTORY TO `/`
+
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
 
   // Create socket
   listenfd = socket(AF_INET, SOCK_STREAM, 0);

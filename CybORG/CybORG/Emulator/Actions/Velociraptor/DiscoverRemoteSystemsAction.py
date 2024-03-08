@@ -7,6 +7,7 @@ from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 from ...Observations.Velociraptor.DiscoverRemoteSystemsObservation import DiscoverRemoteSystemsObservation
 
+
 class DiscoverRemoteSystemsAction(RunProcessAction):
 
     def __init__(self, credentials_file, hostname, cidr):
@@ -30,4 +31,5 @@ class DiscoverRemoteSystemsAction(RunProcessAction):
         for address_element in address_element_list:
             ip_address_list.append(address_element.attrib.get("addr"))
 
+        observation.set_success(True)
         return DiscoverRemoteSystemsObservation(observation, self.cidr, ip_address_list)

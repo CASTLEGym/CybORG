@@ -1,4 +1,4 @@
-from CybORG.Shared.Actions import Action
+from CybORG.Simulator.Actions import Action
 from .VelociraptorInterace import VelociraptorInterface
 
 
