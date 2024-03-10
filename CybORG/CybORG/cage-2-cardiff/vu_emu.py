@@ -145,7 +145,7 @@ class vu_emu():
        elif action_name=='Remove': 
           outcome=KillPidsFromFileAction(credentials_file,'user_host_1',action_param)
        elif action_name=='Restore':
-          outcome= {'Sucess'=True}
+          outcome= {'Success':True}
        elif action_name=='Analyze':
           outcome= VerifyFilesAction(credentials_file,action_param)
        elif action_name=='Sleep':
