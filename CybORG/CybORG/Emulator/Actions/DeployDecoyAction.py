@@ -11,7 +11,7 @@ from CybORG.Simulator.State import State
 
 class DeployDecoy(Action):
 
-    def __init__(self, username='defender',password='defender',ip_address,decoy_name, decoy_port):
+    def __init__(self, ip_address,decoy_name, decoy_port,username='ubuntu',password='ubuntu'):
         super().__init__()
 
         self.ip_address = ip_address
