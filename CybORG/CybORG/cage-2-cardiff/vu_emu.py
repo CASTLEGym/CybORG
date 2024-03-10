@@ -15,6 +15,12 @@ from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
 from ipaddress import IPv4Network, IPv4Address
 import ast
+from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
+from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
+from CybORG.Emulator.Actions.SshAction import SshAction
+from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoyAction
+from CybORG.Emulator.Actions.VerifyFileAction import VerifyFileAction
+
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
@@ -26,10 +32,11 @@ import json
 
 ip2host= name_conversion("./assets/openstack_ip_map.json")
 
-credentials_file = "api_config.yaml"
+credentials_file = "/home/ubuntu/agent_client.yaml"
 
 
 blue_action_space= ['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'Restore', 'DecoyFemitter', 'Remove', 'DecoyTomcat', 'DecoyHarakaSMPT']
+blue_decoys=['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'DecoyFemitter', 'DecoyTomcat', 'DecoyHarakaSMPT']
 red_action_space = ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverRemoteSystems', 'DiscoverNetworkServices']
 vms=["User0","User1","User2","User3","User4","Enterprise0","Enterprise1","Enterprise2","Op_Host0","Op_Host1","Op_Host2","Op_Server0","Defender"]
 red_info={"User0"}
@@ -74,14 +81,16 @@ class vu_emu():
          
          #print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
          is_host_name= self.is_name(action_param)
-         if is_host_name == False:
-            print("** False host name **") 
+         if is_host_name == True:
+            print("** True host name **") 
             action_param= ip2host.fetch_alt_name(action_param)
             print("=> Action param is",action_param)
             
          if agent_type=='red':
             #running_from='User0'
-            outcome=self.execute_action_locally(action_name,action_param)
+            #outcome=self.execute_action_locally(action_name,action_param)
+            
+            outcome= self.execute_action_client(action_name,action_param)
             outcome= self.transfrom_red_observation(action_name,outcome)
             self.old_outcome_red=outcome
             self.last_red_action=action_name
@@ -91,8 +100,10 @@ class vu_emu():
          elif agent_type=='blue':
           if action_name in blue_action_space :
             #  ->>> Execute locally
-            outcome=self.execute_action_locally(action_name,action_param)
+            #outcome=self.execute_action_locally(action_name,action_param)
             
+            #  ->> Execute on client
+            outcome= self.execute_action_client(action_name,action_param)
             #modify blue only if red is taking following actions:
             red_actions_that_affect_blue= ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverNetworkServices']
             if action_name in red_actions_that_affect_blue: 
@@ -115,10 +126,28 @@ class vu_emu():
 
    
    def execute_action_client(self,action_name,action_param,running_from):
-       command="python3 ~/work/action_executor.py "+ action_name+" "+action_param
-       run_foobar_action = RunProcessAction(credentials_file=credentials_file, hostname=running_from, command=command)
-       run_foobar_observation = run_foobar_action.execute(None)
-       return run_foobar_observation.Stdout
+       if action_name='DiscoverRemoteSystems': 
+          outcome=DiscoverRemoteSystemsAction(credentials_file,'user_host_1',action_param)
+       elif action_name='DiscoverNetworkServices': 
+          outcome=DiscoverNetworkServicesAction(credentials_file,'user_host_1',action_param)
+       elif action_name=='ExploitRemoteService':
+          outcome= SshAction(credentials_file,action_param)
+       elif action_name='PrivilegeEscalate':
+          outcome= SshAction(credentials_file,action_param)
+       
+       
+       elif action_name in blue_decoys: 
+          outcome=DeployDecoyAction(credentials_file,'user_host_1',action_param)
+       elif action_name='Remove': 
+          outcome=KillPidsFromFileAction(credentials_file,'user_host_1',action_param)
+       elif action_name=='Restore':
+          outcome= {'Sucess'=True}
+       elif action_name='Analyze':
+          outcome= VerifyFilesAction(credentials_file,action_param)
+       elif action_name=='Sleep':
+          outcome= {'Sucess'=True}
+
+       return outcome
 
    def transfrom_red_observation(self,action_name,data):
        if action_name=='DiscoverRemoteSystems':
