@@ -125,7 +125,7 @@ class vu_emu():
        return outcome, None, None, None
 
    
-   def execute_action_client(self,action_name,action_param,running_from):
+   def execute_action_client(self,action_name,action_param,running_from=None):
        print('@@@'*80)
        if action_name=='DiscoverRemoteSystems': 
           action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
