@@ -5,7 +5,7 @@ import paramiko
 from CybORG.Emulator.Observations.SshObservation import SshObservation
 
 from CybORG.Shared import Observation
-from CybORG.Simulator.Actions import Action
+from CybORG.Shared.Actions import Action
 from CybORG.Simulator.State import State
 
 
@@ -25,7 +25,7 @@ class SshAction(Action):
     def get_ssh_connection(cls, token):
         return cls.token_dict.get(token, None)
 
-    def __init__(self, ip_address, username, password):
+    def __init__(self, ip_address, username='ubuntu', password='ubuntu'):
         super().__init__()
 
         self.ip_address = ip_address

@@ -18,8 +18,8 @@ import ast
 from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
 from CybORG.Emulator.Actions.SshAction import SshAction
-from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoyAction
-from CybORG.Emulator.Actions.VerifyFileAction import VerifyFileAction
+from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
+from CybORG.Emulator.Actions.Velociraptor.VerifyFilesAction import VerifyFilesAction
 
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
@@ -126,12 +126,16 @@ class vu_emu():
 
    
    def execute_action_client(self,action_name,action_param,running_from):
+       print('@@@'*80)
        if action_name='DiscoverRemoteSystems': 
-          outcome=DiscoverRemoteSystemsAction(credentials_file,'user_host_1',action_param)
+          action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
+          outcome=action.execute(None)
        elif action_name='DiscoverNetworkServices': 
-          outcome=DiscoverNetworkServicesAction(credentials_file,'user_host_1',action_param)
+          action=DiscoverNetworkServicesAction(credentials_file,'user-host-1',action_param)
+          outcome=action.execute(None)
        elif action_name=='ExploitRemoteService':
-          outcome= SshAction(credentials_file,action_param)
+          action= SshAction(action_param)
+          outcome=action.execute(None)
        elif action_name='PrivilegeEscalate':
           outcome= SshAction(credentials_file,action_param)
        
