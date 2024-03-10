@@ -127,26 +127,26 @@ class vu_emu():
    
    def execute_action_client(self,action_name,action_param,running_from):
        print('@@@'*80)
-       if action_name='DiscoverRemoteSystems': 
+       if action_name=='DiscoverRemoteSystems': 
           action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
           outcome=action.execute(None)
-       elif action_name='DiscoverNetworkServices': 
+       elif action_name=='DiscoverNetworkServices': 
           action=DiscoverNetworkServicesAction(credentials_file,'user-host-1',action_param)
           outcome=action.execute(None)
        elif action_name=='ExploitRemoteService':
           action= SshAction(action_param)
           outcome=action.execute(None)
-       elif action_name='PrivilegeEscalate':
+       elif action_name=='PrivilegeEscalate':
           outcome= SshAction(credentials_file,action_param)
        
        
        elif action_name in blue_decoys: 
           outcome=DeployDecoyAction(credentials_file,'user_host_1',action_param)
-       elif action_name='Remove': 
+       elif action_name=='Remove': 
           outcome=KillPidsFromFileAction(credentials_file,'user_host_1',action_param)
        elif action_name=='Restore':
           outcome= {'Sucess'=True}
-       elif action_name='Analyze':
+       elif action_name=='Analyze':
           outcome= VerifyFilesAction(credentials_file,action_param)
        elif action_name=='Sleep':
           outcome= {'Sucess'=True}
