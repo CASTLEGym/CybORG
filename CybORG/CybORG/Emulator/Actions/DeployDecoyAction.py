@@ -1,4 +1,4 @@
-.import subprocess
+import subprocess
 from typing import Union
 
 import paramiko
