@@ -11,7 +11,7 @@ from CybORG.Agents.Wrappers.IntListToAction import IntListToActionWrapper
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
 from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
-from GameStateManager import GameStateManager
+from CybORG.Tutorial.GameStateManager import GameStateManager
 
 class InteractiveCybORG:
     def __init__(self, num_steps, red_agent_type):
