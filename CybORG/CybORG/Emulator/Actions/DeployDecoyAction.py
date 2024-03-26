@@ -11,7 +11,7 @@ from CybORG.Simulator.State import State
 
 class DeployDecoy(Action):
 
-    def __init__(self, ip_address,decoy_name, decoy_port,username='ubuntu',password='ubuntu'):
+    def __init__(self, ip_address, username, password, decoy_name, decoy_port):
         super().__init__()
 
         self.ip_address = ip_address
@@ -32,15 +32,17 @@ class DeployDecoy(Action):
             print("SSH connection failed. Bailing out.")
             return Observation(False)
 
+        ssh_session.exec_command(f"rm -f {self.decoy_name}")
+
         script_dir = Path(__file__).parent
 
         velociraptor_executables_path = Path(script_dir, "..")
 
-        subprocess.run(
-            executable="./gradlew",
-            args=["./gradlew", ":Velociraptor:Executables:Decoy:build"],
-            cwd=str(velociraptor_executables_path)
-        )
+        # subprocess.run(
+        #     executable="./gradlew",
+        #     args=["./gradlew", ":Velociraptor:Executables:Decoy:build"],
+        #     cwd=str(velociraptor_executables_path)
+        # )
 
         decoy_executable_path = Path(velociraptor_executables_path, "Velociraptor/Executables/Decoy/decoy").absolute()
 

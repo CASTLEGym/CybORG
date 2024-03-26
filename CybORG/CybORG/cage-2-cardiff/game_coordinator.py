@@ -13,6 +13,7 @@ import random
 from vu_emu import vu_emu
 import json
 from utils import *
+import ast
 #from CybORG.Simulator.Scenarios import FileReaderScenarioGenerator
 
 #path = inspect.getfile(CybORG)
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
-    steps=10
+    steps=5
     # Model loader load the model
     ml =model_loader()
     
@@ -127,7 +128,7 @@ if __name__ == "__main__":
            initial_blue_info = json.load(file)
         initial_blue_info= translate_initial_blue_info(initial_blue_info)
         # print('\n blue action list:',blue_action_list)
-        print('\n Blue info after reset:',initial_blue_info)
+        print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
         #parse_and_store_ips_host_map(initial_blue_obs)
         emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
         

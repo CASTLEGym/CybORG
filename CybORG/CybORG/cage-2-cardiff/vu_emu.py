@@ -20,7 +20,8 @@ from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import Dis
 from CybORG.Emulator.Actions.SshAction import SshAction
 from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
 from CybORG.Emulator.Actions.Velociraptor.VerifyFilesAction import VerifyFilesAction
-
+from pprint import pprint
+import ast
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
@@ -33,6 +34,7 @@ import json
 ip2host= name_conversion("./assets/openstack_ip_map.json")
 
 credentials_file = "/home/ubuntu/agent_client.yaml"
+#credentials_file = "prog_client2.yaml"
 
 
 blue_action_space= ['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'Restore', 'DecoyFemitter', 'Remove', 'DecoyTomcat', 'DecoyHarakaSMPT']
@@ -46,8 +48,39 @@ blue_actions=[]
 red_actions=[]
 counter=0
 
+
+service_ports = {
+    'Apache': 80,
+    'SSHD': 22,
+    'Vsftpd': 21,
+    'Femitter': 21,
+    'Tomcat': 443,
+    'HarakaSMPT': 25
+}
+
+print(service_ports)
+
+
+
 utils=utils()
 print(dir(utils))
+
+
+from enum import Enum
+
+class TrinaryEnum(Enum):
+    TRUE = 1
+    FALSE = 0
+    UNKNOWN = -1
+
+def enum_to_boolean(enum_value):
+    if enum_value == 'TRUE':
+        return True
+    elif enum_value == 'FALSE':
+        return False
+    else:
+        return None
+
 
 class vu_emu():
    def __init__(self):
@@ -57,13 +90,21 @@ class vu_emu():
       self.last_red_action_param=None
       
    def reset(self):
+       
+       with open('./assets/blue_baseline_obs.py','r') as f:
+         baseline= json.load(f)
+       self.baseline= ast.literal_eval(baseline)
+       print('Self baseline type is:',type(self.baseline))
+       """
        self.baseline={}
        for vm in vms:
           #curr_dir=os.getcwd()
           #host_dir= os.path.join('./machines/', vm)
           #print('Host dir is:',host_dir)
           self.baseline[vm]=self.get_machine_intial_state(vm)
-       #print("self.baseline  is:",self.baseline)  
+       """
+       print("baseline estimated by US  is:")
+       pprint(self.baseline)  
        return None, None
        
    def get_action_space(self,agent="Red"):
@@ -92,6 +133,7 @@ class vu_emu():
             
             outcome= self.execute_action_client(action_name,action_param)
             outcome= self.transfrom_red_observation(action_name,outcome)
+            print('--> transformed outcome is:', outcome)
             self.old_outcome_red=outcome
             self.last_red_action=action_name
             self.last_red_action_param=action_param
@@ -126,31 +168,62 @@ class vu_emu():
 
    
    def execute_action_client(self,action_name,action_param,running_from=None):
-       print('@@@'*80)
+       print('@'*80, '\n ==>action name is:',action_name, 'action_params is:',action_param)
        if action_name=='DiscoverRemoteSystems': 
           action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
-          outcome=action.execute(None)
+          observation=action.execute(None)
+          success = enum_to_boolean(str(observation.success))
+          #print('observation success is:',observation.success,'transformed success is:',success)
+       
+          outcome={}
+          
+          outcome.update({'success':success})
+          
+          ip_list= observation.ip_address_list
+          filtered_list = [ip for ip in ip_list if not ip.endswith('.5') and not ip.endswith('.251')]
+          print(filtered_list)
+          outcome.update({action_param:filtered_list})
+          print('\n-> outcome of DiscoverRemoteSystem is:',outcome)
        elif action_name=='DiscoverNetworkServices': 
           action=DiscoverNetworkServicesAction(credentials_file,'user-host-1',action_param)
-          outcome=action.execute(None)
+          observation=action.execute(None)
+
+          success = enum_to_boolean(str(observation.success))
+          outcome={}
+          outcome.update({'success':success})
+          outcome.update({action_param:observation.port_list})
+          print('\n->outcome of DiscoverNetworkServices is:',outcome)
+
        elif action_name=='ExploitRemoteService':
           action= SshAction(action_param)
           outcome=action.execute(None)
+          print('\n->outcome of Exploit action is:',outcome)
        elif action_name=='PrivilegeEscalate':
-          outcome= SshAction(credentials_file,action_param)
-       
+          outcome= {'success':False}
        
        elif action_name in blue_decoys: 
-          outcome=DeployDecoyAction(credentials_file,'user_host_1',action_param)
-       elif action_name=='Remove': 
-          outcome=KillPidsFromFileAction(credentials_file,'user_host_1',action_param)
-       elif action_name=='Restore':
-          outcome= {'Success':True}
-       elif action_name=='Analyze':
-          outcome= VerifyFilesAction(credentials_file,action_param)
-       elif action_name=='Sleep':
-          outcome= {'Success':True}
+          print('In decoy')
+          decoyname= action_name[5:] 
+          decoyport= service_ports[decoyname]
+          deploy_decoy = DeployDecoy(action_param, 'ubuntu', 'ubuntu', decoyname, decoyport)
+          
+          observation = deploy_decoy.execute(None)
 
+          success = enum_to_boolean(str(observation.success))
+          outcome={}
+          outcome.update({'success':success})
+
+          
+          
+       elif action_name=='Remove': 
+          outcome= {'success':False}
+       elif action_name=='Restore':
+          outcome= {'success':False}
+       elif action_name=='Analyze':
+          outcome= {'success':False}
+       elif action_name=='Sleep':
+          outcome= {'success':True}
+       print('--> Outcome of action is:',outcome)
        return outcome
 
    def transfrom_red_observation(self,action_name,data):

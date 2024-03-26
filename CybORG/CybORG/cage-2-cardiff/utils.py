@@ -129,12 +129,17 @@ class utils:
     # Map string representations to TrinaryEnum values
     #print('data in get success is:',data)
     #print('\n \n **** data is:',data['success'])
+    
+    #commenting out since emulation provides this object
     success_map = {
         True: True,
         False: False
     }
     # Use the map to return the corresponding TrinaryEnum value, defaulting to UNKNOWN
     return {'success': success_map.get(data['success'], TrinaryEnum.UNKNOWN)}
+    """
+    return data['success']
+    """
 
   def transform_DiscoverRemoteSystems(self,data):
     # Parsing and setting success on the input data

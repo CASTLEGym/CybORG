@@ -6,7 +6,7 @@ import json
 from CybORG.Shared.Results import Results
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
-
+from pprint import pprint
 
 class BlueTableWrapper(BaseWrapper):
     def __init__(self, env=None, agent=None, output_mode='table'):
@@ -21,11 +21,30 @@ class BlueTableWrapper(BaseWrapper):
     def reset(self, agent='Blue'):
         result = self.env.reset(agent)
         obs = result.observation
-        print('=>In BlueTablewrapper reset, i/p obs is:',obs)
+        
+        if not os.path.exists('./assets'):
+           os.mkdirs('./assets')
+        #data=obs
+        #data.pop('success',None)
+
+        all_processes={}
+        for host,details in obs.items():
+           if host != 'success':
+             if isinstance(details, dict) and 'Processes' in details:
+                 all_processes[host] = details['Processes']        
+
+        file_path='./assets/blue_baseline_obs.py'
+        with open(file_path,'w') as fp:
+           fp.write(json.dumps(str(all_processes)))       
+
+        print('=>In BlueTablewrapper reset, i/p obs is:')
+        pprint(obs)
         if agent == 'Blue':
             self._process_initial_obs(obs)            
             obs = self.observation_change(obs, baseline=True)
-        print('In BlueTablewrapper, o/p obs is:',obs)
+        print('In BlueTablewrapper, o/p obs is:')
+        pprint(obs)
+                
         result.observation = obs
         return result
 

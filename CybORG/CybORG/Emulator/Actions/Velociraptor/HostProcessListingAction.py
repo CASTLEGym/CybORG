@@ -26,4 +26,4 @@ class HostProcessListingAction(VelociraptorAction):
                 velociraptor_interface, client_id
             )
 
-        return HostProcessListingObservation(hostname_process_list_dict)
+        return HostProcessListingObservation(hostname_process_list_dict, True)
