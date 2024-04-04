@@ -159,11 +159,9 @@ class utils:
 
   # Convert the network services data to the required format
   def transform_DiscoverNetworkServices(self,data):
-    formatted_data = {}
+    formatted_data = self.get_success_status(data)
     for key, value in data.items():
-        if key == "success":
-            formatted_data[key] = self.get_success_status(data)
-        else:
+        if key != "success":
             # Convert set of ports into the required list of dictionaries
             processes = []
             for port in value:
