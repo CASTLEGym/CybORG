@@ -13,3 +13,7 @@ pandas
 plotly
 torch==2.1.1
 pyzmq
+pandas
+grpcio 
+grpcio-tools
+pyvelociraptor

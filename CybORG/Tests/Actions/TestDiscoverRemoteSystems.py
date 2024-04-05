@@ -10,4 +10,5 @@ discover_remote_systems_action = DiscoverRemoteSystemsAction(
 
 observation = discover_remote_systems_action.execute(None)
 
+print(observation)
 print("foo")

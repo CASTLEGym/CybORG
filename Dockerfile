@@ -10,12 +10,19 @@ COPY . /cage
 
 # Install system dependencies
 # Mininet installation instructions recommend python-is-python3 on Ubuntu to link python to python3
+# Packages that will be used to run actions shall be installed at this step as well
 RUN apt-get update && apt-get install -y \
     git \
+    openjdk-17-jdk \
     python3-pip \
     python3-dev \
     python-is-python3 \
     iproute2 \
+    nmap \ 
+    bind9 \
+    bind9utils \
+    bind9-doc \
+    dnsutils \
     openvswitch-switch \
     xterm \
     --no-install-recommends && \

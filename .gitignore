@@ -14,7 +14,7 @@ venv
 castle.venv/
 .idea/
 CybORG\.egg-info/
-*/network_topology.yaml
+CybORG/Tutorial/network_topology.yaml
 
 _pycache_/
 *.pyc

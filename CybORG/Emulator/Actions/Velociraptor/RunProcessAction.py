@@ -15,6 +15,8 @@ class RunProcessAction(VelociraptorAction):
 
         super().__init__(credentials_file=credentials_file)
         self.hostname = hostname
+
+        command = command.replace("'", "\\'")
         self.environment_dict = {"Command": f"{command}"}
 
     def execute(self, state: Union[State, None]) -> Observation:
