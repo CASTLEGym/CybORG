@@ -94,7 +94,7 @@ class NetworkVisualizer:
         action_info = state['action_info']
         host_map = state['host_map']
         sim_obs = state['sim_obs']
-        mininet_obs = state['mininet_obs']
+        # mininet_obs = state['mininet_obs']
         reward = self._convert_reward_format(state['reward'])
         accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
 
