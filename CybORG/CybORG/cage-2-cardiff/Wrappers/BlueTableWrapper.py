@@ -27,15 +27,24 @@ class BlueTableWrapper(BaseWrapper):
         #data=obs
         #data.pop('success',None)
 
+        # Create a new dictionary that will only hold the Processes information
+        processes_only = {}
+        # Extracting only the Processes key from each entry
+        for key, value in obs.items():
+          if key != 'success':
+            if 'Processes' in value:
+              processes_only[key] = {'Processes': value['Processes']}
+        
+        """
         all_processes={}
         for host,details in obs.items():
            if host != 'success':
              if isinstance(details, dict) and 'Processes' in details:
-                 all_processes[host] = details['Processes']        
-
+                 all_processes[host]['Processes'] = details['Processes']        
+        """
         file_path='./assets/blue_baseline_obs.py'
         with open(file_path,'w') as fp:
-           fp.write(json.dumps(str(all_processes)))       
+           fp.write(json.dumps(str(processes_only)))       
 
         print('=>In BlueTablewrapper reset, i/p obs is:')
         pprint(obs)

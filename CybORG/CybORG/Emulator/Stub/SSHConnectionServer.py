@@ -1,92 +1,83 @@
 from typing import Union
 
-import sys
 import argparse
+import os
 import paramiko
 from pathlib import Path
-import json
-import zmq
+import signal
+import socket
+import sys
+
+from ShellRelayer import ShellRelayer
 
 
 class SSHConnectionServer:
 
-    def __init__(self, connection_key: str, hostname: str, username: str, private_key_file_path: Union[str, Path]):
+    def __init__(
+            self,
+            connection_key: str = None,
+            hostname: str = None,
+            username: str = None,
+            password: str = None,
+            private_key_file_path: Union[str, Path] = None,
+            client_port: int = 0,
+            server_port: int = 22
+    ):
 
-        self.socket_path = Path(f"/tmp/ssh_connection_{connection_key}")
+        self.shell_relayer = ShellRelayer(connection_key)
+
         self.hostname = hostname
         self.username = username
-        self.private_key = paramiko.RSAKey.from_private_key_file(str(private_key_file_path))
+        self.password = password
+        self.private_key = None if private_key_file_path is None \
+            else paramiko.RSAKey.from_private_key_file(str(private_key_file_path))
+        self.client_port = client_port
+        self.server_port = server_port
 
+        self.socket = None
         self.ssh_session = None
+        self.interactive_shell = None
 
-    def establish_ssh_session(self):
+        self.shell_output_bytes = None
+        self.start = None
+
+        signal.signal(signal.SIGINT, lambda signal, frame: self.handle_interrupt())
+
+    def handle_interrupt(self):
+        self.ssh_session.close()
+        sys.exit(0)
+
+    def establish_session(self):
         self.ssh_session = paramiko.SSHClient()
 
         self.ssh_session.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        self.ssh_session.connect(hostname=self.hostname, username=self.username, pkey=self.private_key)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(("0.0.0.0", self.client_port))
+        self.socket.connect((self.hostname, self.server_port))
+        self.ssh_session.connect(
+            hostname=self.hostname,
+            password=self.password,
+            pkey=self.private_key,
+            username=self.username,
+            sock=self.socket
+        )
+        self.interactive_shell = self.ssh_session.invoke_shell()
 
     def run(self):
 
-        if self.socket_path.exists():
-            try:
-                self.socket_path.unlink()
-            except Exception:
-                if self.socket_path.exists():
-                    raise Exception(f"{self.socket_path} exists and cannot be removed in order to use it as a socket")
-
-        context = zmq.Context()
-        socket = context.socket(zmq.REP)
-        socket.bind(f"ipc://{self.socket_path}")
-
-        self.establish_ssh_session()
-
         while True:
-            json_input = socket.recv_string()
-
             try:
-                json_data = json.loads(json_input)
+                self.establish_session()
 
-            except Exception as e:
-                print(
-                    f"Received input \"{json_input}\" incurred an error on parse: {str(e)}.  Ignoring",
-                    file=sys.stderr
-                )
-                socket.send_string("ERROR")
-                continue
-
-            if json_data == "CLOSE":
-                self.ssh_session.close()
-                socket.close()
-                self.socket_path.unlink()
+                self.shell_relayer.run(self.interactive_shell, "RECONNECT")
                 return
 
-            command = json_data["command"]
-
-            try:
-                command_stdin, command_stdout, command_stderr = self.ssh_session.exec_command(command)
-                command_stdin.close()
-
-                response_dict = {
-                    'stdout': command_stdout.read().decode(),
-                    'stderr': command_stderr.read().decode()
-                }
-                command_stdout.close()
-                command_stderr.close()
-
             except Exception as e:
-                try:
-                    self.ssh_session.close()
-                except Exception:
-                    pass
+                pass
 
-                self.establish_ssh_session()
-                socket.send_string("RECONNECT")
-                continue
-
-            response = json.dumps(response_dict, indent=4, sort_keys=True)
-
-            socket.send_string(response)
+            self.ssh_session.close()
 
 
 if __name__ == "__main__":
@@ -95,32 +86,62 @@ if __name__ == "__main__":
         description="Server for communicating over a persistent SSH connection"
     )
     parser.add_argument(
-        "connection_key",
-        nargs="?",
+        "-n", "--connection-key", required=True,
         help="key used to unique identify ssh connection"
     )
     parser.add_argument(
-        "hostname",
-        nargs="?",
+        "-m", "--hostname", required=True,
         help="name or ip-address of host to which to connect"
     )
     parser.add_argument(
-        "username",
-        nargs="?",
+        "-u", "--username", action="store", required=True,
         help="name of user for SSH connection"
     )
+    password_key_group = parser.add_mutually_exclusive_group(required=True)
+    password_key_group.add_argument(
+        "-k", "--private-key-file", action="store", required=False,
+        help="path of private RSA key file to be used for the SSH connection"
+    )
+    password_key_group.add_argument(
+        "-p", "--password", action="store", required=False,
+        help="password of user"
+    )
     parser.add_argument(
-        "private_key_file_path",
-        nargs="?",
-        help="patht of private RSA key file to be used for the SSH connection"
+        "-d", "--daemon", action="store_true", help="make server a daemon"
+    )
+    parser.add_argument(
+        "-c", "--client-port", action="store", required=False, default=0, type=int,
+        help="client port for ssh connection (default = 0 (random port))"
+    )
+    parser.add_argument(
+        "-s", "--server-port", action="store", required=False, default=22, type=int,
+        help="server port for ssh connection"
     )
 
     args = parser.parse_args()
+
+    if args.daemon:
+        pid = os.fork()
+        if pid < 0:
+            sys.exit(1)
+
+        if pid > 0:
+            sys.exit(0)
+
+        os.setsid()
+        os.chdir("/")
+        sys.stdin.close()
+        sys.stdout.close()
+        sys.stderr.close()
+
     ssh_connection = SSHConnectionServer(
         connection_key=args.connection_key,
         hostname=args.hostname,
         username=args.username,
-        private_key_file_path=args.private_key_file_path
+        password=args.password,
+        private_key_file_path=args.private_key_file,
+        client_port=args.client_port,
+        server_port=args.server_port
     )
 
     ssh_connection.run()

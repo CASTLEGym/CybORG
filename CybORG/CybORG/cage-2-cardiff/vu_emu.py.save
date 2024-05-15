@@ -1,4 +1,6 @@
+
 # main is to run the game coordinator and control entire emulation.
+
 import numpy as np
 import os
 # from vu_emu import vu_emu
@@ -13,15 +15,13 @@ from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
 from ipaddress import IPv4Network, IPv4Address
 import ast
-from CybORG.Emulator.Actions.Velociraptor.ResetAction import ResetAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
 from CybORG.Emulator.Actions.Velociraptor.ExploitAction import ExploitAction
 from CybORG.Emulator.Actions.Velociraptor.PrivilegeEscalateAction import PrivilegeEscalateAction
 #from CybORG.Emulator.Actions.SshAction import SshAction
-from CybORG.Emulator.Actions.DecoyAction import DecoyAction
-from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
-from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
+from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
+from CybORG.Emulator.Actions.Velociraptor.VerifyFilesAction import VerifyFilesAction
 from pprint import pprint
 import ast
 
@@ -34,14 +34,13 @@ import json
 #from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
 
 ip2host= name_conversion("./assets/openstack_ip_map.json")
-cage2os=name_conversion("./assets/cage2-openstack.yaml")
 
 credentials_file = "/home/ubuntu/agent_client.yaml"
 #credentials_file = "prog_client2.yaml"
 
 
 blue_action_space= ['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'Restore', 'DecoyFemitter', 'Remove', 'DecoyTomcat', 'DecoyHarakaSMPT']
-blue_decoys=['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'DecoyTomcat', 'DecoyFemitter','DecoyHarakaSMPT'] # windows specific decoys are faked. 
+blue_decoys=['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'DecoyFemitter', 'DecoyTomcat', 'DecoyHarakaSMPT']
 red_action_space = ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverRemoteSystems', 'DiscoverNetworkServices']
 vms=["User0","User1","User2","User3","User4","Enterprise0","Enterprise1","Enterprise2","Op_Host0","Op_Host1","Op_Host2","Op_Server0","Defender"]
 red_info={"User0"}
@@ -56,7 +55,7 @@ service_ports = {
     'Apache': 80,
     'SSHD': 22,
     'Vsftpd': 21,
-    'Femitter':21,
+    'Femitter': 21,
     'Tomcat': 443,
     'HarakaSMPT': 25
 }
@@ -91,7 +90,6 @@ class vu_emu():
       self.old_outcome_red=None
       self.last_red_action=None
       self.last_red_action_param=None
-      self.connection_key={}
       
    def reset(self):
        
@@ -106,24 +104,9 @@ class vu_emu():
           #host_dir= os.path.join('./machines/', vm)
           #print('Host dir is:',host_dir)
           self.baseline[vm]=self.get_machine_intial_state(vm)
-       
-       reset=ResetAction(credentials_file)
-       self.md5={}
-       for vm in vms:
-          #curr_dir=os.getcwd()
-          #host_dir= os.path.join('./machines/', vm)
-          os_vm=cage2os.fetch_alt_name(vm)
-          obs=reset.execute(os_vm)
-          if obs.success==True: 
-              self.md5[vm]=obs.md5
-          else: 
-              print('Reset failed!!')
-              break
-       print("baseline estimated by US  is:")
-       pprint(self.baseline)
-       print("md5 are:",self.md5)
-       time.sleep(30)  
        """
+       print("baseline estimated by US  is:")
+       pprint(self.baseline)  
        return None, None
        
    def get_action_space(self,agent="Red"):
@@ -147,8 +130,11 @@ class vu_emu():
             print("=> Action param is",action_param)
             
          if agent_type=='red':
+            #running_from='User0'
+            #outcome=self.execute_action_locally(action_name,action_param)
+            
             outcome= self.execute_action_client(action_name,action_param)
-            outcome= self.transfrom_observation(action_name,outcome)
+            outcome= self.transfrom_red_observation(action_name,outcome)
             print('--> transformed outcome is:', outcome)
             self.old_outcome_red=outcome
             self.last_red_action=action_name
@@ -162,11 +148,10 @@ class vu_emu():
             
             #  ->> Execute on client
             outcome= self.execute_action_client(action_name,action_param)
-            outcome= self.transfrom_observation(action_name,outcome)
             #modify blue only if red is taking following actions:
-            #red_actions_that_affect_blue= ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverNetworkServices']
-            #if action_name in red_actions_that_affect_blue: 
-            #   outcome=modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
+            red_actions_that_affect_blue= ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverNetworkServices']
+            if action_name in red_actions_that_affect_blue: 
+               outcome=modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
             
             #print("Outcome is:",outcome)
             #  ->>> Execute on client
@@ -177,26 +162,25 @@ class vu_emu():
           self.old_outcome_blue=outcome
        #if action doesnot contains the hostname (like sleep/monitor) 
        else: 
-          if action_name=='Sleep':
-               outcome={'success': 'Unknown'}
-          else:
-              print('!!! Not Implemented !!!')
-              
+         if agent_type=='red': outcome=self.old_outcome_red
+         elif agent_type=='blue': outcome= self.old_outcome_blue
+      
+      
        return outcome, None, None, None
 
+   
    def execute_action_client(self,action_name,action_param,running_from=None):
        print('@'*80, '\n ==>action name is:',action_name, 'action_params is:',action_param)
-
-       ### Red Actions
        if action_name=='DiscoverRemoteSystems': 
           action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
           observation=action.execute(None)
           success = enum_to_boolean(str(observation.success))
           #print('observation success is:',observation.success,'transformed success is:',success)
+       
           outcome={}
-
+          
           outcome.update({'success':success})
-
+          
           ip_list= observation.ip_address_list
           filtered_list = [ip for ip in ip_list if not ip.endswith('.5') and not ip.endswith('.251')]
           print(filtered_list)
@@ -214,75 +198,39 @@ class vu_emu():
 
        elif action_name=='ExploitRemoteService':
           action= ExploitAction(credentials_file,'user-host-1',action_param,'vagrant','vagrant',4444)
-          observation=action.execute(None)
-
-          success = enum_to_boolean(str(observation.success))
-          outcome={}
-          outcome.update({'success':success})
-          outcome.update({'host_ip':action_param})
-          outcome.update({'available_exploit':observation.available_exploit})
-          outcome.update({'ip_info':observation.ip_address_info})
-          self.connection_key.update({ip2host.fetch_alt_name(action_param):observation.connection_key})
-          print('Connection keys are:',self.connection_key)
+          outcome=action.execute(None)
           print('\n->outcome of Exploit action is:',outcome)
 
        elif action_name=='PrivilegeEscalate':
           action= PrivilegeEscalateAction(credentials_file,'user-host-1',action_param,'vagrant','vagrant',4444)
-          observation=action.execute(None)
-          
-          success = enum_to_boolean(str(observation.success))
-          outcome={}
-          outcome.update({'success':success})
-          outcome.update({'action_param':action_param})
-          outcome.update({'user':observation.user})
-          outcome.update({'explored_host':observation.explored_host})
-          outcome.update({'pid_string':observation.pid})
+          outcome=action.execute(None)
           print('\n->outcome of Exploit action is:',outcome)
-
-       ### Blue Actions
+       
+       # BLue actions
        elif action_name in blue_decoys: 
-          print('In decoy, action name is:',action_name,'param is:',action_param)
+          print('In decoy')
           decoyname= action_name[5:] 
           decoyport= service_ports[decoyname]
-          username='ubuntu'
-          deploy_decoy = DecoyAction(action_param, username, 'ubuntu', decoyname, decoyport)
+          deploy_decoy = DeployDecoy(action_param, 'ubuntu', 'ubuntu', decoyname, decoyport)
+          
           observation = deploy_decoy.execute(None)
+
           success = enum_to_boolean(str(observation.success))
           outcome={}
           outcome.update({'success':success})
-          outcome.update({'host':ip2host.fetch_alt_name(action_param)})
-          outcome.update({'decoyname':decoyname})
-          outcome.update({'username':username})
-          print('\n->outcome of Decoy is:',outcome)
 
+          
+          
        elif action_name=='Remove': 
-          remove_action = RemoveAction(credentials_file,action_param,self.connection_key[action_param])
-          observation=remove_action.execute(None)
-          outcome={observation.success}
-          #to do : delete the connection key
-
-       elif action_name=='Restore':
-          restore_action = RestoreAction(hostname=action_param,
-          auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
-          project_name='mvp1',
-          username='xyz',
-          password='******',
-          user_domain_name='ISIS',
-          project_domain_name='ISIS')
-          
-          restore_action.execute(None)
-
-
-
-       elif action_name=='Analyze':
-          
           outcome= {'success':False}
-       elif action_name=='Sleep':
-          outcome= {'success':True}
+       elif action_name=='Restore':
+          outcome= {'success':False}
+       elif action_name=='Analyze':
+          outcome= {'success':False}
        print('--> Outcome of action is:',outcome)
        return outcome
 
-   def transfrom_observation(self,action_name,data):
+   def transfrom_red_observation(self,action_name,data):
        if action_name=='DiscoverRemoteSystems':
          return utils.transform_DiscoverRemoteSystems(data)    
        elif action_name=='DiscoverNetworkServices':
@@ -291,8 +239,9 @@ class vu_emu():
          return utils.transform_ExploitRemoteService(data) 
        elif action_name=='PrivilegeEscalate':
          return utils.transform_PrivilegeEscalate(data)  
-       elif action_name in blue_decoys:
-         return utils.transform_decoy(data)   
+       elif action_name=='Sleep':
+         return utils.transform_ExploitRemoteService(data)
+   def   
 
    def execute_action_locally(self,action_name,action_param,running_from=None):
             parameters = [action_name , action_param]

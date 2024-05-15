@@ -54,7 +54,7 @@ class RewardCalculator():
 
 if __name__=='__main__':
     reward_cal=RewardCalculator('/home/lab_linux/harsh/CAGE_RL/CybORG_wrapper/CybORG/CybORG/Shared/Scenarios/Scenario2.yaml')
-    obs= {"success":"True/False/Unknown", 'Op_Server0':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}}, 'User1':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}}}
+    obs= {"success":"True/False/Unknown", 'Op_Server0':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}}, 'User1':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}},'Enterprise1': {'Interface': [{'IP Address': '10.0.120.158'}]}}
 
     reward=reward_cal.reward(obs)
     print(reward)

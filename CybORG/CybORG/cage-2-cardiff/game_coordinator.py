@@ -42,7 +42,7 @@ def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
 if __name__ == "__main__":
-    exp='sim'
+    exp='emu'
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
@@ -144,8 +144,7 @@ if __name__ == "__main__":
             #print('\n **** blue action code is:',action)
             
             ##Transform blue action
-            blue_action= blue_action_list[action]
-            
+            blue_action= blue_action_list[action] 
             blue_action = blue_action.replace("'", '"')
             blue_action = json.loads(blue_action)
             
@@ -155,7 +154,6 @@ if __name__ == "__main__":
                blue_action= action_name+" "+hostname
             else:
                blue_action= action_name
-            
             
             
             

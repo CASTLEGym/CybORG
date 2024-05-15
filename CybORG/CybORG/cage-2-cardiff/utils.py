@@ -3,8 +3,11 @@ import os
 import yaml
 import ipaddress
 from ipaddress import IPv4Address, IPv4Network
-from enum import Enum
+from enum import Enum, auto
 import random
+
+import re
+
 
 with open('./assets/openstack_ip_map.json', 'r') as file:
       ip_mapping=json.load(file)
@@ -141,6 +144,40 @@ class utils:
     return data['success']
     """
 
+
+
+  def transform_decoy(self, data):
+    # TO do : Remove PID and PPID as fixed to fetch from process and update 
+    #       : If possible remove the propertiesa and set it during the decoy set up to lure/honeytrap. 
+    #       : Remove the faked decoys that is not part of linux type decoys. 
+    print('Data is:',data)
+    formatted_data= self.get_success_status(data)
+    host=data['host']
+    username=data['username']
+    decoyname=data['decoyname']
+
+    decoyname= decoyname.lower()
+    formatted_data[host] = {
+            'Processes': [
+                {
+                    'PID': random.randint(1000,5000),  # Static PID since it's not provided in the input
+                    'PPID': 1,                # Static PPID since it's not provided in the input
+                    'Service Name': decoyname,  # Assuming a static service name; replace if variable
+                    'Username': username
+                }
+            ]
+        }
+    
+    #Decoy specific modification
+    if decoyname=='tomcat':
+      formatted_data[host]['Processes'][0]['Properties']=['rfi']
+    elif decoyname=='femitter':
+      formatted_data[host]['Processes'][0]['Username']='SYSTEM'
+    elif decoyname=='HarakaSMPT': 
+      formatted_data[host]['Processes'][0]['Service Name']='haraka'
+    return formatted_data
+
+
   def transform_DiscoverRemoteSystems(self,data):
     # Parsing and setting success on the input data
     transformed = self.get_success_status(data)
@@ -181,21 +218,70 @@ class utils:
             }
     return formatted_data
 
+  def extract_tcp_pid(self,ip_string): 
+      pattern = r'pid=(\d+)'
+      pids = re.findall(pattern, data_string)
+      print("Extracted PIDs:", pids)
+      return pids 
+
+  def parse_tcp(self,string):
+      pattern = re.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)(?:.*?):\d+")
+      pos = 0
+      match = pattern.search(my_string, pos)
+      ip_dict={}
+      while match is not None:
+        print('Group 0 is:',match.group(0),'group1:',match.group(1))
+        ip_info= match.group(0)
+        parts=ip_info.split(':')
+        print('Parts:', parts)
+        ip_dict[match.group(1)]=parts[1]
+        pos = match.end(0)
+        match = pattern.search(my_string, pos)
+        print('match is',match)
+      print(ip_dict)
+      return ip_dict
+  
   # Convert the Exploit remote services data to the required format
   def transform_ExploitRemoteService(self,data):
-        formatted_data = {}
-        for key, value in data.items():
-          if key == "success":
-            formatted_data[key] = self.get_success_status(data)
-          else: 
-            exploit=data["available_exploit"]
-            port= data["exploited_port"]
-            alt_name= data["host_name"]
-            port_for_reverse_shell= data["port_for_reverse_shell"]
-            remote_port_on_attacker= 4444
-            attacker_node= self.name_conversion.fetch_alt_name('User0')
-            
-            formatted_data[alt_name]= {
+        if data['success']==False: 
+           formatted_data = {}
+           for key, value in data.items():
+             if key == "success":
+                   formatted_data[key] = self.get_success_status(data)
+             else:
+                ip=data['host_ip']
+                formatted_data['1'] ={
+            'Interface': [{'IP Address': IPv4Address(ip)}]
+        }
+                formatted_data[ip]= {
+            'Interface': [{'IP Address': IPv4Address(ip)}],
+            'Processes': [{
+                'Connections': [{
+                    'Status': 'ProcessState.OPEN',
+                    'local_address': IPv4Address(ip),
+                    'local_port': 21     #To Do: change it to Attacked port
+                }],
+                'Process Type': 'ProcessType.FEMITTER'
+            }]
+        }
+
+        if data['success']== True:
+           formatted_data = {}
+           for key, value in data.items():
+              if key == "success":
+                formatted_data[key] = self.get_success_status(data)
+              else: 
+                exploit=data["available_exploit"]
+                ip_string=data['ip_info']
+                ip_dict=self.parse_tcp(ip_string)
+                ip=data['host_ip']
+                port= ip_dict[ip]
+
+                alt_name= self.name_conversion.fetch_alt_name(ip)
+                port_for_reverse_shell= port
+                remote_port_on_attacker= 4444
+                attacker_node= self.name_conversion.fetch_alt_name('User0')
+                formatted_data[alt_name]= {
             'Processes': [
                {
                 'Connections': [
@@ -223,9 +309,9 @@ class utils:
             'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
             'System info': {'Hostname': self.action_param, 'OSType': 'OperatingSystemType.WINDOWS'}
              }
-            formatted_data[attacker_node]={
-             'Processes': [
-               {
+                formatted_data[attacker_node]={
+              'Processes': [
+                {
                 'Connections': [
                     {
                         'local_port': remote_port_on_attacker,
@@ -237,14 +323,61 @@ class utils:
                 'Process Type': 'ProcessType.REVERSE_SESSION'
                }]
                }
+                
+
         return formatted_data
  
   # Convert the Exploit remote services data to the required format
   def transform_PrivilegeEscalate(self,data):
     formatted_data = {}
-    for key, value in data.items():
-       if key == "success":
+    if data['success']== False: 
+          formatted_data[key] = self.get_success_status(data) 
+    elif data['success']==True: 
+      for key, value in data.items():
+        if key == "success":
           formatted_data[key] = self.get_success_status(data)
+        else: 
+           user=data["user"]
+           explored_ip=data['explored_host']
+           pid_string= data[pid_sting]
+           pids= self.extract_tcp_pid(pid_string)
+           subnet='10.1.1.234/24'
+           host=data['action_param']
+           data[host] = {
+        'Sessions': [
+            {
+                'Username': user,
+                'ID': 1,  # Assuming ID is static for this example
+                'Timeout': 0,  # Assuming Timeout is static for this example
+                'PID': pids[0],
+                'Type': 'SessionType.RED_REVERSE_SHELL',
+                'Agent': 'Red'
+            }
+        ],
+        'Processes': [
+            {
+                'PID': pid,
+                'Username': user
+            }
+        ],
+        'Interface': [
+            {
+                'Interface Name': 'eth0',
+                'IP Address': ipaddress.IPv4Address(host),
+                'Subnet': ipaddress.IPv4Network(subnet)
+            }
+        ]
+    }
+    if explored_ip!= None:
+     data[explored_ip] = {
+        'Interface': [
+            {
+                'IP Address': ipaddress.IPv4Address(explored_ip)
+            }
+        ]
+      }
+           
+    
     return formatted_data
 
 
@@ -253,7 +386,7 @@ class name_conversion():
    def __init__(self,path):
      with open(path,'r') as f:
          self.data = yaml.safe_load(f)
-     #print('Data is:',self.data)
+     print('Data is:',self.data)
      
    def fetch_alt_name(self,name):
      if name in self.data:
@@ -262,7 +395,7 @@ class name_conversion():
         for key, value in self.data.items():
           if value == name:
             alt_name = key
-     #print(f"The value of '{name}' is: {alt_name}")
+     print(f"The value of '{name}' is: {alt_name}")
      return alt_name
    
        

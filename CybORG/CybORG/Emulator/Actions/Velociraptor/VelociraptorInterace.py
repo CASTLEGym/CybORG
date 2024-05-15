@@ -64,6 +64,24 @@ class VelociraptorInterface:
 
         return client_list
 
+    def get_server_glob(self):
+
+        with self as stub:
+
+            query = f"SELECT * FROM glob(globs=\"/proc/*/fd/*\")"
+
+            request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
+
+            glob_output = []
+            for response in stub.Query(request):
+                if response.Response:
+                    rows = json.loads(response.Response)
+
+                    if len(rows) > 0:
+                        glob_output += rows
+
+        return glob_output
+
     def get_client_id_from_hostname(self, hostname):
 
         client_id = None

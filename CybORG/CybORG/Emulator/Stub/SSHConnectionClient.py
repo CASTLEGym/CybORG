@@ -13,7 +13,6 @@ class SSHConnectionClient:
         if not self.socket_path.exists():
             raise Exception(f"SSHConnectionServer with key \"{connection_key}\" does not exist")
 
-
     def run(self):
 
         context = zmq.Context()
@@ -23,23 +22,30 @@ class SSHConnectionClient:
         socket.connect(f"ipc://{self.socket_path}")
 
         total_command = ''
-        input = sys.stdin.read(1024)
-        while input:
-            total_command += input
-            input = sys.stdin.read(1024)
+        input_data = sys.stdin.read(1024)
+        while len(input_data) > 0:
+            total_command += input_data
+            input_data = sys.stdin.read(1024)
 
         total_command = total_command.strip()
-        json_dict = {
-            "command": total_command
-        }
 
-        json_string = json.dumps(json_dict, indent=4, sort_keys=True)
+        if total_command == "CLOSE":
+            json_data = total_command
+        else:
+            json_data = {
+                "command": total_command
+            }
+
+        json_string = json.dumps(json_data, indent=4, sort_keys=True)
         socket.send_string(json_string)
 
         output_bytes = socket.recv_string()
 
         json_data = json.loads(output_bytes)
-        print(json_data['stdout'])
+        if isinstance(json_data, str):
+            print(json_data)
+        else:
+            print(json_data['output'], end='')
 
 
 if __name__ == "__main__":

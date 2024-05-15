@@ -8,7 +8,7 @@ from pathlib import Path
 from CybORG.Emulator.Observations.SshObservation import SshObservation
 
 from CybORG.Shared import Observation
-from CybORG.Shared.Actions import Action
+from CybORG.Simulator.Actions import Action
 from CybORG.Simulator.State import State
 
 
@@ -112,4 +112,3 @@ class SshAction(Action):
         return SshObservation(
             True, token, local_socket_info=local_socket_info, remote_socket_info=remote_socket_info, pid=remote_pid
         )
-

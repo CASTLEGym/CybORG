@@ -109,7 +109,6 @@ class BlueEmulationWrapper():
                     host_anomalies['Files'] = anomalous_files
 
             if 'Processes' in host:
-                
                 baseline_processes = host_baseline.get('Processes', [])
                 print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []

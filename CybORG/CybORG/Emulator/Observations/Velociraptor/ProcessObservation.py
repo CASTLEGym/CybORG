@@ -5,6 +5,6 @@ from CybORG.Emulator.Observations.Velociraptor.DictToAttributes import DictToAtt
 class ProcessObservation(Observation, DictToAttributes):
 
     def __init__(self, process_info=None, success=None):
-
+        #print('process_info is:',process_info)
         Observation.__init__(self, success=success)
         DictToAttributes.__init__(self, artifact_info=process_info)

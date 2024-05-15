@@ -24,6 +24,8 @@ class NetstatAction(VelociraptorAction):
 
         velociraptor_interface = self.get_velociraptor_interface()
 
+#        velociraptor_interface.get_server_glob()
+
         client_id = velociraptor_interface.get_client_id_from_hostname(self.hostname)
 
         output_list = velociraptor_interface.execute_client_artifact(
