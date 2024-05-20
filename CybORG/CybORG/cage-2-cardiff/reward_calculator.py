@@ -49,7 +49,7 @@ class RewardCalculator():
 
     def reward(self,observation):
         reward= self.privilegedrewardcalculator(observation)
-        return [-1*reward,reward]   #[Blue reward, red rewards]
+        return -1*reward   #[Blue reward]
 
 
 if __name__=='__main__':

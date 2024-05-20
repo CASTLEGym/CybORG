@@ -13,6 +13,7 @@ from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
 from ipaddress import IPv4Network, IPv4Address
 import ast
+from CybORG.Emulator.Actions.RestoreAction import RestoreAction
 from CybORG.Emulator.Actions.Velociraptor.ResetAction import ResetAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
@@ -22,8 +23,9 @@ from CybORG.Emulator.Actions.Velociraptor.PrivilegeEscalateAction import Privile
 from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
-from pprint import pprint
+#from pprint import pprint
 import ast
+
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
@@ -50,6 +52,7 @@ blue_info={}
 blue_actions=[]
 red_actions=[]
 counter=0
+modify_blue_red=True
 
 
 service_ports = {
@@ -84,6 +87,10 @@ def enum_to_boolean(enum_value):
     else:
         return None
 
+def generate_ports(num=16,min=4000,max=5000):
+  return random.sample(range(min, max + 1), num)
+
+
 
 class vu_emu():
    def __init__(self):
@@ -92,9 +99,13 @@ class vu_emu():
       self.last_red_action=None
       self.last_red_action_param=None
       self.connection_key={}
-      
+      self.available_ports=generate_ports()
+      print('\n-> Available port:',self.available_ports)
+      self.used_ports={}
+      self.exploited_hosts=[]
+      self.old_exploit_outcome={}
+
    def reset(self):
-       
        with open('./assets/blue_baseline_obs.py','r') as f:
          baseline= json.load(f)
        self.baseline= ast.literal_eval(baseline)
@@ -163,10 +174,13 @@ class vu_emu():
             #  ->> Execute on client
             outcome= self.execute_action_client(action_name,action_param)
             outcome= self.transfrom_observation(action_name,outcome)
-            #modify blue only if red is taking following actions:
-            #red_actions_that_affect_blue= ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverNetworkServices']
-            #if action_name in red_actions_that_affect_blue: 
-            #   outcome=modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
+            if modify_blue_red==True: 
+             print('###'*100,self.last_red_action)
+             #modify blue only if red is taking following actions:
+             red_actions_that_affect_blue= ['ExploitRemoteService', 'DiscoverNetworkServices']
+             if self.last_red_action in red_actions_that_affect_blue:
+                print('In modify') 
+                outcome=self.modify_blue_by_red(outcome,self.old_outcome_red,self.last_red_action,self.last_red_action_param)
             
             #print("Outcome is:",outcome)
             #  ->>> Execute on client
@@ -177,16 +191,105 @@ class vu_emu():
           self.old_outcome_blue=outcome
        #if action doesnot contains the hostname (like sleep/monitor) 
        else: 
-          if action_name=='Sleep':
+          print('In else:',action_string)
+          if action_string=='Sleep':
                outcome={'success': 'Unknown'}
           else:
-              print('!!! Not Implemented !!!')
-              
+              print('!!! Not Implemented !!!')       
        return outcome, None, None, None
+   
+   def modify_blue_by_red(self,blue_outcome,red_outcome,last_red_action,last_red_action_param):
+      print('@@@@@'*100)
+      print('-> Blue outcome:',blue_outcome)
+      if last_red_action=='DiscoverNetworkServices':
+        for key,value in red_outcome.items():
+          if self.fetch_ip(key)!= None: 
+              red_data=red_outcome[key]
+              host=ip2host.fetch_alt_name(key)
+              blue_outcome.update({host:red_data})
+      elif last_red_action=='ExploitRemoteService':
+        print('%%%%'*100,'In modify of exploit',)
+        red_data= red_outcome[last_red_action_param]
+        print('red data in exploit is:',red_data)
+        if red_outcome['success']==True:
+          red_to_blue=self.convert_red_exploit_dict(red_data)
+        elif red_outcome['success']==False:
+          # Iterate over all the processes and their connections
+          red_to_blue = {'Processes': []}
+          for process in red_data['Processes']:
+            for connection in process['Connections']:
+              new_connection1 = {
+                'local_port': connection['local_port'],
+                'remote_port': 53259,  # Assuming remote_port is a fixed value
+                'local_address': connection['local_address'],
+                'remote_address': IPv4Address('10.0.214.186')}
+            
+              new_connection2 = {
+                'local_port': connection['local_port'],
+                'local_address': connection['local_address'],
+                'remote_address': IPv4Address('10.0.214.186')}
+            
+              red_to_blue['Processes'].append({'Connections': [new_connection1]})
+              red_to_blue['Processes'].append({'Connections': [new_connection2]})
+          attacked_hostname=ip2host.fetch_alt_name(last_red_action_param)
+          blue_outcome.update({attacked_hostname:red_to_blue})
+      return blue_outcome
+  
+   
+   def convert_red_exploit_dict(self,template_dict):
+    # Iterate over all the keys of connections to find attacker_ip
+    for process in template_dict.get('Processes', []):
+      for connection in process.get('Connections', []):
+        if 'remote_address' in connection:
+            attacker_ip = connection['remote_address']
+            print(f"Found remote_address: {attacker_ip}")
+        else: attacker_ip=None
+            
+    converted_dict = {
+        'Processes': [],
+        'Interface': template_dict.get('Interface', []),
+        'System info': {
+            'Hostname': template_dict['System info']['Hostname'],
+            'OSType': template_dict['System info']['OSType'],
+            'OSDistribution': 'OperatingSystemDistribution.UBUNTU',
+            'OSVersion': 'OperatingSystemVersion.U18_04_3',
+            'Architecture': 'Architecture.x64'
+        }
+    }
 
+    for process in template_dict['Processes']:
+        for connection in process['Connections']:
+            new_connection = {
+                'local_port': connection['local_port'],
+                'remote_port': connection.get('remote_port', random.randint(40000,50000)),
+                'local_address': connection['local_address'],
+                'remote_address': connection.get('remote_address', attacker_ip)
+            }
+            converted_dict['Processes'].append({'Connections': [new_connection]})
+
+    # Adding a sample PID for demonstration
+    converted_dict['Processes'][1]['PID'] = 27893
+
+    return converted_dict
+
+
+   
+   def fetch_ip(self,string):
+      # Regular expression to match the IP address
+      pattern = r'\d+\.\d+\.\d+\.\d+'
+
+      # Find the IP address in the string
+      match = re.search(pattern, string)
+
+      # Extract the IP address if found
+      if match: ip_address = match.group(0)
+      else: ip_address=None
+      return ip_address
+  
+   
    def execute_action_client(self,action_name,action_param,running_from=None):
        print('@'*80, '\n ==>action name is:',action_name, 'action_params is:',action_param)
-
+       
        ### Red Actions
        if action_name=='DiscoverRemoteSystems': 
           action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
@@ -196,7 +299,6 @@ class vu_emu():
           outcome={}
 
           outcome.update({'success':success})
-
           ip_list= observation.ip_address_list
           filtered_list = [ip for ip in ip_list if not ip.endswith('.5') and not ip.endswith('.251')]
           print(filtered_list)
@@ -213,30 +315,47 @@ class vu_emu():
           print('\n->outcome of DiscoverNetworkServices is:',outcome)
 
        elif action_name=='ExploitRemoteService':
-          action= ExploitAction(credentials_file,'user-host-1',action_param,'vagrant','vagrant',4444)
-          observation=action.execute(None)
-
-          success = enum_to_boolean(str(observation.success))
-          outcome={}
-          outcome.update({'success':success})
-          outcome.update({'host_ip':action_param})
-          outcome.update({'available_exploit':observation.available_exploit})
-          outcome.update({'ip_info':observation.ip_address_info})
-          self.connection_key.update({ip2host.fetch_alt_name(action_param):observation.connection_key})
+          if action_param in self.exploited_hosts:
+            return self.old_exploit_outcome[action_param]
+          else: 
+            port=random.choice(self.available_ports)
+            server_port=22  # To Do: Dynamically select the port absed on selected exploit
+            print('Action param :',action_param,'port is:',port)
+            action= ExploitAction(credentials_file,'user-host-1',action_param,'ubuntu','ubuntu',port,server_port)
+            observation=action.execute(None)
+            success = enum_to_boolean(str(observation.success))
+            print('Success:',success)
+            outcome={}
+            outcome.update({'success':success})
+            outcome.update({'host_ip':action_param})
+            outcome.update({'available_exploit':observation.available_exploit})
+            outcome.update({'ip_info':observation.ip_address_info})
+          if success==True: 
+            self.old_exploit_outcome.update({action_param:outcome})
+            self.available_ports.remove(port)
+            self.used_ports.update({action_param:port})
+            self.exploited_hosts.append(action_param)
+            self.connection_key.update({action_param:observation.connection_key})
           print('Connection keys are:',self.connection_key)
           print('\n->outcome of Exploit action is:',outcome)
 
        elif action_name=='PrivilegeEscalate':
-          action= PrivilegeEscalateAction(credentials_file,'user-host-1',action_param,'vagrant','vagrant',4444)
-          observation=action.execute(None)
-          
-          success = enum_to_boolean(str(observation.success))
           outcome={}
+          print('Self.connection_key:',self.connection_key,'action_param:',action_param)
+          if action_param in self.connection_key:
+            client_port= self.used_ports[action_param]
+          
+            action= PrivilegeEscalateAction(credentials_file,'user-host-1',self.connection_key[action_param],action_param,'ubuntu','ubuntu',client_port)
+            observation=action.execute(None)
+            success = enum_to_boolean(str(observation.success))
+            outcome.update({'action_param':action_param})
+            outcome.update({'user':observation.user.strip()})
+            outcome.update({'explored_host':self.fetch_ip(observation.explored_host)})
+            outcome.update({'pid_string':observation.pid})
+          else: 
+            success= False
           outcome.update({'success':success})
-          outcome.update({'action_param':action_param})
-          outcome.update({'user':observation.user})
-          outcome.update({'explored_host':observation.explored_host})
-          outcome.update({'pid_string':observation.pid})
+
           print('\n->outcome of Exploit action is:',outcome)
 
        ### Blue Actions
@@ -255,12 +374,18 @@ class vu_emu():
           outcome.update({'username':username})
           print('\n->outcome of Decoy is:',outcome)
 
-       elif action_name=='Remove': 
-          remove_action = RemoveAction(credentials_file,action_param,self.connection_key[action_param])
-          observation=remove_action.execute(None)
-          outcome={observation.success}
-          #to do : delete the connection key
-
+       elif action_name=='Remove':
+          if action_param in self.connection_key: 
+            remove_action = RemoveAction(credentials_file,action_param,self.connection_key[action_param])
+            observation=remove_action.execute(None)
+            outcome={'success:',observation.success}
+          else: 
+            outcome={'success:',False}
+          if outcome.success==True:
+               del self.connection_key[action_param]
+               self.available_ports.append(self.used_ports[action_param])
+               del self.used_ports[action_param]
+       
        elif action_name=='Restore':
           restore_action = RestoreAction(hostname=action_param,
           auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
@@ -269,16 +394,14 @@ class vu_emu():
           password='******',
           user_domain_name='ISIS',
           project_domain_name='ISIS')
-          
           restore_action.execute(None)
+          outcome={observation.success}
+          if observation.success==True:del self.connection_key[action_param]
 
-
-
-       elif action_name=='Analyze':
-          
+       elif action_name=='Analyse':
           outcome= {'success':False}
-       elif action_name=='Sleep':
-          outcome= {'success':True}
+       
+
        print('--> Outcome of action is:',outcome)
        return outcome
 

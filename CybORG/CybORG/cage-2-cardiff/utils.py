@@ -8,7 +8,6 @@ import random
 
 import re
 
-
 with open('./assets/openstack_ip_map.json', 'r') as file:
       ip_mapping=json.load(file)
 
@@ -124,10 +123,12 @@ class TrinaryEnum(Enum):
     FALSE = 0
     UNKNOWN = 2
 
+
 class utils:
   def __init___(self):
      TrinaryEnum= TrinaryEnum(Enum)
-    
+     self.ip2host= name_conversion("./assets/openstack_ip_map.json")
+     
   def get_success_status(self,data):
     # Map string representations to TrinaryEnum values
     #print('data in get success is:',data)
@@ -173,7 +174,7 @@ class utils:
       formatted_data[host]['Processes'][0]['Properties']=['rfi']
     elif decoyname=='femitter':
       formatted_data[host]['Processes'][0]['Username']='SYSTEM'
-    elif decoyname=='HarakaSMPT': 
+    elif decoyname=='harakasmpt': 
       formatted_data[host]['Processes'][0]['Service Name']='haraka'
     return formatted_data
 
@@ -220,25 +221,25 @@ class utils:
 
   def extract_tcp_pid(self,ip_string): 
       pattern = r'pid=(\d+)'
-      pids = re.findall(pattern, data_string)
+      pids = re.findall(pattern, ip_string)
       print("Extracted PIDs:", pids)
       return pids 
 
   def parse_tcp(self,string):
       pattern = re.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+)(?:.*?):\d+")
       pos = 0
-      match = pattern.search(my_string, pos)
+      match = pattern.search(string, pos)
       ip_dict={}
       while match is not None:
-        print('Group 0 is:',match.group(0),'group1:',match.group(1))
+        #print('Group 0 is:',match.group(0),'group1:',match.group(1))
         ip_info= match.group(0)
         parts=ip_info.split(':')
-        print('Parts:', parts)
+        #print('Parts:', parts)
         ip_dict[match.group(1)]=parts[1]
         pos = match.end(0)
-        match = pattern.search(my_string, pos)
-        print('match is',match)
-      print(ip_dict)
+        match = pattern.search(string, pos)
+        #print('match is',match)
+      #print(ip_dict)
       return ip_dict
   
   # Convert the Exploit remote services data to the required format
@@ -247,7 +248,7 @@ class utils:
            formatted_data = {}
            for key, value in data.items():
              if key == "success":
-                   formatted_data[key] = self.get_success_status(data)
+                   formatted_data = self.get_success_status(data)
              else:
                 ip=data['host_ip']
                 formatted_data['1'] ={
@@ -269,61 +270,74 @@ class utils:
            formatted_data = {}
            for key, value in data.items():
               if key == "success":
-                formatted_data[key] = self.get_success_status(data)
+                formatted_data = self.get_success_status(data)
               else: 
                 exploit=data["available_exploit"]
                 ip_string=data['ip_info']
                 ip_dict=self.parse_tcp(ip_string)
-                ip=data['host_ip']
-                port= ip_dict[ip]
-
-                alt_name= self.name_conversion.fetch_alt_name(ip)
-                port_for_reverse_shell= port
-                remote_port_on_attacker= 4444
-                attacker_node= self.name_conversion.fetch_alt_name('User0')
-                formatted_data[alt_name]= {
-            'Processes': [
-               {
-                'Connections': [
-                    {
-                        'local_port': port_for_reverse_shell,
-                        'remote_port': remote_port_on_attacker,
-                        'local_address': IPv4Address(alt_name),
-                        'remote_address': IPv4Address(attacker_node)
-                    }
-                ],
-                'Process Type': 'ProcessType.REVERSE_SESSION'
-               },
-               {
-                'Connections': [
-                    {
-                        'local_port': port,
-                        'local_address': IPv4Address(alt_name),
-                        'Status': 'ProcessState.OPEN'
-                    }
-                ],
-                'Process Type': 'ProcessType.XXX'
-               }
-               ],
-            'Interface': [{'IP Address': IPv4Address(alt_name)}],
-            'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
-            'System info': {'Hostname': self.action_param, 'OSType': 'OperatingSystemType.WINDOWS'}
-             }
-                formatted_data[attacker_node]={
-              'Processes': [
-                {
-                'Connections': [
-                    {
-                        'local_port': remote_port_on_attacker,
-                        'remote_port': port_for_reverse_shell,
-                        'local_address': IPv4Address(attacker_node),
-                        'remote_address': IPv4Address(alt_name)
-                    }
-                ],
-                'Process Type': 'ProcessType.REVERSE_SESSION'
-               }]
-               }
                 
+                attacked_ip=data['host_ip']
+                attacked_port= ip_dict[attacked_ip]
+                attacked_host_name= self.fetch_name(attacked_ip)
+
+                attacker_ip=self.fetch_name('User0')
+                
+                #Instead of taking actual port parsed from ss output using fixed 4444
+                #attacker_port= ip_dict[attacker_ip]  #undo this and comment next line for actual port
+                attacker_port=4444 
+
+                attacker_host_name='User0'
+
+                attack_start_ip= 21
+
+                print('Attacked',attacked_ip,attacked_port,attacked_host_name)
+                print('Attacker',attacker_ip,attacker_port,attacker_host_name)
+                
+                formatted_data[attacker_ip]= {
+        "Processes": [{
+            "Connections": [{
+                "local_port": attacker_port,
+                "remote_port": attacked_port,
+                "local_address": ipaddress.IPv4Address(attacker_ip),
+                "remote_address": ipaddress.IPv4Address(attacked_ip)
+            }],
+            "Process Type": 'ProcessType.REVERSE_SESSION_HANDLER'
+        }],
+        "Interface": [{
+            "IP Address": ipaddress.IPv4Address(attacker_ip)
+        }]
+    }
+    
+                formatted_data[attacked_ip]= {
+        "Processes": [{
+            "Connections": [{
+                "local_port": attacked_port,
+                "remote_port": attacker_port,
+                "local_address": ipaddress.IPv4Address(attacked_ip),
+                "remote_address": ipaddress.IPv4Address(attacker_ip)
+            }],
+            "Process Type": 'ProcessType.REVERSE_SESSION'
+        }, {
+            "Connections": [{
+                "local_port": attack_start_ip,
+                "local_address": ipaddress.IPv4Address(attacked_ip),
+                "Status": 'ProcessState.OPEN'
+            }],
+            "Process Type": 'ProcessType.FEMITTER'
+        }],
+        "Interface": [{
+            "IP Address": ipaddress.IPv4Address(attacked_ip)
+        }],
+        "Sessions": [{
+            "ID": 1,
+            "Type": 'SessionType.RED_REVERSE_SHELL',
+            "Agent": "Red"
+        }],
+        "System info": {
+            "Hostname": attacked_host_name,
+            "OSType": 'OperatingSystemType.LINUX'
+        }
+    }
 
         return formatted_data
  
@@ -331,19 +345,17 @@ class utils:
   def transform_PrivilegeEscalate(self,data):
     formatted_data = {}
     if data['success']== False: 
-          formatted_data[key] = self.get_success_status(data) 
+          formatted_data = self.get_success_status(data) 
     elif data['success']==True: 
-      for key, value in data.items():
-        if key == "success":
-          formatted_data[key] = self.get_success_status(data)
-        else: 
-           user=data["user"]
-           explored_ip=data['explored_host']
-           pid_string= data[pid_sting]
-           pids= self.extract_tcp_pid(pid_string)
-           subnet='10.1.1.234/24'
-           host=data['action_param']
-           data[host] = {
+        formatted_data = self.get_success_status(data)
+         
+        user=data["user"]
+        explored_ip=data['explored_host']
+        pid_string= data['pid_string']
+        pids= self.extract_tcp_pid(pid_string)
+        subnet='10.1.1.234/24'
+        host=data['action_param']
+        formatted_data[host] = {
         'Sessions': [
             {
                 'Username': user,
@@ -354,32 +366,49 @@ class utils:
                 'Agent': 'Red'
             }
         ],
-        'Processes': [
-            {
-                'PID': pid,
-                'Username': user
-            }
-        ],
+        
         'Interface': [
             {
                 'Interface Name': 'eth0',
                 'IP Address': ipaddress.IPv4Address(host),
-                'Subnet': ipaddress.IPv4Network(subnet)
+                'Subnet': 'ipaddress.IPv4Network(subnet)'
             }
         ]
     }
-    if explored_ip!= None:
-     data[explored_ip] = {
+        pid_data=[]
+        for pid in pids: 
+             pid_data.append({'PID': pid,'Username': user})
+        formatted_data[host]['Procesess']=pid_data
+    if self.is_valid_ip(explored_ip) :
+     formatted_data[self.fetch_name(explored_ip)] = {
         'Interface': [
             {
                 'IP Address': ipaddress.IPv4Address(explored_ip)
             }
         ]
       }
-           
-    
     return formatted_data
-
+  
+  def is_valid_ip(self,ip):
+    # Define the regex pattern for a valid IPv4 address
+    print('IP is:',ip)
+    if ip==None:
+     return False
+    else:
+     pattern = re.compile(r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+     return bool(pattern.match(ip))
+    
+  def fetch_name(self,name): 
+     with open("./assets/openstack_ip_map.json",'r') as f:
+        data = yaml.safe_load(f)
+     if name in data:
+        alt_name = data[name]
+     else:
+        for key, value in data.items():
+          if value == name:
+            alt_name = key
+     print(f"The value of '{name}' is: {alt_name}")
+     return alt_name
 
 
 class name_conversion():

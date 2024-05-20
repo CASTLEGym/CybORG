@@ -14,6 +14,8 @@ from vu_emu import vu_emu
 import json
 from utils import *
 import ast
+from reward_calculator import RewardCalculator
+
 #from CybORG.Simulator.Scenarios import FileReaderScenarioGenerator
 
 #path = inspect.getfile(CybORG)
@@ -42,17 +44,18 @@ def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
 if __name__ == "__main__":
-    exp='emu'
+    exp='emu'   
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
-    steps=5
+    steps=10
     # Model loader load the model
     ml =model_loader()
     
     path = str(inspect.getfile(CybORG))
     print(path)
     path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
+    reward_calc=RewardCalculator(path)
     #sg = FileReaderScenarioGenerator(path)
     # B_lineAgent
     if exp=='sim':
@@ -117,11 +120,9 @@ if __name__ == "__main__":
         red_observation=translate_intial_red_obs(red_observation)
         print("\n ***** Red observation after reset is:",red_observation)
 
-        
         cyborg_emu = vu_emu()
         cyborg_emu.reset()
-       
-        
+               
         #read assets
         blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
         with open('./assets/blue_initial_obs.json', 'r') as file:
@@ -135,7 +136,8 @@ if __name__ == "__main__":
         # Translate intial obs in vectorised format to feed into NN
         blue_observation=emu_wrapper.reset(initial_blue_info)
         red_agent=red_agent()
-        
+        total_reward=0
+        rewards=[]
         for i in range(steps):
             print('%%'*76)
             print('Iteration start:',i)
@@ -177,8 +179,12 @@ if __name__ == "__main__":
             blue_observation= emu_wrapper.step(blue_action,blue_outcome)
             #print('\n Blue observation is:',blue_observation)
             #print('\n Red observation is:',red_observation)
-           
-           
+            
+            #reward=reward_calc.reward(blue_observation)
+            #rewards.append(reward)
+            #total_reward+=reward
+
+
             #define their action spaces for both red and blue
             #red_action_space = cyborg_emu.get_action_space("Red")
             #blue_action_space = cyborg_emu.get_action_space("Blue")
@@ -196,4 +202,5 @@ if __name__ == "__main__":
             print('%%'*76)
             print('Iteration End:',i)
         #print("--> Blue actions and its outcome are:", blue_actions)
-        #print("--> Red actions and its outcome are:", red_actions)           
+        #print("--> Red actions and its outcome are:", red_actions)  
+        #print('-> Rewards:',rewards)         

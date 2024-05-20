@@ -1,4 +1,12 @@
+# Interface to load the agent 
+
+#import your agent class. 
 from Agents.MainAgent import MainAgent
+'''
+Agent must have two methods:
+1. get_action : Inputs-observation and action_space; Output-action
+2. end_episode : Inputs- ; Output ; It ends the episode of game. 
+'''
 
 
 class model_loader:

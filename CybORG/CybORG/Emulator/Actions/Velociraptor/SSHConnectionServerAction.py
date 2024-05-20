@@ -33,9 +33,6 @@ class SSHConnectionServerAction(RunProcessAction):
 
     def execute(self, state: Union[State, None]) -> Observation:
         #print('Executing**')
-        if random.random()>=1: 
-           return ProcessObservation(None,False)
-        else:
-           process_observation = super().execute(state)
-           #print('**process observation is :',process_observation)
-           return SSHConnectionServerObservation(process_observation, self.connection_key)
+        process_observation = super().execute(state)
+        #print('**process observation is :',process_observation)
+        return SSHConnectionServerObservation(process_observation, self.connection_key)

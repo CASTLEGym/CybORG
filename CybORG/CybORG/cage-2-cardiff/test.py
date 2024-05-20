@@ -188,13 +188,131 @@ data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
 # Print the updated dictionary
 print(data )
 """
-
+"""
 
 host= {'Processes': [{'PID': 12122, 'PPID': 1, 'Service Name': 'femitter', 'Username': 'SYSTEM'}]}
 host_baseline={'Processes:': [{'pid': 4}, {'pid': 832}, {'pid': 4400}]}
 if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
                 print('\n-> Baseline processes:',baseline_processes)
+"""
+
+
+from ipaddress import IPv4Address
+from enum import Enum
+import random
+
+# Enums based on the given context
+class ProcessType(Enum):
+    REVERSE_SESSION = 11
+    SMTP = 5
+
+class ProcessState(Enum):
+    OPEN = 2
+
+class SessionType(Enum):
+    RED_REVERSE_SHELL = 11
+
+class OperatingSystemType(Enum):
+    LINUX = 3
+
+class OperatingSystemDistribution(Enum):
+    UBUNTU = 8
+
+class OperatingSystemVersion(Enum):
+    U18_04_3 = 6
+
+class Architecture(Enum):
+    x64 = 2
+
+class TrinaryEnum(Enum):
+    TRUE = 1
+
+# Given template dictionary
+template_dict = {
+    'Interface': [{'IP Address': IPv4Address('10.0.214.187')}],
+    'Processes': [
+        {
+            'Connections': [
+                {
+                    'local_address': IPv4Address('10.0.214.187'),
+                    'local_port': 58068,
+                    'remote_address': IPv4Address('10.0.214.186'),
+                    'remote_port': 4444
+                }
+            ],
+            'Process Type': ProcessType.REVERSE_SESSION
+        },
+        {
+            'Connections': [
+                {
+                    'Status': ProcessState.OPEN,
+                    'local_address': IPv4Address('10.0.214.187'),
+                    'local_port': 25
+                }
+            ],
+            'Process Type': ProcessType.SMTP
+        }
+    ],
+    'Sessions': [
+        {
+            'Agent': 'Red',
+            'ID': 1,
+            'Type': SessionType.RED_REVERSE_SHELL
+        }
+    ],
+    'System info': {
+        'Hostname': 'User1',
+        'OSType': OperatingSystemType.LINUX
+    },
+    'success': TrinaryEnum.TRUE
+}
+
+#if template_dict['Processes']['Connections']['remote_port']==4444: 
+      
+    
+# Function to convert the dictionary
+def convert_template_dict(template_dict):
+    # Check if remote_port is 4444 and fetch remote_address
+    attacker_ip_detected=0
+    for process in template_dict['Processes']:
+        for connection in process['Connections']:
+            if connection.get('remote_port') == 4444:
+              attacker_ip = IPv4Address(connection.get('remote_address'))  
+              attacker_ip_detected=1       
+            elif attacker_ip_detected==0: attacker_ip=None
+    
+    
+    converted_dict = {
+        'Processes': [],
+        'Interface': template_dict.get('Interface', []),
+        'System info': {
+            'Hostname': template_dict['System info']['Hostname'],
+            'OSType': template_dict['System info']['OSType'],
+            'OSDistribution': 'OperatingSystemDistribution.UBUNTU',
+            'OSVersion': 'OperatingSystemVersion.U18_04_3',
+            'Architecture': 'Architecture.x64'
+        }
+    }
+
+    for process in template_dict['Processes']:
+        for connection in process['Connections']:
+            new_connection = {
+                'local_port': connection['local_port'],
+                'remote_port': connection.get('remote_port', random.randint(40000,50000)),
+                'local_address': connection['local_address'],
+                'remote_address': connection.get('remote_address', attacker_ip)
+            }
+            converted_dict['Processes'].append({'Connections': [new_connection]})
+
+    # Adding a sample PID for demonstration
+    converted_dict['Processes'][1]['PID'] = 27893
+
+    return converted_dict
+
+# Convert the template dictionary
+converted_dict = convert_template_dict(template_dict)
+print(converted_dict)
 
 
 
