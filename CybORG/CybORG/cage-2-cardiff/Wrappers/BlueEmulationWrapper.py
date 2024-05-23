@@ -24,14 +24,14 @@ class BlueEmulationWrapper():
         self.blue_info = obs
         #print('\n blueEmulationwrapper, self.blue_info:',self.blue_info)	
         obs = self.observation_change(obs, baseline=True)
-        print('\n In BlueEmulationwrapper, obs is:',obs)
+        print('\n In reset step of BlueEmulationwrapper, obs is:',obs)
         return obs
 
     def step(self, action,obs):
-        print('\n=> action from blue emu wrapper, is:',action)
-        print('\n-> i/p obs from blue table wraper, is:',obs)
+        #print('\n=> action from blue emu wrapper, is:',action)
+        print('\n==> i/p obs from blue table wraper, is:',obs)
         obs = self.observation_change(obs)
-        print('\n-> o/p obs from blue_table wrapper, is:',obs)
+        print('-> o/p obs from blue_table wrapper, is:',obs)
         self.last_action=action
         return obs
 
@@ -90,9 +90,9 @@ class BlueEmulationWrapper():
                 continue
 
             host_baseline = self.baseline[hostid]
-            print('\n=> From blue, Host id is:',hostid)
-            print('--> Host is:',host)
-            print('\n-> Host baseline is:',host_baseline)
+            print('\n--------> From blue, Host id is:',hostid)
+            print('--------> Host input info is:',host)
+            print('--------------> Host baseline info is:',host_baseline)
             if host == host_baseline:
                 continue
 
@@ -110,7 +110,7 @@ class BlueEmulationWrapper():
 
             if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
-                print('\n-> Baseline processes:',baseline_processes)
+                #print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []
                 for p in host['Processes']:
                     if p not in baseline_processes:
@@ -120,7 +120,7 @@ class BlueEmulationWrapper():
                 #print('\n anomalous processes:',anomalous_processes)
             if host_anomalies:
                 anomaly_dict[hostid] = host_anomalies
-        print('\n anomaly dict is:',anomaly_dict)
+        print('-------------------------->>>> Anomaly dict is:',anomaly_dict)
         return anomaly_dict
 
     def _process_anomalies(self, anomaly_dict):

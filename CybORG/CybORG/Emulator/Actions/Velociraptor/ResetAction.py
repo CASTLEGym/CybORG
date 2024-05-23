@@ -18,7 +18,7 @@ class ResetAction(Action):
         self.credentials_file = credentials_file
             
 
-    def execute(self, hostname= None,directory="/home/vagrant", state=None) -> Observation:
+    def execute(self, hostname= None,directory="/home/ubuntu", state=None) -> Observation:
         self.directory=directory
         self.hostname=hostname
         md5_process_action = RunProcessAction(

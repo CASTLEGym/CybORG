@@ -125,7 +125,12 @@ class RestoreAction(Action):
 
         network_id_port_data_list_dict = {}
         for network_name, network_data in server.addresses.items():
-            network = conn.network.find_network(network_name)
+            try:
+                network = conn.network.find_network(network_name)
+            except Exception as e:
+                print(e)
+                continue
+
             port_data_list = []
             for item in network_data:
                 ip_address = item['addr']
@@ -143,6 +148,8 @@ class RestoreAction(Action):
     def execute(self, state: Union[State, None]) -> Observation:
 
         observation = Observation(False)
+
+        print(self.auth_args)
 
         conn = connection.Connection(**self.auth_args)
 

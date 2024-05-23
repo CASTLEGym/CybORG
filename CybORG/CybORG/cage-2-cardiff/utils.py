@@ -64,11 +64,11 @@ def translate_intial_red_obs(data):
             new_ip= key
         elif value == 'user_subnet':
             new_subnet= key
-    print('new ip is:',new_ip,'subnet is:',new_subnet)
-    print(data['User0']['Interface'][0])
+    #print('new ip is:',new_ip,'subnet is:',new_subnet)
+    #print(data['User0']['Interface'][0])
     data['User0']['Interface'][0]['IP Address']= IPv4Address(new_ip)
     data['User0']['Interface'][0]['Subnet']= IPv4Network(new_subnet)
-    print('\n Data is:',data)
+    #print('\n Data is:',data)
     return data
     
 
@@ -76,13 +76,13 @@ def modify_blue_by_red(blue_outcome,red_outcome,red_action,red_action_param):
     if red_action=='DiscoverRemoteSystems':
       return blue_outcome
     elif red_action=='DiscoverNetworkServices':
-      print('red_outcome is:',red_outcome, 'red_action_param is:',red_action_param) 
+      #print('red_outcome is:',red_outcome, 'red_action_param is:',red_action_param) 
       info={
         red_action_param:parse_DNS_data(red_outcome)
       }
-      print('\n blue outcome is:',blue_outcome)
+      #print('\n blue outcome is:',blue_outcome)
       blue_outcome.update(info)
-      print('\n **Blue Info is:',blue_outcome)
+      #print('\n **Blue Info is:',blue_outcome)
       return blue_outcome
 
 
@@ -145,13 +145,21 @@ class utils:
     return data['success']
     """
 
-
+  
+  def transform_analyse(self, data):
+     if data['success']== False: 
+       formatted_data= self.get_success_status(data)
+     elif data['success']== True:
+       formatted_data= self.get_success_status(data)
+       
+     return formatted_data 
+       
 
   def transform_decoy(self, data):
     # TO do : Remove PID and PPID as fixed to fetch from process and update 
     #       : If possible remove the propertiesa and set it during the decoy set up to lure/honeytrap. 
     #       : Remove the faked decoys that is not part of linux type decoys. 
-    print('Data is:',data)
+    #print('Data is:',data)
     formatted_data= self.get_success_status(data)
     host=data['host']
     username=data['username']
@@ -222,7 +230,7 @@ class utils:
   def extract_tcp_pid(self,ip_string): 
       pattern = r'pid=(\d+)'
       pids = re.findall(pattern, ip_string)
-      print("Extracted PIDs:", pids)
+      #print("Extracted PIDs:", pids)
       return pids 
 
   def parse_tcp(self,string):
@@ -290,8 +298,8 @@ class utils:
 
                 attack_start_ip= 21
 
-                print('Attacked',attacked_ip,attacked_port,attacked_host_name)
-                print('Attacker',attacker_ip,attacker_port,attacker_host_name)
+                #print('Attacked',attacked_ip,attacked_port,attacked_host_name)
+                #print('Attacker',attacker_ip,attacker_port,attacker_host_name)
                 
                 formatted_data[attacker_ip]= {
         "Processes": [{
@@ -391,7 +399,7 @@ class utils:
   
   def is_valid_ip(self,ip):
     # Define the regex pattern for a valid IPv4 address
-    print('IP is:',ip)
+    #print('IP is:',ip)
     if ip==None:
      return False
     else:
@@ -407,7 +415,7 @@ class utils:
         for key, value in data.items():
           if value == name:
             alt_name = key
-     print(f"The value of '{name}' is: {alt_name}")
+     #print(f"The value of '{name}' is: {alt_name}")
      return alt_name
 
 
@@ -415,7 +423,7 @@ class name_conversion():
    def __init__(self,path):
      with open(path,'r') as f:
          self.data = yaml.safe_load(f)
-     print('Data is:',self.data)
+     #print('Data is:',self.data)
      
    def fetch_alt_name(self,name):
      if name in self.data:
@@ -424,7 +432,7 @@ class name_conversion():
         for key, value in self.data.items():
           if value == name:
             alt_name = key
-     print(f"The value of '{name}' is: {alt_name}")
+     #print(f"The value of '{name}' is: {alt_name}")
      return alt_name
    
        

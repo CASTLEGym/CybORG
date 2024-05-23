@@ -51,7 +51,7 @@ class BlueTableWrapper(BaseWrapper):
         if agent == 'Blue':
             self._process_initial_obs(obs)            
             obs = self.observation_change(obs, baseline=True)
-        print('In BlueTablewrapper, o/p obs is:')
+        print('In reset step BlueTablewrapper, o/p obs is:')
         pprint(obs)
                 
         result.observation = obs
@@ -60,7 +60,7 @@ class BlueTableWrapper(BaseWrapper):
     def step(self, agent=None, action=None) -> Results:
         result = self.env.step(agent, action)
         obs = result.observation
-        print('\n=> action from blue table wrapper, is:',action)
+        #print('\n=> action from blue table wrapper, is:',action)
         print('\n-> i/p obs from blue table wraper, is:',obs)
         if agent == 'Blue':
             obs = self.observation_change(obs)

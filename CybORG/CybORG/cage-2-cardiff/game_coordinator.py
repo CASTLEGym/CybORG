@@ -15,6 +15,7 @@ import json
 from utils import *
 import ast
 from reward_calculator import RewardCalculator
+from CybORG.Shared.RedRewardCalculator import HybridImpactPwnRewardCalculator
 
 #from CybORG.Simulator.Scenarios import FileReaderScenarioGenerator
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     path = str(inspect.getfile(CybORG))
     print(path)
     path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
-    reward_calc=RewardCalculator(path)
+    reward_calc=HybridImpactPwnRewardCalculator('Red',path)
     #sg = FileReaderScenarioGenerator(path)
     # B_lineAgent
     if exp=='sim':
@@ -105,11 +106,12 @@ if __name__ == "__main__":
                 # observation = cyborg.reset().observation
                 #observation = wrapped_cyborg.reset()
             #print(f'Average reward for red agent {red_agent.__name__} and steps {num_steps} is: {mean(total_reward)} with a standard deviation of {stdev(total_reward)}')
+            print('=> total reward is:',total_reward,'reward r is:',r)
     elif exp=='emu':
       for red_agent in [B_lineAgent]:
         cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
         wrapped_cyborg = wrap(cyborg)   
-      
+        reward_calc.reset()
         #this intialisation information is coming from Cyborg
         blue_observation = wrapped_cyborg.reset()      
         blue_action_space = wrapped_cyborg.get_action_space(agent_name)
@@ -129,7 +131,7 @@ if __name__ == "__main__":
            initial_blue_info = json.load(file)
         initial_blue_info= translate_initial_blue_info(initial_blue_info)
         # print('\n blue action list:',blue_action_list)
-        print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
+        # print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
         #parse_and_store_ips_host_map(initial_blue_obs)
         emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
         
@@ -157,13 +159,10 @@ if __name__ == "__main__":
             else:
                blue_action= action_name
             
-            
-            
-            
             # Red AGENT  
             # Get action from B-line
             red_action=red_agent.get_action(red_observation, red_action_space)
-            print('red action is:',red_action)
+            #print('red action is:',red_action)
             
             
             #print('\n Red observation is:',red_observation)
@@ -172,7 +171,7 @@ if __name__ == "__main__":
             
             
             
-            print('\n **** blue action is:',blue_action)
+            #print('\n **** blue action is:',blue_action)
             #Execute blue action and convert it to observation
             #To get observation, we need to capture output of both red and blue action and then invoke wrappers (below to get observation)
             blue_outcome, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='blue')
@@ -180,7 +179,7 @@ if __name__ == "__main__":
             #print('\n Blue observation is:',blue_observation)
             #print('\n Red observation is:',red_observation)
             
-            #reward=reward_calc.reward(blue_observation)
+            #reward=reward_calc.calculate_reward(red_observation)
             #rewards.append(reward)
             #total_reward+=reward
 
@@ -203,4 +202,4 @@ if __name__ == "__main__":
             print('Iteration End:',i)
         #print("--> Blue actions and its outcome are:", blue_actions)
         #print("--> Red actions and its outcome are:", red_actions)  
-        #print('-> Rewards:',rewards)         
+        print('----->>>> Rewards:',rewards)         
