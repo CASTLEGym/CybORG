@@ -1,7 +1,5 @@
 # Copyright DST Group. Licensed under the MIT license.
 from CybORG.Simulator.Actions.ShellActionsFolder.PersistenceFolder.Persistence import Persistence
-from CybORG.Simulator.State import State
-from CybORG.Shared.Enums import OperatingSystemType
 from CybORG.Shared.Observation import Observation
 
 class Schtasks(Persistence):

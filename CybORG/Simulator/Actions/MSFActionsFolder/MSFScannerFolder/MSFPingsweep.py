@@ -2,7 +2,7 @@
 from ipaddress import IPv4Address, IPv4Network
 
 from CybORG.Simulator.Actions.MSFActionsFolder.MSFScannerFolder.MSFScanner import MSFScanner
-from CybORG.Shared.Enums import InterfaceType, SessionType, ProcessType, ProcessVersion, AppProtocol
+from CybORG.Shared.Enums import SessionType
 from CybORG.Shared.Observation import Observation
 from CybORG.Simulator.State import State
 

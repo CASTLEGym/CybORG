@@ -28,10 +28,10 @@ class ShellPrivilegeEscalation(ShellAction):
     def copy_files_to_webserver(self, session, file):
         if file.check_readable(session.user) and session.hostname.os_type == OperatingSystemType.LINUX:
             new_file = copy.deepcopy(file)
-            new_file.path = "/tmp/webserver/"
+            new_file.yaml_file_path = "/tmp/webserver/"
             session.hostname.files.append(new_file)
-            self.obs.add_file_info(hostid="hostid0", name=file.name, path=file.path, file_type=file.file_type)
-            self.obs.add_file_info(hostid="hostid0", name=new_file.name, path=new_file.path, file_type=new_file.file_type)
+            self.obs.add_file_info(hostid="hostid0", name=file.name, path=file.yaml_file_path, file_type=file.file_type)
+            self.obs.add_file_info(hostid="hostid0", name=new_file.name, path=new_file.yaml_file_path, file_type=new_file.file_type)
             self.obs.add_system_info(hostid="hostid0", os_type=OperatingSystemType.LINUX)
             return new_file
 
@@ -39,11 +39,11 @@ class ShellPrivilegeEscalation(ShellAction):
         if session.session_type == SessionType.SHELL:
             self.obs.add_interface_info(hostid="hostid1", ip_address=from_ip_address)
             new_file = copy.deepcopy(file)
-            new_file.path = "/tmp/"
+            new_file.yaml_file_path = "/tmp/"
             new_file.user = session.user
             new_file.group = session.user.groups[0].name
             session.hostname.files.append(new_file)
-            self.obs.add_file_info(hostid="hostid1", name=new_file.name, path=new_file.path, file_type=new_file.file_type)
+            self.obs.add_file_info(hostid="hostid1", name=new_file.name, path=new_file.yaml_file_path, file_type=new_file.file_type)
             return new_file
 
     def compile_file(self, session, code_file: File):

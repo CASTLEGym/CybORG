@@ -1,7 +1,5 @@
 # Copyright DST Group. Licensed under the MIT license.
 import string
-from ipaddress import IPv4Address
-
 
 from CybORG.Simulator.Actions.Action import lo
 from CybORG.Simulator.Actions.MSFActionsFolder.MSFAction import MSFAction
@@ -59,7 +57,7 @@ class UpgradeToMeterpreter(MSFAction):
                                         parent=server_session.ident)
         process = state.hosts[new_session.hostname].get_process(new_session.pid)
         process.ppid = session_to_upgrade.pid
-        process.path = "/tmp/"
+        process.yaml_file_path = "/tmp/"
         # Randomly generate name:
         process.name = ''.join(state.np_random.choice(list(string.ascii_uppercase + string.ascii_lowercase)) for _ in range(5))
         local_port = state.hosts[session_to_upgrade.hostname].get_ephemeral_port()

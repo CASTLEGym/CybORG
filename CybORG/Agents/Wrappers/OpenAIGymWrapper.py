@@ -90,7 +90,7 @@ class OpenAIGymWrapper(Env, BaseWrapper):
             param_dict = {}
             param_list = [{}]
             for p in self.action_signature[action]:
-                if p == 'priority':
+                if p == 'priority' or p == 'kwargs':
                     continue
                 temp[p] = []
                 if p not in params:

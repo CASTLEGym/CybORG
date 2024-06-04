@@ -66,7 +66,7 @@ class SambaUsermapScript(RemoteCodeExecution):
             process = new_session.process
             process.name = "sh"
             process.ppid = sh_proc.pid
-            process.path = sh_proc.path
+            process.yaml_file_path = sh_proc.yaml_file_path
             process.user = root_user
 
             local_port = target_host.get_ephemeral_port()

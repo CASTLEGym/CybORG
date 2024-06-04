@@ -1,7 +1,7 @@
 # Copyright DST Group. Licensed under the MIT license.
 import itertools
 import sys
-from typing import List
+from typing import List, Union
 from pprint import pprint
 import numpy as np
 
@@ -18,8 +18,17 @@ from CybORG.Shared import CybORGLogger
 class ScenarioSession(CybORGLogger):
     """A dataclass for handling scenario information of a session """
 
-    def __init__(self, name: str, username: str, session_type, hostname: str, parent=None, num_children: int = 0,
-                 event_artifacts: list = None):
+    def __init__(
+            self,
+            name: Union[str,None],
+            username: str,
+            session_type,
+            hostname: str,
+            parent=None,
+            num_children:
+            int = 0,
+            event_artifacts: list = None
+    ):
         """
         Parameters
         ----------
@@ -49,13 +58,15 @@ class ScenarioSession(CybORGLogger):
     @classmethod
     def load(cls, session_info: dict):
         #print('--> in Scenario session loader')
-        return cls(username=session_info.get("username"),
-                   session_type=session_info.get("type"),
-                   hostname=session_info.get("hostname"),
-                   parent=session_info.get("parent", None),
-                   num_children=session_info.get("num_children_sessions", 0),
-                   event_artifacts=session_info.get("artifacts", []),
-                   name=session_info.get('name', None))
+        return cls(
+            username=session_info.get("username"),
+            session_type=session_info.get("type"),
+            hostname=session_info.get("hostname"),
+            parent=session_info.get("parent", None),
+            num_children=session_info.get("num_children_sessions", 0),
+            event_artifacts=session_info.get("artifacts", []),
+            name=session_info.get('name', None)
+        )
 
     def __str__(self):
         return f"ScenarioSession {self.name}, {self.parent} -> {self.username}@{self.hostname}: {self.session_type}"
@@ -69,17 +80,19 @@ class ScenarioAgent(CybORGLogger):
     agent data without having to remember string keys, etc.
     """
 
-    def __init__(self,
-                 agent_name: str,
-                 team: str,
-                 starting_sessions: list,
-                 actions: list,
-                 osint: dict,
-                 allowed_subnets: list,
-                 agent_type: BaseAgent = None,
-                 active: bool = True,
-                 default_actions: tuple = None,
-                 internal_only: bool = False):
+    def __init__(
+            self,
+            agent_name: str,
+            team: str,
+            starting_sessions: list,
+            actions: list,
+            osint: dict,
+            allowed_subnets: list,
+            agent_type: BaseAgent = None,
+            active: bool = True,
+            default_actions: tuple = None,
+            internal_only: bool = False
+    ):
         """
         Parameters
         ----------
@@ -105,9 +118,7 @@ class ScenarioAgent(CybORGLogger):
         """
         self.name = agent_name
         self.team = team
-        self.starting_sessions = []
-        for session in starting_sessions:
-            self.starting_sessions.append(session)
+        self.starting_sessions = list(starting_sessions)
         self.actions = actions
         if agent_type is not None:
             self.agent_type = agent_type
@@ -133,18 +144,39 @@ class ScenarioAgent(CybORGLogger):
     @classmethod
     def load(cls, agent_name: str, agent_info: dict):
         #print('--> in ScenarioAgent loader')
-        return cls(agent_name=agent_name,
-                   team=agent_info.get('team'),
-                   actions=cls.get_action_classes(agent_info.get("actions", [])),
-                   starting_sessions=[ScenarioSession.load(i) for i in agent_info.get("starting_sessions", [])],
-                   agent_type=getattr(sys.modules['CybORG.Agents'], agent_info.get("agent_type", SleepAgent))(),
-                   allowed_subnets=agent_info.get("AllowedSubnets", []),
-                   osint=agent_info.get("INT", {}))
+        return cls(
+            agent_name=agent_name,
+            team=agent_info.get('team'),
+            actions=cls.get_action_classes(agent_info.get("actions", [])),
+            starting_sessions=[
+                ScenarioSession.load(session)
+                for session in agent_info.get("starting_sessions", [])
+            ],
+            # agent_type IS AN INSTANCE OF THE CLASS SPECIFIED AS "agent_type" IN THE agent_info
+            agent_type=getattr(sys.modules['CybORG.Agents'], agent_info.get("agent_type", "SleepAgent"))(),
+            allowed_subnets=agent_info.get("AllowedSubnets", []),
+            osint=agent_info.get("INT", {})
+        )
 
 
 class ScenarioHost:
-    def __init__(self, hostname, processes=None, host_type='host', system_info=None, user_info=None, interface_info=None, services=None, image=None, info=None, aws_info=None,
-                 confidentiality_value: str = None, availability_value: str = None, respond_to_ping: bool = True, starting_position=np.array([0.0, 0.0])):
+    def __init__(
+            self,
+            hostname,
+            processes=None,
+            host_type='host',
+            system_info=None,
+            user_info=None,
+            interface_info=None,
+            services=None,
+            image=None,
+            info=None,
+            aws_info=None,
+            confidentiality_value: str = None,
+            availability_value: str = None,
+            respond_to_ping: bool = True,
+            starting_position=np.array([0.0, 0.0])
+    ):
         self.hostname = hostname
         self.host_type = host_type
         self.aws_info = aws_info
@@ -165,16 +197,18 @@ class ScenarioHost:
 
     @classmethod
     def load(cls, hostname: str, host_info: dict):
-        return cls(hostname=hostname,
-                   aws_info=host_info.get("AWS_Info", []),
-                   image=host_info.get("image"),
-                   processes=host_info.get("Processes"),
-                   system_info=host_info.get("System info"),
-                   user_info=host_info.get("User Info"),
-                   info=host_info.get("info", {}),
-                   services=host_info.get("Services"),
-                   confidentiality_value=host_info.get("ConfidentialityValue", None),
-                   availability_value=host_info.get("AvailabilityValue", None))
+        return cls(
+            hostname=hostname,
+            aws_info=host_info.get("AWS_Info", []),
+            image=host_info.get("image"),
+            processes=host_info.get("Processes"),
+            system_info=host_info.get("System info"),
+            user_info=host_info.get("User Info"),
+            info=host_info.get("info", {}),
+            services=host_info.get("Services"),
+            confidentiality_value=host_info.get("ConfidentialityValue", None),
+            availability_value=host_info.get("AvailabilityValue", None)
+        )
 
     def get_availability_value(self, default):
         return self.availability_value if self.availability_value is not None else default
@@ -194,24 +228,37 @@ class ScenarioSubnet:
 
     @classmethod
     def load(cls, subnet_name, subnet_info):
-        return cls(subnet_name=subnet_name,
-                   size=subnet_info.get('Size'),
-                   hosts=subnet_info.get('Hosts'),
-                   nacls=subnet_info.get('NACLs'))
+        return cls(
+            subnet_name=subnet_name,
+            size=subnet_info.get('Size'),
+            hosts=subnet_info.get('Hosts'),
+            nacls=subnet_info.get('NACLs')
+        )
 
     def __str__(self):
-        output = f"ScenarioAgent: name={self.name} _info={self._info} \nsessions=\n"
-
-        for session in self.starting_sessions:
-            output += f"{session}"
-
+        output = f"""ScenarioSubnet:
+    subnet_name={self.subnet_name}
+    size={self.size}
+    cidr={self.cidr}
+    hosts={self.hosts}
+    ip_addresses={self.ip_addresses}
+    nacls={self.nacls}
+"""
         return output
 
 class Scenario(CybORGLogger):
     """A dataclass that contains the initial state information"""
 
-    def __init__(self, agents: dict = None, team_calcs: dict = None, team_agents: dict = None, hosts: dict = None, subnets: dict = None,
-                 predeployed: bool = False, max_bandwidth: int = 1000):
+    def __init__(
+            self,
+            agents: dict = None,
+            team_calcs: dict = None,
+            team_agents: dict = None,
+            hosts: dict = None,
+            subnets: dict = None,
+            predeployed: bool = False,
+            max_bandwidth: int = 1000
+    ):
         if agents is None:
             self.agents = {}
         else:
@@ -269,17 +316,24 @@ class Scenario(CybORGLogger):
 
     @classmethod
     def load(cls, scenario_dict: dict):
-        agents={name: ScenarioAgent.load(name, info) for name, info in scenario_dict['Agents'].items()}
         #print(agents)
-        return cls(agents={name: ScenarioAgent.load(name, info) for name, info in scenario_dict['Agents'].items()},
-                   team_calcs=scenario_dict['team_calcs'],
-                   team_agents=scenario_dict['team_agents'],
-                   hosts={hostname: ScenarioHost.load(hostname=hostname, host_info=host_info) for hostname, host_info in
-                          scenario_dict['Hosts'].items()},
-                   subnets={subnet_name: ScenarioSubnet.load(subnet_name=subnet_name, subnet_info=subnet_info) for
-                            subnet_name, subnet_info in scenario_dict['Subnets'].items()},
-
-                   predeployed=scenario_dict.get("predeployed", False))
+        return cls(
+            agents={
+                agent_name: ScenarioAgent.load(agent_name, agent_info)
+                for agent_name, agent_info in scenario_dict['Agents'].items()
+            },
+            team_calcs=scenario_dict['team_calcs'],
+            team_agents=scenario_dict['team_agents'],
+            hosts={
+                hostname: ScenarioHost.load(hostname=hostname, host_info=host_info)
+                for hostname, host_info in scenario_dict['Hosts'].items()
+            },
+            subnets={
+                subnet_name: ScenarioSubnet.load(subnet_name=subnet_name, subnet_info=subnet_info)
+                for subnet_name, subnet_info in scenario_dict['Subnets'].items()
+            },
+            predeployed=scenario_dict.get("predeployed", False)
+        )
 
     def get_subnet_size(self, subnetname: str) -> int:
         return self.subnets[subnetname].size

@@ -117,27 +117,38 @@ class State(CybORGLogger):
         for subnet_name, subnet_info in scenario.subnets.items():
             subnet_cidr = subnet_info.cidr
             self.subnet_name_to_cidr[subnet_name] = subnet_cidr
+            self.subnets[subnet_cidr] = Subnet(
+                cidr=subnet_cidr,
+                ip_addresses=subnet_info.ip_addresses,
+                nacls=scenario.get_subnet_nacls(subnet_name),
+                name=subnet_name
+            )
 
-            for hostname, host_info in scenario.hosts.items():
-                for interface in host_info.interface_info:
-                    self.ip_addresses[interface['ip_address']] = hostname
-            self.subnets[subnet_cidr] = Subnet(cidr=subnet_cidr, ip_addresses=subnet_info.ip_addresses,
-                                               nacls=scenario.get_subnet_nacls(subnet_name), name=subnet_name)
+        for hostname, host_info in scenario.hosts.items():
+            for interface in host_info.interface_info:
+                self.ip_addresses[interface['ip_address']] = hostname
 
-        # create host objects for all host names in the scenario
-        for hostname in scenario.hosts:
-            host_info = scenario.get_host(hostname)
             host_class = Drone if host_info.host_type == 'drone' else Host
-            self.hosts[hostname] = host_class(np_random=self.np_random,system_info=host_info.system_info, processes=host_info.processes,
-                                        users=host_info.user_info, interfaces=host_info.interface_info,
-                                        hostname=hostname, info=host_info.info, services=host_info.services,
-                                        respond_to_ping=host_info.respond_to_ping, starting_position=host_info.starting_position,
-                                        host_type=host_info.host_type)
+            self.hosts[hostname] = host_class(
+                np_random=self.np_random,
+                system_info=host_info.system_info,
+                processes=host_info.processes,
+                users=host_info.user_info,
+                interfaces=host_info.interface_info,
+                hostname=hostname,
+                info=host_info.info,
+                services=host_info.services,
+                respond_to_ping=host_info.respond_to_ping,
+                starting_position=host_info.starting_position,
+                host_type=host_info.host_type
+            )
+
+            # SET UP AGENT SESSIONS PER HOST
             for agent in scenario.agents:
                 self.hosts[hostname].sessions[agent] = []
 
-        for agent in scenario.agents:
-            agent_info = scenario.get_agent_info(agent)
+        # create host objects for all host names in the scenario
+        for agent, agent_info in scenario.agents.items():
             self.sessions[agent] = {}
             self.sessions_count[agent] = 0
             # instantiate parentless sessions first
@@ -308,7 +319,7 @@ class State(CybORGLogger):
         host.sessions = {}
         host.processes = []
         for file in host.files:
-            if file.path == "/tmp/":
+            if file.yaml_file_path == "/tmp/":
                 host.files.remove(file)
 
         # start back up

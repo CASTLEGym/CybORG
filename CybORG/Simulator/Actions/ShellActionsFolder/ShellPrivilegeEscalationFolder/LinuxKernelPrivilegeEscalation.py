@@ -29,7 +29,6 @@ from CybORG.Simulator.Actions.ShellActionsFolder.ShellPrivilegeEscalationFolder.
 from CybORG.Shared.Enums import FileType, AppProtocol
 from CybORG.Shared.Observation import Observation
 from CybORG.Simulator.File import File
-from CybORG.Simulator.Host import Host
 from CybORG.Simulator.State import State
 
 

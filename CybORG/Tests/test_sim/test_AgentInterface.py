@@ -1,10 +1,6 @@
-import inspect
-
 import pytest
 
-from CybORG import CybORG
 from CybORG.Agents.Wrappers import FixedFlatWrapper
-from CybORG.Shared import Results
 from CybORG.Simulator.Actions.Action import Action
 from CybORG.Shared.Observation import Observation
 

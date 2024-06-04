@@ -5,8 +5,7 @@ import pytest
 
 from CybORG.Agents.Wrappers import EnumActionWrapper
 
-from CybORG.Simulator.Actions import MeterpreterIPConfig, MSFAutoroute, MS17_010_PSExec, MSFPortscan, MSFPingsweep, \
-    UpgradeToMeterpreter, SSHLoginExploit, Sleep, DiscoverNetworkServices, \
+from CybORG.Simulator.Actions import MSFPortscan, UpgradeToMeterpreter, SSHLoginExploit, DiscoverNetworkServices, \
     ExploitRemoteService
 from CybORG.Shared.Observation import Observation
 

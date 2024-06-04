@@ -1,9 +1,7 @@
 # Copyright DST Group. Licensed under the MIT license.
-import re
-from ipaddress import IPv4Network
 
 from CybORG.Simulator.Actions.MSFActionsFolder.MeterpreterActionsFolder.MeterpreterAction import MeterpreterAction
-from CybORG.Shared.Enums import OperatingSystemType, SessionType
+from CybORG.Shared.Enums import SessionType
 from CybORG.Shared.Observation import Observation
 
 

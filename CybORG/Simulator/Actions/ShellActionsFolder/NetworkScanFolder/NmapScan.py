@@ -1,8 +1,8 @@
 # Copyright DST Group. Licensed under the MIT license.
-from ipaddress import IPv4Address, IPv4Network
+from ipaddress import IPv4Address
 
 from CybORG.Simulator.Actions.ShellActionsFolder.NetworkScanFolder.NetworkScan import NetworkScan
-from CybORG.Shared.Enums import FileType, InterfaceType
+from CybORG.Shared.Enums import FileType
 from CybORG.Shared.Observation import Observation
 
 

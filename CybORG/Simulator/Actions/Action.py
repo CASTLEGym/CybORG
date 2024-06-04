@@ -1,6 +1,6 @@
 # Copyright DST Group. Licensed under the MIT license.
 from ipaddress import IPv4Address, IPv4Network
-from typing import Optional
+from typing import Union, Optional
 
 from networkx import shortest_path, has_path, NetworkXNoPath
 
@@ -13,11 +13,11 @@ lo = IPv4Address('127.0.0.1')
 
 class Action(CybORGLogger):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.name = self.__class__.__name__
         self.priority = 99
 
-    def execute(self, state: State) -> Observation:
+    def execute(self, state: Union[State, None]) -> Observation:
         raise NotImplementedError(f'Action {type(self)} not implemented')
 
     def check_c2(self, state: State, session: int) -> bool:

@@ -11,6 +11,7 @@ import CybORG.Shared.Enums as CyEnums
 
 BROADCAST_ADDRESS = IPv4Address('0.0.0.0')
 
+
 class Observation:
 
     def __init__(self, success:bool = None):

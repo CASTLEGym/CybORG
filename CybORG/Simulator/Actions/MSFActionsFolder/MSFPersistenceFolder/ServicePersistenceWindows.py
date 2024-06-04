@@ -61,7 +61,7 @@ class ServicePersistenceWindows(MSFAction):
 
         process = new_session.process
         process.ppid = session_to_persist.process.pid
-        process.path = '/tmp/'  # NOTE: Change path to actual path...
+        process.yaml_file_path = '/tmp/'  # NOTE: Change path to actual path...
         process.name = 'exploit.exe'
         local_port = session_to_persist.hostname.get_ephemeral_port()
         new_connection = {"Application Protocol": AppProtocol.TCP,

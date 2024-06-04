@@ -2,7 +2,7 @@
 from ipaddress import IPv4Address
 
 from CybORG.Simulator.Actions.ShellActionsFolder.OpenConnectionFolder.OpenConnection import OpenConnection
-from CybORG.Shared.Enums import ProcessType, InterfaceType
+from CybORG.Shared.Enums import ProcessType
 from CybORG.Shared.Observation import Observation
 from CybORG.Simulator.State import State
 

@@ -1,5 +1,4 @@
 # Copyright DST Group. Licensed under the MIT license.
-from ipaddress import IPv4Network
 
 from CybORG.Simulator.Actions.MSFActionsFolder.MSFAction import MSFAction
 from CybORG.Shared.Enums import SessionType

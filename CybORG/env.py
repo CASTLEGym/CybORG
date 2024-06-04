@@ -45,14 +45,16 @@ class CybORG(CybORGLogger):
         Defines the agent that selects the default action to be performed if the external agent does not pick an action
         If None agents will be loaded from description in scenario file (default=None).
     """
-    supported_envs = ['sim', 'aws']
+    supported_envs = ['sim', 'aws', 'emu']
 
-    def __init__(self,
-                 scenario_generator: ScenarioGenerator,
-                 environment: str = "sim",
-                 env_config=None,
-                 agents: dict = None,
-                 seed: Union[int,CustomGenerator] = None):
+    def __init__(
+            self,
+            scenario_generator: ScenarioGenerator,
+            environment: str = "sim",
+            env_config=None,
+            agents: dict = None,
+            seed: Union[int,CustomGenerator] = None
+    ):
         """Instantiates the CybORG class.
 
         Parameters
@@ -93,6 +95,9 @@ class CybORG(CybORGLogger):
         """
         if self.env == 'sim':
             from CybORG.Simulator.SimulationController import SimulationController
+            return SimulationController(self.scenario_generator, agents, self.np_random)
+        if self.env == 'emu':
+            from CybORG.Emulator.SimulationController import SimulationController
             return SimulationController(self.scenario_generator, agents, self.np_random)
         raise NotImplementedError(
             f"Unsupported environment '{self.env}'. Currently supported "

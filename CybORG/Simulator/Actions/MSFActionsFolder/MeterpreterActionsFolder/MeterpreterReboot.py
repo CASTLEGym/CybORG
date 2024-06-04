@@ -1,8 +1,7 @@
 # Copyright DST Group. Licensed under the MIT license.
 from CybORG.Simulator.Actions.MSFActionsFolder.MeterpreterActionsFolder.MeterpreterAction import MeterpreterAction
-from CybORG.Shared.Enums import OperatingSystemType, SessionType
+from CybORG.Shared.Enums import SessionType
 from CybORG.Shared.Observation import Observation
-from CybORG.Simulator.Process import Process
 from CybORG.Simulator.State import State
 
 

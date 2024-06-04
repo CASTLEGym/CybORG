@@ -35,7 +35,7 @@ class ShellPS(ShellAction):
                     if proc.user.username not in users:
                         users.append(proc.user)
                     obs.add_process(hostid="0", pid=proc.pid, process_name=proc.name,
-                                    username=proc.user.username, parent_pid=proc.ppid, path=proc.path)
+                                    username=proc.user.username, parent_pid=proc.ppid, path=proc.yaml_file_path)
 
                 for user in users:
                     obs.add_user_info(hostid="0", username=user.username, uid=user.uid)

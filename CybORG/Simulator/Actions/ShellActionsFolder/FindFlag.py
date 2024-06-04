@@ -23,7 +23,7 @@ class FindFlag(ShellAction):
             if file.file_type == FileType.FLAG:
                 if file.check_readable(session.user):
                     obs.set_success(True)
-                    obs.add_file_info(hostid="hostid0", path=file.path, name=file.name, file_type=file.file_type)
+                    obs.add_file_info(hostid="hostid0", path=file.yaml_file_path, name=file.name, file_type=file.file_type)
                     return obs
 
         return obs

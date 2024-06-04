@@ -37,7 +37,7 @@ class MeterpreterPS(MeterpreterAction):
                         if proc.user.username not in users:
                             users.append(proc.user.username)
                         obs.add_process(hostid="0", pid=proc.pid, process_name=proc.name,
-                                        username=proc.user.username, path=proc.path)
+                                        username=proc.user.username, path=proc.yaml_file_path)
                     for user in users:
                         obs.add_user_info(hostid="0", username=user)
                     # Need to be able to remove processes as well - remove /bin/sh and ps processes created above?
@@ -53,7 +53,7 @@ class MeterpreterPS(MeterpreterAction):
                     if proc.user.username not in users:
                         users.append(proc.user.username)
                     obs.add_process(hostid="0", pid=proc.pid, process_name=proc.name,
-                                    username=proc.user.username, parent_pid=proc.ppid, path=proc.path)
+                                    username=proc.user.username, parent_pid=proc.ppid, path=proc.yaml_file_path)
             else:
                 state.remove_process(host=session.hostname.hostname, pid=proc_sh.pid)
                 state.remove_process(host=session.hostname.hostname, pid=proc_ps.pid)
@@ -74,7 +74,7 @@ class MeterpreterPS(MeterpreterAction):
                 if proc.user is not None and proc.user.username not in users:
                     users.append(proc.user.username)
                 obs.add_process(hostid="0", pid=proc.pid, process_name=proc.name,
-                                username=proc.user.username, parent_pid=proc.ppid, path=proc.path)
+                                username=proc.user.username, parent_pid=proc.ppid, path=proc.yaml_file_path)
             for user in users:
                 obs.add_user_info(hostid="0", username=user)
             return obs

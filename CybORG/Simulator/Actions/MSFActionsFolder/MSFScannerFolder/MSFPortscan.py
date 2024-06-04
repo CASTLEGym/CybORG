@@ -1,9 +1,9 @@
 # Copyright DST Group. Licensed under the MIT license.
-from ipaddress import IPv4Address, IPv4Network
+from ipaddress import IPv4Address
 
 from CybORG.Simulator.Actions.Action import lo, lo_subnet
 from CybORG.Simulator.Actions.MSFActionsFolder.MSFScannerFolder.MSFScanner import MSFScanner
-from CybORG.Shared.Enums import InterfaceType, SessionType, ProcessType, ProcessVersion, AppProtocol
+from CybORG.Shared.Enums import SessionType
 from CybORG.Shared.Observation import Observation
 from CybORG.Simulator.State import State
 

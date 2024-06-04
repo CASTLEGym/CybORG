@@ -45,7 +45,7 @@ class GetFileInfo(Action):
             obs.add_file_info(
                 hostid="0",
                 name=file.name,
-                path=file.path,
+                path=file.yaml_file_path,
                 group=file.group,
                 group_permissions=file.group_permissions,
                 user=file.user.username,

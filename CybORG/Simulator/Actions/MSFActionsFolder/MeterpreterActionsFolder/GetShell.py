@@ -34,7 +34,7 @@ class GetShell(MeterpreterAction):
                                         user=session.user.username, session_type="msf shell", parent=session)
         process = new_session.process
         process.ppid = session.process.pid
-        process.path = "/bin/"
+        process.yaml_file_path = "/bin/"
         process.name = "sh"
         port1 = new_session.hostname.get_ephemeral_port()
         port2 = new_session.hostname.get_ephemeral_port()

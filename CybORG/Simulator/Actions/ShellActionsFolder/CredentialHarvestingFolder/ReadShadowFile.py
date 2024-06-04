@@ -24,7 +24,7 @@ class ReadShadowFile(CredentialHarvesting):
             obs.add_system_info(hostid="0", os_type="linux")
             shadow_file = None
             for file in session.hostname.files:
-                if file.name == "shadow" and Path.parse_string(file.path) == Path.ETC:
+                if file.name == "shadow" and Path.parse_string(file.yaml_file_path) == Path.ETC:
                     shadow_file = file
                     break
             if shadow_file is not None and shadow_file.check_readable(session.user):

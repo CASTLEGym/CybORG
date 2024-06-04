@@ -1,6 +1,5 @@
 # Copyright DST Group. Licensed under the MIT license.
 from ipaddress import IPv4Address
-from time import sleep
 
 from CybORG.Simulator.Actions.MSFActionsFolder.RemoteCodeExecutionFolder.RemoteCodeExecution import RemoteCodeExecution
 

@@ -23,6 +23,6 @@ class SigCheck(LocalAction):
             return obs
         obs.set_success(True)
         for file in target_host.files:
-            obs.add_file_info(hostid=target_host.hostname, name=file.name, path=file.path, signed=file.signed)
+            obs.add_file_info(hostid=target_host.hostname, name=file.name, path=file.yaml_file_path, signed=file.signed)
 
         return obs

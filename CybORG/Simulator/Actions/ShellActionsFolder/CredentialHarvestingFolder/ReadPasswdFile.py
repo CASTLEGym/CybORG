@@ -23,7 +23,7 @@ class ReadPasswdFile(CredentialHarvesting):
         elif session.hostname.os_type == OperatingSystemType.LINUX:
             passwd_file = False
             for file in session.hostname.files:
-                if file.name == "passwd" and Path.parse_string(file.path) == Path.ETC:
+                if file.name == "passwd" and Path.parse_string(file.yaml_file_path) == Path.ETC:
                     passwd_file = True
                     break
             if passwd_file:
