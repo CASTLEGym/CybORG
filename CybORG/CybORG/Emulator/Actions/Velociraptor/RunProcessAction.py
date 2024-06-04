@@ -24,11 +24,11 @@ class RunProcessAction(VelociraptorAction):
 
         velociraptor_interface = self.get_velociraptor_interface()
         client_id = velociraptor_interface.get_client_id_from_hostname(self.hostname)
-
+        print('--> client id is:',client_id)
         output_list = velociraptor_interface.execute_client_artifact(
             client_id, self.artifact_name, self.environment_dict
         )
-      
+        print("finshed running velociraptor interface ")
         return ProcessObservation(
             success=False
         ) if output_list is None else ProcessObservation(

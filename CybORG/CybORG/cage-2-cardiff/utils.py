@@ -361,9 +361,11 @@ class utils:
         explored_ip=data['explored_host']
         pid_string= data['pid_string']
         pids= self.extract_tcp_pid(pid_string)
-        subnet='10.1.1.234/24'
+        subnet=data['subnet']
         host=data['action_param']
-        formatted_data[host] = {
+        hostname= data['hostname']
+
+        formatted_data[hostname] = {
         'Sessions': [
             {
                 'Username': user,
@@ -379,14 +381,14 @@ class utils:
             {
                 'Interface Name': 'eth0',
                 'IP Address': ipaddress.IPv4Address(host),
-                'Subnet': 'ipaddress.IPv4Network(subnet)'
+                'Subnet': ipaddress.IPv4Network(subnet)
             }
         ]
     }
         pid_data=[]
         for pid in pids: 
              pid_data.append({'PID': pid,'Username': user})
-        formatted_data[host]['Procesess']=pid_data
+        formatted_data[hostname]['Procesess']=pid_data
     if self.is_valid_ip(explored_ip) :
      formatted_data[self.fetch_name(explored_ip)] = {
         'Interface': [

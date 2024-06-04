@@ -17,7 +17,7 @@ previous_verification_dict = {
 
 verify_files_action = AnalyseAction(
     credentials_file=credentials_file,
-    hostname='user-host-4',
+    hostname='user-host-3',
     directory="/home/ubuntu",
     previous_verification_dict=previous_verification_dict
 )

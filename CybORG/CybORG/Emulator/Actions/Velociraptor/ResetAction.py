@@ -21,12 +21,13 @@ class ResetAction(Action):
     def execute(self, hostname= None,directory="/home/ubuntu", state=None) -> Observation:
         self.directory=directory
         self.hostname=hostname
+        print('hostname:',hostname,'directory is:',directory)
         md5_process_action = RunProcessAction(
             self.credentials_file,
             self.hostname,
-            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f ! -name '.*' -exec echo \"{{}}\" +)"
+            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f -exec echo \"{{}}\" +)"
         )
-
+        print("finished md5 execution!!")
         md5_observation = md5_process_action.execute(None)
 
         if md5_observation.ReturnCode != 0:

@@ -25,6 +25,7 @@ from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 #from pprint import pprint
 import ast
+from reward_calculator import RewardCalculator
 
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
@@ -104,6 +105,13 @@ class vu_emu():
       self.used_ports={}
       self.exploited_hosts=[]
       self.old_exploit_outcome={}
+      self.network_state={}
+      self.reward_cal=RewardCalculator('/home/ubuntu/Git/CybORG-wrappers/CybORG/CybORG/Shared/Scenarios/Scenario2.yaml')
+
+
+      with open("./assets/openstack_ip_map.json",'r') as f:
+         self.os_ip_data = yaml.safe_load(f)
+     #print('Data is:',self.data)
 
    def reset(self):
        with open('./assets/blue_baseline_obs.py','r') as f:
@@ -123,7 +131,9 @@ class vu_emu():
        for vm in vms:
           #curr_dir=os.getcwd()
           #host_dir= os.path.join('./machines/', vm)
+          
           os_vm=cage2os.fetch_alt_name(vm)
+          print('--> VM is:',vm, 'os name is:',os_vm)
           obs=reset.execute(os_vm)
           if obs.success==True: 
               self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
@@ -139,6 +149,22 @@ class vu_emu():
        
    def get_action_space(self,agent="Red"):
        return None, None
+
+   def update_reward_information_dict(self,info_dict, server_name, username):
+    if server_name not in info_dict:
+        info_dict[server_name] = {'Sessions': []}
+    info_dict[server_name]['Sessions'].append({'Username': username})
+   
+   def delete_reward_information_dict(self,info_dict, server_name, username):
+    if server_name in info_dict:
+        sessions = info_dict[server_name]['Sessions']
+        info_dict[server_name]['Sessions'] = [session for session in sessions if session['Username'] != username]
+        
+        # If there are no more sessions, remove the server entry
+        if not info_dict[server_name]['Sessions']:
+            del info_dict[server_name]
+    return info_dict
+
 
    
    def step(self,action_string,agent_type):
@@ -190,8 +216,9 @@ class vu_emu():
           if action_string=='Sleep':
                outcome={'success': 'Unknown'}
           else:
-              print('!!! Not Implemented !!!')       
-       return outcome, None, None, None
+              print('!!! Not Implemented !!!')   
+       reward=self.reward_cal.reward(self.network_state)    
+       return outcome, reward, None, None
    
    def modify_blue_by_red(self,blue_outcome,red_outcome,last_red_action,last_red_action_param):
       #print('@@@@@'*100)
@@ -295,10 +322,16 @@ class vu_emu():
 
           outcome.update({'success':success})
           ip_list= observation.ip_address_list
-          filtered_list = [ip for ip in ip_list if not ip.endswith('.5') and not ip.endswith('.251')]
+
+          # in future filtering must be done using a parameter.. 
+          ip_list = [ip for ip in ip_list if not ip.endswith('.5') and not ip.endswith('.251')]
+          filtered_list = [ip for ip in ip_list if not ip.endswith('.100') and not ip.endswith('.120') and not ip.endswith('.200')]
+
           #print(filtered_list)
           outcome.update({action_param:filtered_list})
           #print('\n-> outcome of DiscoverRemoteSystem is:',outcome)
+
+
        elif action_name=='DiscoverNetworkServices': 
           action=DiscoverNetworkServicesAction(credentials_file,'user-host-1',action_param)
           observation=action.execute(None)
@@ -347,8 +380,15 @@ class vu_emu():
             outcome.update({'user':observation.user.strip()})
             outcome.update({'explored_host':self.fetch_ip(observation.explored_host)})
             outcome.update({'pid_string':observation.pid})
+            hostname=ip2host.fetch_alt_name(action_param)
+            outcome.update({'hostname':hostname})
+            subnet_ip= self.get_subnet_ip(hostname)
+            outcome.update({'subnet':subnet_ip})
+
           else: 
             success= False
+          if success==True:
+            self.update_reward_information_dict(self.network_state,action_param,'root')
           outcome.update({'success':success})
 
           #print('\n->outcome of Exploit action is:',outcome)
@@ -372,30 +412,40 @@ class vu_emu():
        elif action_name=='Remove':
           outcome={}
           if action_param in self.connection_key: 
-            remove_action = RemoveAction(credentials_file,action_param,self.connection_key[action_param])
+            remove_action = RemoveAction(credentials_file,'user-host-1',self.connection_key[action_param])
             observation=remove_action.execute(None)
             success = enum_to_boolean(str(observation.success))
             outcome.update({'success':success})
           else: 
             outcome.update({'success':False})
           if outcome['success']==True:
-               del self.connection_key[action_param]
+               if action_param in self.connection_key:del self.connection_key[action_param]
                self.available_ports.append(self.used_ports[action_param])
                del self.used_ports[action_param]
+               self.delete_reward_information_dict(self.network_state,action_param,'root')
        
        elif action_name=='Restore':
+          """
           outcome={}
-          restore_action = RestoreAction(hostname=action_param,
+          restore_action = RestoreAction(hostname=cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)),
           auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
           project_name='mvp1',
-          username='xyz',
-          password='*****',
+          username='xxx',
+          password='xxx',
           user_domain_name='ISIS',
           project_domain_name='ISIS')
           observation=restore_action.execute(None)
           success = enum_to_boolean(str(observation.success))
           outcome.update({'success':success})
-          if observation.success==True:del self.connection_key[action_param]
+          if observation.success==True:
+             del self.connection_key[action_param]
+          """
+          outcome={}
+          outcome.update({'success':True})
+          print('outcome is:',outcome, 'and success is:',outcome["success"])
+          if outcome["success"]==True:
+             self.delete_reward_information_dict(self.network_state,action_param,'root')
+             if action_param in self.connection_key:del self.connection_key[action_param]
 
        elif action_name=='Analyse':
           print('@@'*100, 'In Analyse, host name is:',cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)))
@@ -436,7 +486,34 @@ class vu_emu():
    def is_name(self,s):
          return bool(re.match(r"^[A-Za-z]+", s))
    
-  
+   def get_subnet_ip(self,hostname):
+    # Reverse the dictionary to map names to IPs
+    #to do : load the 
+    ip_to_name= self.os_ip_data
+    name_to_ip = {v: k for k, v in ip_to_name.items()}
+    print(name_to_ip)
+    # Subnet mappings
+    subnet_mappings = {}
+    # Loop through the input dictionary and extract subnet information
+    for key, value in name_to_ip.items():
+      if 'subnet' in key:
+         subnet_mappings[key] = value
+    print(subnet_mappings)
+
+    if hostname in name_to_ip:
+        ip = name_to_ip[hostname]
+        print('ip is:',ip)
+        # Determine which subnet the IP belongs to
+        for subnet_name, subnet_ip in subnet_mappings.items():
+            # Split the string by dots
+            parts = subnet_ip.split('.')
+            # Combine the first three parts with dots
+            first_part = '.'.join(parts[:3])
+            if subnet_ip in ip_to_name and ip.startswith(first_part):
+                print('subnet Ip:',subnet_ip)
+                return subnet_ip
+    return None
+      
    
    def get_machine_intial_state(self,path):
      file_path= './machines/config_'+path+'.yaml'

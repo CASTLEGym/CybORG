@@ -56,6 +56,7 @@ if __name__ == "__main__":
     path = str(inspect.getfile(CybORG))
     print(path)
     path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
+    print('path is:',path)
     reward_calc=HybridImpactPwnRewardCalculator('Red',path)
     #sg = FileReaderScenarioGenerator(path)
     # B_lineAgent
@@ -167,7 +168,7 @@ if __name__ == "__main__":
             
             #print('\n Red observation is:',red_observation)
             
-            red_observation, red_rew, done, info = cyborg_emu.step(str(red_action),agent_type='red')
+            red_observation,rew, done, info = cyborg_emu.step(str(red_action),agent_type='red')
             
             
             
@@ -176,6 +177,7 @@ if __name__ == "__main__":
             #To get observation, we need to capture output of both red and blue action and then invoke wrappers (below to get observation)
             blue_outcome, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='blue')
             blue_observation= emu_wrapper.step(blue_action,blue_outcome)
+            rewards.append(blue_rew)
             #print('\n Blue observation is:',blue_observation)
             #print('\n Red observation is:',red_observation)
             
