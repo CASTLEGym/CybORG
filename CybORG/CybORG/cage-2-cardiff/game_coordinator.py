@@ -16,6 +16,7 @@ from utils import *
 import ast
 from reward_calculator import RewardCalculator
 from CybORG.Shared.RedRewardCalculator import HybridImpactPwnRewardCalculator
+import argparse
 
 #from CybORG.Simulator.Scenarios import FileReaderScenarioGenerator
 
@@ -45,11 +46,22 @@ def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
 if __name__ == "__main__":
-    exp='emu'   
+    parser = argparse.ArgumentParser(description="Game coordinator interface")
+    
+    # Positional arguments
+    parser.add_argument("exp", type=str, nargs='?',default='sim', help="Set up the type of environment - sim/emu")
+    parser.add_argument("steps", type=int,nargs='?', default=5,help="Number of steps in the game")
+    
+    args = parser.parse_args()
+    
+    
+    exp=args.exp   
+    steps=args.steps
+    
     scenario = 'Scenario2'
     print('Cyborg version:',CYBORG_VERSION)
     print('*** Running :',exp)
-    steps=10
+    
     # Model loader load the model
     ml =model_loader()
     
