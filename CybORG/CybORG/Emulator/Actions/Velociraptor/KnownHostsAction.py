@@ -12,7 +12,7 @@ class KnownHostsAction(RunProcessAction):
     def __init__(self, credentials_file, hostname):
 
         ip_address_regex = r"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
-        command = f"doas sed -En '/{ip_address_regex}/s/^({ip_address_regex}).*/\\\\1/p' ~ubuntu/.ssh/known_hosts"
+        command = f"sed -En '/{ip_address_regex}/s/^({ip_address_regex}).*/\\\\1/p' ~ubuntu/.ssh/known_hosts"
 
         super().__init__(credentials_file=credentials_file, hostname=hostname, command=command)
 

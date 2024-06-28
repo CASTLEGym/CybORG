@@ -1,9 +1,7 @@
-import json
 from typing import Union
 
 from pathlib import Path
 import tempfile
-import time
 
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
@@ -15,8 +13,7 @@ from CybORG.Shared.Actions import Action
 import paramiko
 import shutil
 import time
-
-from novaclient import client
+import socket
 
 
 class RestoreAction(Action):
@@ -36,7 +33,9 @@ class RestoreAction(Action):
         self.auth_url = auth_url
         self.password = password
         self.username = username
+        self.project_name = project_name
         self.user_domain_name = user_domain_name
+        self.project_domain_name = project_domain_name
 
         self.auth_args = {
             'auth_url': auth_url,
@@ -74,9 +73,18 @@ class RestoreAction(Action):
                 ssh_session.connect(hostname=ip_address, username='vagrant', password='vagrant')
                 session_success = True
                 break
-            except Exception:
-                # print(f"SSH connection try {ix} failed. Retrying...")
-                time.sleep(1)
+            except paramiko.BadHostKeyException as bad_host_key_exception:
+                print(f"SSH connection try {ix} failed: BadHostKeyException ({str(bad_host_key_exception)})")
+                return None
+            except paramiko.AuthenticationException as authentication_exception:
+                print(f"SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
+                return None
+            except paramiko.SSHException as ssh_exception:
+                print(f"SSH connection try {ix} failed: SSHException ({str(ssh_exception)})")
+            except socket.error:
+                print(f"SSH connection try {ix} failed: socker.error ({str(socket.error)})")
+
+            time.sleep(5)
 
         if session_success:
             return ssh_session
@@ -86,8 +94,6 @@ class RestoreAction(Action):
 
     @classmethod
     def collect_files(cls, ssh_session):
-
-        ssh_session.exec_command(f"rm -rf {cls.collect_files_dir_name} {cls.collect_script_name} {cls.tarfile_name}")
 
         sftp_client = ssh_session.open_sftp()
 
@@ -101,13 +107,8 @@ class RestoreAction(Action):
         sftp_client.get(cls.tarfile_name, str(cls.tarfile_path))
         sftp_client.close()
 
-        ssh_session.exec_command(f"rm -rf {cls.collect_files_dir_name} {cls.collect_script_name} {cls.tarfile_name}")
-
-
     @classmethod
     def restore_files(cls, ssh_session):
-
-        ssh_session.exec_command(f"rm -rf {cls.collect_files_dir_name} {cls.restore_script_name} {cls.tarfile_name}")
 
         sftp_client = ssh_session.open_sftp()
 
@@ -118,98 +119,125 @@ class RestoreAction(Action):
 
         ssh_session.exec_command(f"bash {cls.restore_script_name}")
 
-        ssh_session.exec_command(f"rm -rf {cls.collect_files_dir_name} {cls.restore_script_name} {cls.tarfile_name}")
+        ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
 
     @staticmethod
     def get_network_id_port_data_list_dict(conn, server):
 
         network_id_port_data_list_dict = {}
         for network_name, network_data in server.addresses.items():
-            try:
-                network = conn.network.find_network(network_name)
-            except Exception as e:
-                print(e)
-                continue
-
+            network_list = conn.list_networks(
+                filters={
+                    "name": network_name,
+                    "project_id": server.location.project.id
+                }
+            )
+            network = network_list[0]
             port_data_list = []
             for item in network_data:
-                ip_address = item['addr']
                 mac_address = item["OS-EXT-IPS-MAC:mac_addr"]
-                port = conn.network.ports(mac_address=mac_address)
+                port = list(conn.network.ports(mac_address=mac_address))[0]
                 port_data_list.append({
-                    'ip_address': ip_address,
-                    'port': list(port)[0]
+                    "port_id": port.id,
+                    "port_info": {
+                        "admin_state_up": True,
+                        'fixed_ips': port.fixed_ips,
+                        'mac_address': mac_address,
+                        "network_id": network.id,
+                        "security_groups": port.security_group_ids
+                    }
                 })
-            network_id_port_data_list_dict[network.id] = port_data_list
+            network_id_port_data_list_dict[network_name] = port_data_list
 
         return network_id_port_data_list_dict
-
 
     def execute(self, state: Union[State, None]) -> Observation:
 
         observation = Observation(False)
 
-        print(self.auth_args)
-
+        # CONNECTION API
         conn = connection.Connection(**self.auth_args)
 
+        # GET SERVER TO RESTORE
         server = conn.compute.find_server(self.hostname)
 
+        # IF SERVER DOESN'T EXIST, RETURN FALSE OBSERVATION
         if server is None:
             return observation
 
+        # GET FLAVOR ID OF SERVER
         flavor_name = server.flavor.name
         flavor = conn.compute.find_flavor(name_or_id=flavor_name)
         flavor_id = flavor.id
 
+        # SERVER IMAGE ID
         image_id = server.image.id
 
+        # INFO ABOUT SERVER PORTS
         network_id_port_data_list_dict = self.get_network_id_port_data_list_dict(conn, server)
 
-        ip_address_port_data_set = {
-            item['ip_address']
-            for value in network_id_port_data_list_dict.values()
-            for item in value
-        }
-
+        # IF THERE ARE NO PORTS, RETURN FALSE OBSERVATION
         if len(network_id_port_data_list_dict) == 0:
             return observation
 
-        ssh_ip_address = list(ip_address_port_data_set)[0]
+        # GET SET OF ALL IP ADDRESSES OF SERVER,
+        # AND LIST OF IP ADDRESSES ASSOCIATED WITH 'control' NETWORK
+        server_ip_address_set = set()
+        server_control_network_ip_address_list = []
+        for network_name, port_data_list in network_id_port_data_list_dict.items():
+            for port_data in port_data_list:
+                for fixed_ip in port_data['port_info']['fixed_ips']:
+                    ip_address = fixed_ip['ip_address']
+                    server_ip_address_set.add(ip_address)
+                    if network_name == 'control':
+                        server_control_network_ip_address_list.append(ip_address)
 
+        # GET IP ADDRESS FOR SSH CONNECTION
+        ssh_ip_address = server_control_network_ip_address_list[0]
+
+        # CREATE AN SSH SESSION WITH SERVER
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
             return observation
 
+        # COLLECT CRITICAL FILES FROM SERVER, STORE LOCALLY ON THIS MACHINE
         self.collect_files(ssh_session)
 
+        # CLOSE THE SESSION
         ssh_session.close()
 
+        #
+        # DELETE THE SERVER
+        #
         instance_id = server.id
         conn.compute.delete_server(instance_id)
+
+        # WAIT UNTIL SERVER IS FULLY DELETED
         conn.compute.wait_for_delete(server_v2.Server(id=instance_id))
 
+        # GET ID'S OF ALL EXISTING PORTS TO SEE IF ANY THAT WERE ATTACHED TO THE SERVER STILL EXIST
         existing_port_list = conn.list_ports()
+        existing_port_id_set = {existing_port.id for existing_port in existing_port_list}
 
-        existing_port_id_set = { existing_port.id for existing_port in existing_port_list }
-
+        # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
         network_list = []
-        new_network_id_port_data_dict = {}
-        for network_id, port_data_list in network_id_port_data_list_dict.items():
-            new_port_data_list = []
-            include_network = True
+        for network_name, port_data_list in network_id_port_data_list_dict.items():
             for port_data in port_data_list:
-                port_id = port_data['port'].id
+                port_id = port_data['port_id']
+                # IF PORT EXISTS, PLACE IN LIST TO ATTACH TO RESTORED SERVER
                 if port_id in existing_port_id_set:
-                    network_list.append({ 'port': port_id })
+                    network_list.append({'port': port_id})
                     include_network = False
+                # OTHERWISE, PLACE DATA ABOUT PORT INTO LIST FOR RE-CREATION
                 else:
-                    new_port_data_list.append(port_data)
-            if len(new_port_data_list) > 0:
-                new_network_id_port_data_dict[network_id] = new_port_data_list
-                if include_network:
-                    network_list.append({ 'uuid': network_id})
+                    port = conn.create_port(
+                        **port_data['port_info']
+                    )
+                    network_list.append({'port': port.id})
 
+        #
+        # RESTORE THE SERVER
+        #
         redeployed_instance = conn.compute.create_server(
             auto_ip=False,
             name=self.hostname,
@@ -218,42 +246,8 @@ class RestoreAction(Action):
             networks=network_list,
             key_name='castle-control'
         )
-
+        # WAIT UNTIL SERVER FULLY RESTORED
         conn.compute.wait_for_server(server=redeployed_instance, wait=1200)
-
-        redeployed_server = conn.compute.find_server(self.hostname)
-
-        project_id = server.location.project.id
-        nova_client = client.Client(
-            version='2.1',
-            username=self.username,
-            password=self.password,
-            project_id=project_id,
-            auth_url=self.auth_url,
-            user_domain_name=self.user_domain_name,
-            project_domain_name="ISIS"
-        )
-
-        server_nova_client = nova_client.servers.get(redeployed_server.id)
-
-        if len(new_network_id_port_data_dict) > 0:
-
-            for network_id, port_data_list in new_network_id_port_data_dict.items():
-                for port_data in port_data_list:
-                    fixed_ip_address = port_data['ip_address']
-                    server_nova_client.interface_attach(port_id=None, net_id=network_id, fixed_ip=fixed_ip_address)
-
-        new_network_id_port_data_list_dict = self.get_network_id_port_data_list_dict(conn, redeployed_server)
-
-        new_ip_address_port_data_dict = {
-            item['ip_address']: item['port']
-            for value in new_network_id_port_data_list_dict.values()
-            for item in value
-        }
-
-        for ip_address, port in new_ip_address_port_data_dict.items():
-            if ip_address not in ip_address_port_data_set:
-                server_nova_client.interface_detach(port.id)
 
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
@@ -264,3 +258,7 @@ class RestoreAction(Action):
         ssh_session.close()
 
         shutil.rmtree(str(self.temp_directory_path))
+
+        observation.set_success(True)
+        return observation
+

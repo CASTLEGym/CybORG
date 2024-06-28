@@ -1,7 +1,7 @@
 from CybORG.Emulator.Actions.Velociraptor.ResetAction import ResetAction
 
 
-credentials_file = "./CybORG/Tests/Actions/prog_client2.yaml"
+credentials_file = "prog_client2.yaml"
 
 
 

@@ -15,7 +15,7 @@ class DiscoverNetworkServicesAction(RunProcessAction):
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"doas nmap -oX - -sV {ip_address}"
+            command=f"nmap -oX - -sV {ip_address}"
         )
         self.ip_address = ip_address
 

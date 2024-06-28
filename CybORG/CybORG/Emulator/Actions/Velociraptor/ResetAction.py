@@ -29,8 +29,11 @@ class ResetAction(Action):
         )
         print("finished md5 execution!!")
         md5_observation = md5_process_action.execute(None)
-
-        if md5_observation.ReturnCode != 0:
+        print('md5 observation is :',md5_observation)
+        if hasattr(md5_observation, 'ReturnCode'):
+          if md5_observation.ReturnCode != 0:
+            return Observation(False)
+        else: 
             return Observation(False)
 
         current_verification_dict = {}

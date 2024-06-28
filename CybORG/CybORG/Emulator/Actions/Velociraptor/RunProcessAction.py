@@ -28,7 +28,7 @@ class RunProcessAction(VelociraptorAction):
         output_list = velociraptor_interface.execute_client_artifact(
             client_id, self.artifact_name, self.environment_dict
         )
-        print("finshed running velociraptor interface ")
+        print("finshed running velociraptor interface ",output_list)
         return ProcessObservation(
             success=False
         ) if output_list is None else ProcessObservation(
