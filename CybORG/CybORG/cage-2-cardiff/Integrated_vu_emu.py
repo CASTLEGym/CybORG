@@ -135,7 +135,8 @@ class vu_emu():
           #curr_dir=os.getcwd()
           #host_dir= os.path.join('./machines/', vm)
           
-          os_vm=cage2os.fetch_alt_name(vm)
+          #os_vm=cage2os.fetch_alt_name(vm)
+          os_vm= vm
           print('--> VM is:',vm, 'os name is:',os_vm)
           obs=reset.execute(os_vm)
 
@@ -436,7 +437,7 @@ class vu_emu():
           
           outcome={}
 
-          restore_action = RestoreAction(hostname=cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)),
+          restore_action = RestoreAction(hostname=ip2host.fetch_alt_name(action_param),
           auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
           project_name='mvp1',
           username=self.current_user,
@@ -457,9 +458,9 @@ class vu_emu():
              if action_param in self.connection_key:del self.connection_key[action_param]
 
        elif action_name=='Analyse':
-          print('@@'*100, 'In Analyse, host name is:',cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)))
+          print('@@'*100, 'In Analyse, host name is:',ip2host.fetch_alt_name(action_param))
           analyse_action = AnalyseAction(credentials_file=credentials_file,
-                                         hostname=cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)),
+                                         hostname=ip2host.fetch_alt_name(action_param),
                                          directory="/home/ubuntu",
                                          previous_verification_dict=self.md5[action_param])
           observation = analyse_action.execute(None)
