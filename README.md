@@ -8,9 +8,19 @@ Create a new folder in defender node:
  
 # Make it executable : 
 
- a. chmod 755 install_conda.sh
- b. chmod 755 install_test_run.sh
+ - chmod 755 install_conda.sh
+ - chmod 755 install_test_run.sh
  
- # Run 
- ./install_conda.sh
- ./install_test_run.sh
+ # Run the test: 
+ - ./install_conda.sh
+ - ./install_test_run.sh
+ 
+ 
+ # game coordinator setting: 
+ - set parameters:
+   - -e: experiment (default: sim, for emulation : emu) 
+   - -s: steps (int, default: 4)
+   - -u : openstack username 
+   - -p : openstack password
+   - -t : Blue team   (default: cardiff)
+ 
