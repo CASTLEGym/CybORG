@@ -7,7 +7,7 @@ conda install -y pytorch  pytorch-cuda=11.8 -c pytorch -c nvidia
 
 git clone -b wrappers https://github.com/CASTLEGym/CybORG.git
 
-cd RAMPART_CybORG_EMU/CybORG/
+cd CybORG/RAMPART_CybORG_EMU/CybORG/
 
 pip install openstackclient
 pip install pyvelociraptor
