@@ -3,8 +3,7 @@
 
 conda install -y pytorch  pytorch-cuda=11.8 -c pytorch -c nvidia
 
-#need to install git
-sudo apt-get install git
+
 
 git clone -b wrappers https://github.com/CASTLEGym/CybORG.git
 
