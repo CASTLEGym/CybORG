@@ -8,6 +8,8 @@ import sys
 import subprocess
 import yaml
 import time
+import inspect
+from CybORG import CybORG
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
@@ -67,6 +69,11 @@ service_ports = {
 
 #print(service_ports)
 
+scenario = 'Scenario2'
+path = str(inspect.getfile(CybORG))
+print("path is:",path)
+path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
+print('path is:',path)
 
 
 utils=utils()
@@ -106,7 +113,7 @@ class vu_emu():
       self.exploited_hosts=[]
       self.old_exploit_outcome={}
       self.network_state={}
-      self.reward_cal=RewardCalculator('/home/ubuntu/Git/CybORG-wrappers/CybORG/CybORG/Shared/Scenarios/Scenario2.yaml')
+      self.reward_cal=RewardCalculator(path)
       self.current_user= current_user
       self.password= password
 

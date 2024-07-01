@@ -8,7 +8,7 @@ sudo apt-get install git
 
 git clone -b wrappers https://github.com/CASTLEGym/CybORG.git
 
-cd RAMPART_CybORG_EMU/CybORG/CybORG/
+cd RAMPART_CybORG_EMU/CybORG/
 
 pip install openstackclient
 pip install pyvelociraptor

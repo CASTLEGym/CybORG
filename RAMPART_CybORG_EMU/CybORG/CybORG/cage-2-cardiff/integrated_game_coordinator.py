@@ -115,7 +115,7 @@ if __name__ == "__main__":
     ml =model_loader(team)
     
     path = str(inspect.getfile(CybORG))
-  
+    print("path is:",path)
     path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
     print('path is:',path)
     reward_calc=HybridImpactPwnRewardCalculator('Red',path)
