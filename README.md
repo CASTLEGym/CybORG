@@ -19,13 +19,14 @@ Create a new folder in defender node:
  
 
  
- # Run the scripts: 
+# Run the scripts: 
  - ./install_conda.sh
  - ./install_test_run.sh
 
 
  
- # game coordinator setting: We currently using the integrated_game_coordinator.py python script, that is in cage-2-cardiff folder. cd to the folder and run it by : python integrated_game_cordinator.py 
+# Game coordinator setting: 
+We currently using the integrated_game_coordinator.py python script, that is in cage-2-cardiff folder. cd to the folder and run it by : python integrated_game_cordinator.py 
  
  We can set the paramters of the game_coordinator using following :
  - set parameters:
