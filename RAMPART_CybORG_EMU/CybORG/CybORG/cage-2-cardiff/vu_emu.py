@@ -56,6 +56,7 @@ blue_actions=[]
 red_actions=[]
 counter=0
 modify_blue_red=True
+red_intial_foothold='user0'
 
 
 service_ports = {
@@ -329,7 +330,7 @@ class vu_emu():
        
        ### Red Actions
        if action_name=='DiscoverRemoteSystems': 
-          action=DiscoverRemoteSystemsAction(credentials_file,'user-host-1',action_param)
+          action=DiscoverRemoteSystemsAction(credentials_file,red_intial_foothold,action_param)
           observation=action.execute(None)
           success = enum_to_boolean(str(observation.success))
           #print('observation success is:',observation.success,'transformed success is:',success)
@@ -348,7 +349,7 @@ class vu_emu():
 
 
        elif action_name=='DiscoverNetworkServices': 
-          action=DiscoverNetworkServicesAction(credentials_file,'user-host-1',action_param)
+          action=DiscoverNetworkServicesAction(credentials_file,red_intial_foothold,action_param)
           observation=action.execute(None)
 
           success = enum_to_boolean(str(observation.success))
@@ -364,7 +365,7 @@ class vu_emu():
             port=random.choice(self.available_ports)
             server_port=22  # To Do: Dynamically select the port absed on selected exploit
             #print('Action param :',action_param,'port is:',port)
-            action= ExploitAction(credentials_file,'user-host-1',action_param,'ubuntu','ubuntu',port,server_port)
+            action= ExploitAction(credentials_file,red_intial_foothold,action_param,'ubuntu','ubuntu',port,server_port)
             observation=action.execute(None)
             success = enum_to_boolean(str(observation.success))
             #print('Success:',success)
@@ -388,7 +389,7 @@ class vu_emu():
           if action_param in self.connection_key:
             client_port= self.used_ports[action_param]
           
-            action= PrivilegeEscalateAction(credentials_file,'user-host-1',self.connection_key[action_param],action_param,'ubuntu','ubuntu',client_port)
+            action= PrivilegeEscalateAction(credentials_file,red_intial_foothold,self.connection_key[action_param],action_param,'ubuntu','ubuntu',client_port)
             observation=action.execute(None)
             success = enum_to_boolean(str(observation.success))
             outcome.update({'action_param':action_param})
@@ -427,7 +428,7 @@ class vu_emu():
        elif action_name=='Remove':
           outcome={}
           if action_param in self.connection_key: 
-            remove_action = RemoveAction(credentials_file,'user-host-1',self.connection_key[action_param])
+            remove_action = RemoveAction(credentials_file,red_intial_foothold,self.connection_key[action_param])
             observation=remove_action.execute(None)
             success = enum_to_boolean(str(observation.success))
             outcome.update({'success':success})
