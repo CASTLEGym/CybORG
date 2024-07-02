@@ -72,8 +72,7 @@ if __name__ == "__main__":
    
     # Print the variables
     print(f"experiment type is: {exp}, steps are {steps}, userid {user} and password is {password}, running agent of team {team}.")
-    user ='vardhah'
-    password= 'Roadies@5*'
+ 
     current_directory = os.getcwd()
     data_dir = 'data'
     data_dir_path = os.path.join(current_directory, data_dir)
