@@ -15,7 +15,7 @@ class DiscoverRemoteSystemsAction(RunProcessAction):
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"nmap -oX - -sn {cidr}"
+            command=f"doas nmap -oX - -sn {cidr}"
         )
         self.cidr = cidr
 

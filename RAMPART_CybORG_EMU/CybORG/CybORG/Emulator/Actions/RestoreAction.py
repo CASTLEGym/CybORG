@@ -261,4 +261,3 @@ class RestoreAction(Action):
 
         observation.set_success(True)
         return observation
-

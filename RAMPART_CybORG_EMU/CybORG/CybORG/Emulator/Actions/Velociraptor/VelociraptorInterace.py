@@ -205,14 +205,16 @@ SELECT * FROM flow_results(flow_id='{flow_id}', client_id='{client_id}', artifac
     @staticmethod
     def cancel_flow(stub, client_id, flow_id):
         query = f"""
-SELECT cancel_flow(client_id='{client_id}', flow_id='{flow_id}') FROM scope() 
+SELECT cancel_flow(client_id='{client_id}', flow_id='{flow_id}') FROM scope()
 """
         request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
 
+        # NOTE:  stub.Query(request) RETURNS AN ITERATOR AND EXECUTES LAZILY.
+        # THIS MEANS IT WILL NOT EXECUTE UNLESS THE ITERATOR IS ITERATED OVER (E.G. IN A LOOP).
         for _ in stub.Query(request):
             pass
 
-    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=600, max_retries=3):
+    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=120, max_retries=2):
 
         num_retries = 0
 

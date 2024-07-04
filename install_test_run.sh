@@ -12,6 +12,7 @@ cd CybORG/RAMPART_CybORG_EMU/CybORG/
 pip install openstackclient
 pip install pyvelociraptor
 conda install -c conda-forge grpcio -y
+pip install zmq
 pip install -e .
 
 cd CybORG/cage-2-cardiff

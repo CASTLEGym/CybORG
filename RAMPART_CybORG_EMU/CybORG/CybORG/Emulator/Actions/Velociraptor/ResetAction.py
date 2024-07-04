@@ -10,30 +10,25 @@ from ...Observations.Velociraptor.ResetObservation import ResetObservation
 from CybORG.Shared.Actions import Action
 
 
-
 class ResetAction(Action):
 
     def __init__(self, credentials_file):
         super().__init__()
         self.credentials_file = credentials_file
-            
+        self.directory = None
 
-    def execute(self, hostname= None,directory="/home/ubuntu", state=None) -> Observation:
+    def execute(self, hostname= None,directory='.', state: Union[State, None]=None) -> Observation:
         self.directory=directory
         self.hostname=hostname
-        print('hostname:',hostname,'directory is:',directory)
         md5_process_action = RunProcessAction(
             self.credentials_file,
             self.hostname,
-            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f -exec echo \"{{}}\" +)"
+            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f ! -name '.*' -exec echo \"{{}}\" +)"
         )
-        print("finished md5 execution!!")
+
         md5_observation = md5_process_action.execute(None)
-        print('md5 observation is :',md5_observation)
-        if hasattr(md5_observation, 'ReturnCode'):
-          if md5_observation.ReturnCode != 0:
-            return Observation(False)
-        else: 
+
+        if md5_observation.ReturnCode != 0:
             return Observation(False)
 
         current_verification_dict = {}

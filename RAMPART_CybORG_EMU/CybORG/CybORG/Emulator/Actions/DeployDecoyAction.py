@@ -4,8 +4,9 @@ from typing import Union
 import paramiko
 from pathlib import Path
 
-from CybORG.Shared import Observation
-from CybORG.Shared.Actions import Action
+from ..Observations.DeployDecoyObservation import DeployDecoyObservation
+from CybORG.Shared.Observation import Observation
+from CybORG.Simulator.Actions import Action
 from CybORG.Simulator.State import State
 
 
@@ -43,7 +44,7 @@ class DeployDecoy(Action):
         #     args=["./gradlew", ":Velociraptor:Executables:Decoy:build"],
         #     cwd=str(velociraptor_executables_path)
         # )
-
+        #
         decoy_executable_path = Path(velociraptor_executables_path, "Velociraptor/Executables/Decoy/decoy").absolute()
 
         sftp_client = ssh_session.open_sftp()
@@ -55,4 +56,14 @@ class DeployDecoy(Action):
 
         ssh_session.exec_command(f"chmod +x {self.decoy_name} ; PATH=\".:$PATH\" doas {self.decoy_name} {self.decoy_port}")
 
-        return Observation(True)
+        # stdin, stdout, stderr = ssh_session.exec_command("ps -aef")
+        #
+        ps_output = ""
+        # for line in stdout:
+        #     ps_output += line
+        #
+        # stdin.close()
+        # stdout.close()
+        # stderr.close()
+
+        return DeployDecoyObservation(process_listing=ps_output, success=True)

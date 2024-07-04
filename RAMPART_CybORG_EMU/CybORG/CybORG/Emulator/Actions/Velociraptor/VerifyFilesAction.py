@@ -3,7 +3,7 @@ from typing import Union
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 
-from CybORG.Shared.Actions import Action
+from CybORG.Simulator.Actions import Action
 
 from CybORG.Emulator.Observations.Velociraptor.VerifyFilesObservation import VerifyFilesObservation
 
