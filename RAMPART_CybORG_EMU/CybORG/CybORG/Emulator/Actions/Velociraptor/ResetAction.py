@@ -17,25 +17,28 @@ class ResetAction(Action):
         self.credentials_file = credentials_file
         self.directory = None
 
-    def execute(self, hostname= None,directory='.', state: Union[State, None]=None) -> Observation:
+    def execute(self, hostname= None,directory='/home/ubuntu', state: Union[State, None]=None) -> Observation:
         self.directory=directory
         self.hostname=hostname
+        print("In execute")
         md5_process_action = RunProcessAction(
             self.credentials_file,
             self.hostname,
-            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f ! -name '.*' -exec echo \"{{}}\" +)"
+            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f -exec echo \"{{}}\" +)"
         )
-
         md5_observation = md5_process_action.execute(None)
-
-        if md5_observation.ReturnCode != 0:
+        
+        print('md5 observation is :',md5_observation.__dict__)
+        if hasattr(md5_observation, 'ReturnCode'):
+          if md5_observation.ReturnCode != 0:
             return Observation(False)
+          else:
+            current_verification_dict = {}
+            md5_lines = md5_observation.Stdout.strip().splitlines()
+            print('\n--> md5 checksums are:',md5_lines)
+            for line in md5_lines:
+              value, key = line.split()
+              current_verification_dict[key] = value
 
-        current_verification_dict = {}
-        md5_lines = md5_observation.Stdout.strip().splitlines()
-        print('\n--> md5 checksums are:',md5_lines)
-        for line in md5_lines:
-            value, key = line.split()
-            current_verification_dict[key] = value
+            return ResetObservation(True,current_verification_dict)
 
-        return ResetObservation(True,current_verification_dict)

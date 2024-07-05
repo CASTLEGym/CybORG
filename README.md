@@ -26,7 +26,7 @@ Create a new folder in defender node:
 
  
 # Game coordinator setting: 
-We currently using the integrated_game_coordinator.py python script, that is in cage-2-cardiff folder. cd to the folder and run it by : python integrated_game_cordinator.py 
+We currently using the integrated_game_coordinator.py python script, that is in cage-2-cardiff folder located in subdirectory (CybORG/RAMPART_CybORG_EMU/CybORG/CybORG/cage-2-cardiff/) relative to new flode. cd to the folder and run it by : python integrated_game_cordinator.py 
  
  We can set the paramters of the game_coordinator using following :
  - set parameters:

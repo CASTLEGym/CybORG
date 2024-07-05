@@ -30,26 +30,23 @@ class SSHConnectionServerAction(RunProcessAction):
             remote_password,
             client_port,
             server_port=22,
-            success_probability=0.5
+            success_probability=1.0
     ):
 
         self.connection_key = self.get_connection_key()
         self.success_probility = success_probability
-
-        # print('Credential file :',credentials_file,'host:',hostname)
+        print()
+        print('Credential file :',credentials_file,'host:',hostname)
+        print(f"python3 /usr/local/scripts/python/SSHConnectionServer.py -n {self.connection_key} -m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d -s {server_port}")
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"python3 /usr/local/scripts/python/SSHConnectionServer.py -n {self.connection_key} " + \
-                    f"-m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d " + \
-                    f"-s {server_port} > /dev/null 2>&1 &"
+            command=f"python3 /usr/local/scripts/python/SSHConnectionServer.py -n {self.connection_key} -m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d -s {server_port} > /dev/null 2>&1 &"
         )
 
     def execute(self, state: Union[State, None]) -> Observation:
-        # print('Executing**')
-        if random.random() >= self.success_probility:
-           return ProcessObservation(None,False)
+        print('Executing**')
 
         process_observation = super().execute(state)
-        # print('**process observation is :',process_observation)
+        print('**process observation is :',process_observation)
         return SSHConnectionServerObservation(process_observation, self.connection_key)

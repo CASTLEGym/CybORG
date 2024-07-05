@@ -15,14 +15,14 @@ class DiscoverNetworkServicesAction(RunProcessAction):
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"nmap -oX - -sV {ip_address}"
+            command=f"doas nmap -oX - -sV {ip_address}"
         )
         self.ip_address = ip_address
 
     def execute(self, state: Union[State, None]) -> Observation:
 
         observation = super().execute(state)
-
+        print('observation dict:',observation.__dict__)
         root = ElementTree.fromstring(observation.Stdout)
 
         port_element_list = root.findall(".//host/ports/port[@protocol='tcp']")

@@ -1,10 +1,10 @@
 from CybORG.Emulator.Actions.Velociraptor.ImpactAction import ImpactAction
 
-credentials_file = "prog_client.yaml"
+credentials_file = "/home/ubuntu/prog_client.yaml"
 
 impact_action = ImpactAction(
     credentials_file=credentials_file,
-    hostname='user-host-1',
+    hostname='user0',
     controller='lc1'
 )
 
