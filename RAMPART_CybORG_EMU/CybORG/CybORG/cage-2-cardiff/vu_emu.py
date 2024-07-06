@@ -41,7 +41,7 @@ import json
 ip2host= name_conversion("./assets/openstack_ip_map.json")
 cage2os=name_conversion("./assets/cage2-openstack.yaml")
 
-credentials_file = "/home/ubuntu/agent_client.yaml"
+credentials_file = "/home/ubuntu/prog_client.yaml"
 #credentials_file = "prog_client2.yaml"
 
 
