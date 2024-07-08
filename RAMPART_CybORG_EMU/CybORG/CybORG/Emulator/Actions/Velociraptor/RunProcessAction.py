@@ -18,7 +18,7 @@ class RunProcessAction(VelociraptorAction):
 
         command = command.replace("'", "\\'")
         self.environment_dict = {"Command": f"{command}"}
-        #print('credentialfile:',credentials_file,'env dict:',self.environment_dict)
+        print('credentialfile:',credentials_file,'env dict:',self.environment_dict)
 
     def execute(self, state: Union[State, None]) -> Observation:
 

@@ -389,14 +389,14 @@ class utils:
         for pid in pids: 
              pid_data.append({'PID': pid,'Username': user})
         formatted_data[hostname]['Procesess']=pid_data
-    if self.is_valid_ip(explored_ip) :
-     formatted_data[self.fetch_name(explored_ip)] = {
-        'Interface': [
+        if self.is_valid_ip(explored_ip) :
+          formatted_data[self.fetch_name(explored_ip)] = {
+          'Interface': [
             {
                 'IP Address': ipaddress.IPv4Address(explored_ip)
             }
-        ]
-      }
+          ]
+        }
     return formatted_data
   
   def is_valid_ip(self,ip):

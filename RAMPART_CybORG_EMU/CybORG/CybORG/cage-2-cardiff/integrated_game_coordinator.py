@@ -49,15 +49,24 @@ def load_data_from_file(file_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Welcome to RAMPART cyber agent training and evalution tool")
+    parser = argparse.ArgumentParser(description="** Welcome to RAMPART cyber agent training and evaluation tool **")
 
     # Add the arguments
-    parser.add_argument("-e", "--exp", type=str, default="sim", help="The experiment mode  (default: 'simulation')")
-    parser.add_argument("-s", "--steps", type=int,default=5 , help="The number of steps of game.")
+    parser.add_argument("-e", "--exp", type=str, default="sim",choices=["sim", "emu"], help="The experiment mode  (default: 'sim')")
+    parser.add_argument("-s", "--steps", type=int,default=5 , help="The number of steps of game (default: 5 steps).")
     
-    parser.add_argument("-u", "--user", type=str, default="dummy", help="The user name for openstack")
-    parser.add_argument("-p", "--password", type=str,default="dummy" , help="The password for openstack")
+    parser.add_argument("-u", "--user", type=str, default="dummy", help="The user name for openstack (default:'dummy')")
+    parser.add_argument("-p", "--password", type=str,default="dummy" , help="The password for openstack (default: 'dummy')")
     
+    
+    parser.add_argument( "-url",type=str,default="https://cloud.isislab.vanderbilt.edu:5000/v3", help="The url for openstack (dafault: Vanderbilt's openstack cluster URL)")
+    parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')")
+    parser.add_argument("-pdn",type=str,default="ISIS", help="The project domain name for openstack (default: 'ISIS')")
+    parser.add_argument("-pr", "--project",type=str,default="mvp1a", help="The project name for openstack (default: 'mvp1a')")
+
+
+
+
     parser.add_argument("-t", "--team", type=str,default="cardiff" , help="Team")
 
     # Parse the arguments
@@ -69,12 +78,18 @@ if __name__ == "__main__":
     user= args.user
     password= args.password
     team= args.team
-   
+    
+    project_name= args.project
+    os_url=args.url
+    os_udn= args.udn
+    os_pdn=args.pdn
+
     # Print the variables
     print(f"experiment type is: {exp}, steps are {steps}, userid {user} and password is {password}, running agent of team {team}.")
- 
+    print(f"url is: {os_url} , udn is : {os_udn}, pdn is  {os_pdn}, project_name : {project_name}")
     current_directory = os.getcwd()
     data_dir = 'data'
+
     data_dir_path = os.path.join(current_directory, data_dir)
     
     if not os.path.exists(data_dir_path):
@@ -191,7 +206,7 @@ if __name__ == "__main__":
         red_observation=translate_intial_red_obs(red_observation)
         #print("\n ***** Red observation after reset is:",red_observation)
 
-        cyborg_emu = vu_emu(user,password)
+        cyborg_emu = vu_emu(user,password,os_url,os_udn,os_pdn,project_name )
         cyborg_emu.reset()
                
         #read assets

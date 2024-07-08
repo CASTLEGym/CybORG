@@ -214,13 +214,13 @@ SELECT cancel_flow(client_id='{client_id}', flow_id='{flow_id}') FROM scope()
         for _ in stub.Query(request):
             pass
 
-    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=120, max_retries=2):
+    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=300, max_retries=2):
 
         num_retries = 0
 
         # TRY UP TO max_tries TIMES TO SUBMIT THE ARTIFACT
         while num_retries < max_retries:
-
+            print('***=> Trial: ',num_retries, ", timeout: ",timeout, 'sec') 
             num_retries += 1
 
             # OPEN A CHANNEL

@@ -16,14 +16,15 @@ password = getpass.getpass()
 
 
 restore_action = RestoreAction(
-    hostname='test_restore',
+    hostname='user1',
     auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
-    project_name='mvp1',
-    username=user_name,
-    password=password,
+    project_name='mvp1a',
+    username='vardhah',
+    password='Roadies@5*',
     user_domain_name='ISIS',
     project_domain_name='ISIS'
 )
 
 observation=restore_action.execute(None)
 print('observation success:',observation.success)
+

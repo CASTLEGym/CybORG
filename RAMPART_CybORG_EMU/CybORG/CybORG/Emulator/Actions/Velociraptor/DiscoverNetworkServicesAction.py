@@ -15,7 +15,7 @@ class DiscoverNetworkServicesAction(RunProcessAction):
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"doas nmap -oX - -sV {ip_address}"
+            command=f"doas nmap -oX - -sV -p 1-1000 {ip_address}"
         )
         self.ip_address = ip_address
 
@@ -23,7 +23,6 @@ class DiscoverNetworkServicesAction(RunProcessAction):
 
         observation = super().execute(state)
         print('observation dict:',observation.__dict__)
-        
         port_list = []
         if observation.success== True:
           root = ElementTree.fromstring(observation.Stdout)
@@ -32,5 +31,4 @@ class DiscoverNetworkServicesAction(RunProcessAction):
             port_list.append(port_element.attrib.get("portid"))
 
           observation.set_success(True)
-
         return DiscoverNetworkServicesObservation(observation, self.ip_address, port_list)

@@ -26,18 +26,19 @@ class PrivilegeEscalateAction:
        return ssh_connection_client_observation.Stdout
 
     def execute(self, state: Union[State, None]) -> Observation:
-        if self.conn_key == None:
-            return PrivilegeEscalateObservation(success=False)
-
-        out1 = self.run_command("sudo whoami")
-        out2 = self.run_command("grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' ~/.ssh/known_hosts")
-        out3 = self.run_command("sudo ss -tunap | grep ':4444'")
-        return PrivilegeEscalateObservation(success=True,user=out1,explored_host=out2,pid=out3)
+       if self.conn_key== None: 
+          return PrivilegeEscalateObservation(success=False)
+       else: 
+          command = f"sudo ss -tunap | grep ':{self.client_port}'"
+          out1=self.run_command("sudo whoami")
+          out2=self.run_command("grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' ~/.ssh/known_hosts")
+          out3=self.run_command(command)
+          return PrivilegeEscalateObservation(success=True,user=out1,explored_host=out2,pid=out3) 
 
 
 if __name__=="__main__":
-    credentials_file = "prog_client.yaml"
-    hostname = "user-host-1"
+    credentials_file = "/home/ubuntu/prog_client.yaml"
+    hostname = "user0"
     remote_hostname = "10.10.10.13"
     remote_username = "vagrant"
     remote_password = "vagrant"

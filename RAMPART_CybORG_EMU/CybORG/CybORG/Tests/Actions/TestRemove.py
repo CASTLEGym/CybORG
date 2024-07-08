@@ -2,15 +2,15 @@ from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 from CybORG.Emulator.Actions.Velociraptor.ExploitAction import ExploitAction
 
 
-credentials_file = "prog_client2.yaml"
-hostname="user-host-1"
+credentials_file = "/home/ubuntu/prog_client.yaml"
+hostname="user0"
 remote_hostname="10.10.10.13"
-remote_username="vagrant"
-remote_password="vagrant"
-client_port=4444
+remote_username="ubuntu"
+remote_password="ubuntu"
+client_port=4747
+server_port=22
 
-
-exploit_action= ExploitAction(credentials_file,hostname,remote_hostname,remote_username,remote_password,client_port)
+exploit_action= ExploitAction(credentials_file,hostname,remote_hostname,remote_username,remote_password,client_port,server_port)
 observation=exploit_action.execute(None)
 print("Connection Key is:",observation.connection_key)
 conn_key= observation.connection_key

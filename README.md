@@ -36,3 +36,8 @@ We currently using the integrated_game_coordinator.py python script, that is in 
    - -p : openstack password
    - -t : Blue team   (default: cardiff)
  
+ 
+ TO load other agents: copy their agent classes and weights onto defender. Not putting it on public github since it doesnot come with licence and clarification is sough for licence type. 
+ 
+ To copy DARTMOUTH agents and classes: 
+ scp ~/.ssh/castle.pem -r /home/lab_linux/harsh/CAGE_RL/CybORG_wrapper/RAMPART_CybORG_EMU/CybORG/CybORG/cage-2-cardiff/DARTMOUTH ubuntu@129.59.234.198:~/test_agent/CybORG/RAMPART_CybORG_EMU/CybORG/CybORG/cage-2-cardiff/

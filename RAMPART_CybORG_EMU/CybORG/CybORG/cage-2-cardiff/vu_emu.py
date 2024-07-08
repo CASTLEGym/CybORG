@@ -41,6 +41,8 @@ import json
 ip2host= name_conversion("./assets/openstack_ip_map.json")
 cage2os=name_conversion("./assets/cage2-openstack.yaml")
 
+cage2os_instance=name_conversion("./assets/cage2-openstack_instance.yaml")
+
 credentials_file = "/home/ubuntu/prog_client.yaml"
 #credentials_file = "prog_client2.yaml"
 
@@ -102,7 +104,7 @@ def generate_ports(num=50,min=4000,max=5000):
 
 
 class vu_emu():
-   def __init__(self, current_user, password):
+   def __init__(self, current_user, password, url,udn,pdn,project):
       self.old_outcome_blue=None
       self.old_outcome_red=None
       self.last_red_action=None
@@ -117,6 +119,10 @@ class vu_emu():
       self.reward_cal=RewardCalculator(path)
       self.current_user= current_user
       self.password= password
+      self.url=url
+      self.udn=udn
+      self.pdn=pdn
+      self.project=project
 
     
 
@@ -364,11 +370,12 @@ class vu_emu():
           else: 
             port=random.choice(self.available_ports)
             server_port=22  # To Do: Dynamically select the port absed on selected exploit
-            #print('Action param :',action_param,'port is:',port)
+            print('Action param :',action_param,'port is:',port)
             action= ExploitAction(credentials_file,red_intial_foothold,action_param,'ubuntu','ubuntu',port,server_port)
             observation=action.execute(None)
             success = enum_to_boolean(str(observation.success))
-            #print('Success:',success)
+            print('in vu_emu, Success:',success)
+            print('in vu_emu:',observation.ip_address_info)
             outcome={}
             outcome.update({'success':success})
             outcome.update({'host_ip':action_param})
@@ -444,13 +451,13 @@ class vu_emu():
           
           outcome={}
 
-          restore_action = RestoreAction(hostname=cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)),
-          auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
-          project_name='mvp1',
+          restore_action = RestoreAction(hostname=cage2os_instance.fetch_alt_name(ip2host.fetch_alt_name(action_param)),
+          auth_url=self.url,
+          project_name=self.project,
           username=self.current_user,
           password=self.password,
-          user_domain_name='ISIS',
-          project_domain_name='ISIS')
+          user_domain_name=self.udn,
+          project_domain_name=self.pdn)
           observation=restore_action.execute(None)
           success = enum_to_boolean(str(observation.success))
           outcome.update({'success':success})
