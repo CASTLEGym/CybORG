@@ -1,0 +1,23 @@
+Blue Agent Actions and Rewards
+
+    Action Frequencies:
+        Simulation: High frequency of Remove User3 and Restore Enterprise1.
+        Emulation: High frequency of Restore Enterprise1 and Restore Enterprise2.
+
+   
+Red Agent Actions and Rewards
+
+    Action Frequencies:
+        Simulation: High frequency of ExploitRemoteService 10.0.120.158 and PrivilegeEscalate Enterprise1.
+        Emulation: High frequency of ExploitRemoteService 10.10.20.12 and PrivilegeEscalate Enterprise2.
+
+   
+Key Observations
+
+    Blue Agent:
+        Prefers Remove and Restore actions.
+        Faces penalties or negative rewards for these actions, suggesting a high cost associated with restoration and removal operations in both environments.
+
+    Red Agent:
+        Focuses on ExploitRemoteService and PrivilegeEscalate actions.
+        Gains positive rewards from successful exploits and privilege escalations, indicating effective offensive strategies.
