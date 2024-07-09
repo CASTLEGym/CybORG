@@ -1,0 +1,9 @@
+pytest
+paramiko
+pyyaml
+numpy
+gym
+prettytable
+docutils
+torch==1.13.1
+scipy

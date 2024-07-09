@@ -1,7 +1,7 @@
 *.*~
 __pycache__/
 *.pkl
-data/
+<<<
 **/*.egg-info
 .python-version
 ../../PycharmProjects/CybORG/.idea/
@@ -36,4 +36,4 @@ build/
 
 PUNCH/
 KEEP/
-DARTMOUTH/
+
