@@ -41,4 +41,3 @@ class ResetAction(Action):
               current_verification_dict[key] = value
 
             return ResetObservation(True,current_verification_dict)
-

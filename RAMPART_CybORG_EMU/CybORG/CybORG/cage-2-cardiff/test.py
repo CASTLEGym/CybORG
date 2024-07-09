@@ -32,7 +32,7 @@ def get_subnet_ip(self,hostname,ip_to_name):
 
     print(subnet_mappings)
 
-    
+
     if hostname in name_to_ip:
         ip = name_to_ip[hostname]
         print('ip is:',ip)
@@ -54,31 +54,33 @@ print(get_subnet_ip("Enterprise2"))  # Should return "enterprise_subnet"
 print(get_subnet_ip("User2"))  # Should return "user_subnet"
 """
 
-network_state={}
+network_state = {}
+
 
 def update_reward_information_dict(info_dict, server_name, username):
     if server_name not in info_dict:
         info_dict[server_name] = {'Sessions': []}
     info_dict[server_name]['Sessions'].append({'Username': username})
-   
+
+
 def delete_reward_information_dict(info_dict, server_name, username):
     if server_name in info_dict:
         sessions = info_dict[server_name]['Sessions']
         info_dict[server_name]['Sessions'] = [session for session in sessions if session['Username'] != username]
-        
+
         # If there are no more sessions, remove the server entry
         if not info_dict[server_name]['Sessions']:
             del info_dict[server_name]
-    
+
     return info_dict
 
 
-update_reward_information_dict(network_state,'User0','root')
+update_reward_information_dict(network_state, 'User0', 'root')
 print(network_state)
-update_reward_information_dict(network_state,'User0','ubuntu')
+update_reward_information_dict(network_state, 'User0', 'ubuntu')
 print(network_state)
-update_reward_information_dict(network_state,'User1','ubuntu')
+update_reward_information_dict(network_state, 'User1', 'ubuntu')
 print(network_state)
 
-delete_reward_information_dict(network_state,'User0','root')
+delete_reward_information_dict(network_state, 'User0', 'root')
 print(network_state)

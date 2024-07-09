@@ -63,7 +63,7 @@ class EnumActionWrapper(BaseWrapper):
                 else:
                     new_param_list = []
                     for p_dict in param_list:
-                       
+
                         for key, val in action_space[p].items():
                             p_dict[p] = key
                             new_param_list.append({key: value for key, value in p_dict.items()})

@@ -8,6 +8,7 @@ from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from pprint import pprint
 
+
 class BlueTableWrapper(BaseWrapper):
     def __init__(self, env=None, agent=None, output_mode='table'):
         super().__init__(env, agent)
@@ -21,20 +22,20 @@ class BlueTableWrapper(BaseWrapper):
     def reset(self, agent='Blue'):
         result = self.env.reset(agent)
         obs = result.observation
-        
+
         if not os.path.exists('./assets'):
-           os.mkdirs('./assets')
-        #data=obs
-        #data.pop('success',None)
+            os.mkdirs('./assets')
+        # data=obs
+        # data.pop('success',None)
 
         # Create a new dictionary that will only hold the Processes information
         processes_only = {}
         # Extracting only the Processes key from each entry
         for key, value in obs.items():
-          if key != 'success':
-            if 'Processes' in value:
-              processes_only[key] = {'Processes': value['Processes']}
-        
+            if key != 'success':
+                if 'Processes' in value:
+                    processes_only[key] = {'Processes': value['Processes']}
+
         """
         all_processes={}
         for host,details in obs.items():
@@ -42,29 +43,29 @@ class BlueTableWrapper(BaseWrapper):
              if isinstance(details, dict) and 'Processes' in details:
                  all_processes[host]['Processes'] = details['Processes']        
         """
-        file_path='./assets/blue_baseline_obs.py'
-        with open(file_path,'w') as fp:
-           fp.write(json.dumps(str(processes_only)))       
+        file_path = './assets/blue_baseline_obs.py'
+        with open(file_path, 'w') as fp:
+            fp.write(json.dumps(str(processes_only)))
 
-        #print('=>In BlueTablewrapper reset, i/p obs is:')
-        #pprint(obs)
+            # print('=>In BlueTablewrapper reset, i/p obs is:')
+        # pprint(obs)
         if agent == 'Blue':
-            self._process_initial_obs(obs)            
+            self._process_initial_obs(obs)
             obs = self.observation_change(obs, baseline=True)
-        #print('In reset step BlueTablewrapper, o/p obs is:')
-        #pprint(obs)
-                
+        # print('In reset step BlueTablewrapper, o/p obs is:')
+        # pprint(obs)
+
         result.observation = obs
         return result
 
     def step(self, agent=None, action=None) -> Results:
         result = self.env.step(agent, action)
         obs = result.observation
-        #print('\n=> action from blue table wrapper, is:',action)
-        #print('\n-> i/p obs from blue table wraper, is:',obs)
+        # print('\n=> action from blue table wrapper, is:',action)
+        # print('\n-> i/p obs from blue table wraper, is:',obs)
         if agent == 'Blue':
             obs = self.observation_change(obs)
-        #print('\n-> o/p obs from blue_table wrapper, is:',obs)
+        # print('\n-> o/p obs from blue_table wrapper, is:',obs)
         result.observation = obs
         result.action_space = self.action_space_change(result.action_space)
         return result
@@ -76,20 +77,20 @@ class BlueTableWrapper(BaseWrapper):
             return self.env.get_table()
 
     def observation_change(self, observation, baseline=False):
-        
+
         obs = observation if type(observation) == dict else observation.data
         obs = deepcopy(observation)
         success = obs['success']
         self._process_last_action()
-        
+
         anomaly_obs = self._detect_anomalies(obs) if not baseline else obs
         del obs['success']
         # TODO check what info is for baseline
-        #print('\n from observation change, anomaly obs is:',anomaly_obs)
-        
+        # print('\n from observation change, anomaly obs is:',anomaly_obs)
+
         info = self._process_anomalies(anomaly_obs)
-        
-        #print('\n from observation change, Info is :',info)
+
+        # print('\n from observation change, Info is :',info)
         if baseline:
             for host in info:
                 info[host][-2] = 'None'
@@ -97,7 +98,7 @@ class BlueTableWrapper(BaseWrapper):
                 self.blue_info[host][-1] = 'No'
 
         self.info = info
-        #print('\n -> self.Info is :',self.info)
+        # print('\n -> self.Info is :',self.info)
         if self.output_mode == 'table':
             return self._create_blue_table(success)
         elif self.output_mode == 'anomaly':
@@ -112,7 +113,7 @@ class BlueTableWrapper(BaseWrapper):
 
     def _process_initial_obs(self, obs):
         obs = obs.copy()
-        #print('\n _process_initial_obs, obs is:',obs)
+        # print('\n _process_initial_obs, obs is:',obs)
         self.baseline = obs
         del self.baseline['success']
         for hostid in obs:
@@ -124,13 +125,13 @@ class BlueTableWrapper(BaseWrapper):
             ip = str(interface['IP Address'])
             hostname = host['System info']['Hostname']
             self.blue_info[hostname] = [str(subnet), str(ip), hostname, 'None', 'No']
-        #print('\n _process_initial_obs, blue_info is:',self.blue_info)
+        # print('\n _process_initial_obs, blue_info is:',self.blue_info)
         if not os.path.exists('./assets'):
-             os.makedirs('./assets')
-        file_path= './assets/blue_initial_obs.json'
+            os.makedirs('./assets')
+        file_path = './assets/blue_initial_obs.json'
         with open(file_path, 'w') as file:
             json.dump(self.blue_info, file)
-        
+
         return self.blue_info
 
     def _process_last_action(self):
@@ -145,7 +146,7 @@ class BlueTableWrapper(BaseWrapper):
                 compromised = self.blue_info[hostname][-1]
                 if compromised != 'No':
                     self.blue_info[hostname][-1] = 'Unknown'
-        #print('\n-> self blue info is:',self.blue_info)
+        # print('\n-> self blue info is:',self.blue_info)
 
     def _detect_anomalies(self, obs):
         if self.baseline is None:
@@ -153,43 +154,43 @@ class BlueTableWrapper(BaseWrapper):
                 'BlueTableWrapper was unable to establish baseline. This usually means the environment was not reset before calling the step method.')
 
         anomaly_dict = {}
-        #clear
-        #print('\n \n self.baseline:',self.baseline)
+        # clear
+        # print('\n \n self.baseline:',self.baseline)
         for hostid, host in obs.items():
             if hostid == 'success':
                 continue
-            #print('\n=>From blue,  host id is:',hostid)
-            #print('--> Host is:',host)
+            # print('\n=>From blue,  host id is:',hostid)
+            # print('--> Host is:',host)
             host_baseline = self.baseline[hostid]
-            #print('\n->Host baseline is:',host_baseline)
+            # print('\n->Host baseline is:',host_baseline)
             if host == host_baseline:
                 continue
 
             host_anomalies = {}
             if 'Files' in host:
                 baseline_files = host_baseline.get('Files', [])
-                #print('\n-> Baseline files:',baseline_files)
+                # print('\n-> Baseline files:',baseline_files)
                 anomalous_files = []
                 for f in host['Files']:
                     if f not in baseline_files:
                         anomalous_files.append(f)
-                #print('\n anomalous files:',anomalous_files)
+                # print('\n anomalous files:',anomalous_files)
                 if anomalous_files:
                     host_anomalies['Files'] = anomalous_files
 
             if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
-                #print('\n-> Baseline processes:',baseline_processes)
+                # print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []
                 for p in host['Processes']:
                     if p not in baseline_processes:
                         anomalous_processes.append(p)
                 if anomalous_processes:
                     host_anomalies['Processes'] = anomalous_processes
-                #print('\n anomalous processes:',anomalous_processes)
+                # print('\n anomalous processes:',anomalous_processes)
             if host_anomalies:
                 anomaly_dict[hostid] = host_anomalies
-        #print('\n anomaly dict is:',anomaly_dict,'\n')
+        # print('\n anomaly dict is:',anomaly_dict,'\n')
         return anomaly_dict
 
     def _process_anomalies(self, anomaly_dict):
@@ -213,11 +214,11 @@ class BlueTableWrapper(BaseWrapper):
         return info
 
     def _interpret_connections(self, activity: list):
-        #print("_interpret connections:, activity is:",activity)
+        # print("_interpret connections:, activity is:",activity)
         num_connections = len(activity)
         ports = set([item['Connections'][0]['local_port'] \
                      for item in activity if 'Connections' in item])
-        #print('** ports are:',ports,'num of connections:',num_connections)
+        # print('** ports are:',ports,'num of connections:',num_connections)
         port_focus = len(ports)
 
         remote_ports = set([item['Connections'][0].get('remote_port') \
@@ -269,7 +270,7 @@ class BlueTableWrapper(BaseWrapper):
 
     def _create_vector(self, success):
         table = self._create_blue_table(success)._rows
-        #print('From blue table wrapper, table is:',table)
+        # print('From blue table wrapper, table is:',table)
         proto_vector = []
         for row in table:
             # Activity

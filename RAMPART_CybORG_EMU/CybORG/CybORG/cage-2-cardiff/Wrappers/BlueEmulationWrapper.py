@@ -4,35 +4,34 @@ import numpy as np
 import os
 import json
 from enum import Enum
-  
+
+
 class TrinaryEnum(Enum):
     TRUE = 1
     FALSE = 0
     UNKNOWN = 2
 
 
-
-
 class BlueEmulationWrapper():
-    def __init__(self,host_baseline_info):
+    def __init__(self, host_baseline_info):
         self.baseline = host_baseline_info
         self.blue_info = {}
-        self.last_action=None
-        self.success= TrinaryEnum.UNKNOWN
+        self.last_action = None
+        self.success = TrinaryEnum.UNKNOWN
 
     def reset(self, obs):
         self.blue_info = obs
-        #print('\n blueEmulationwrapper, self.blue_info:',self.blue_info)	
+        # print('\n blueEmulationwrapper, self.blue_info:',self.blue_info)
         obs = self.observation_change(obs, baseline=True)
-        print('\n In reset step of BlueEmulationwrapper, obs is:',obs)
+        print('\n In reset step of BlueEmulationwrapper, obs is:', obs)
         return obs
 
-    def step(self, action,obs):
-        #print('\n=> action from blue emu wrapper, is:',action)
-        print('\n==> i/p obs from blue table wraper, is:',obs)
+    def step(self, action, obs):
+        # print('\n=> action from blue emu wrapper, is:',action)
+        print('\n==> i/p obs from blue table wraper, is:', obs)
         obs = self.observation_change(obs)
-        print('-> o/p obs from blue_table wrapper, is:',obs)
-        self.last_action=action
+        print('-> o/p obs from blue_table wrapper, is:', obs)
+        self.last_action = action
         return obs
 
     def get_table(self, output_mode='blue_table'):
@@ -46,11 +45,11 @@ class BlueEmulationWrapper():
         obs = deepcopy(observation)
         success = self.success
         self._process_last_action()
-        
+
         anomaly_obs = self._detect_anomalies(obs) if not baseline else obs
-     
+
         info = self._process_anomalies(anomaly_obs)
-        
+
         if baseline:
             for host in info:
                 info[host][-2] = 'None'
@@ -58,14 +57,12 @@ class BlueEmulationWrapper():
                 self.blue_info[host][-1] = 'No'
 
         self.info = info
-        print('self.Info is :',self.info)
+        print('self.Info is :', self.info)
         return self._create_vector(success)
-        
-    
 
     def _process_last_action(self):
         action = self.last_action
-        #print('\n \n *** last action is:',action)
+        # print('\n \n *** last action is:',action)
         if action is not None:
             name = action.split(" ")[0]
             hostname = action.split(" ")[1] if name in ('Restore', 'Remove') else None
@@ -76,10 +73,10 @@ class BlueEmulationWrapper():
                 compromised = self.blue_info[hostname][-1]
                 if compromised != 'No':
                     self.blue_info[hostname][-1] = 'Unknown'
-        print('\n-> self.blue info is:',self.blue_info)
+        print('\n-> self.blue info is:', self.blue_info)
 
     def _detect_anomalies(self, obs):
-        #print('\n from detect anomalies, input obs is:',obs)
+        # print('\n from detect anomalies, input obs is:',obs)
         if self.baseline is None:
             raise TypeError(
                 'BlueTableWrapper was unable to establish baseline. This usually means the environment was not reset before calling the step method.')
@@ -90,37 +87,37 @@ class BlueEmulationWrapper():
                 continue
 
             host_baseline = self.baseline[hostid]
-            print('\n--------> From blue, Host id is:',hostid)
-            print('--------> Host input info is:',host)
-            print('--------------> Host baseline info is:',host_baseline)
+            print('\n--------> From blue, Host id is:', hostid)
+            print('--------> Host input info is:', host)
+            print('--------------> Host baseline info is:', host_baseline)
             if host == host_baseline:
                 continue
 
             host_anomalies = {}
             if 'Files' in host:
                 baseline_files = host_baseline.get('Files', [])
-                print('\n-> Baseline files:',baseline_files)
+                print('\n-> Baseline files:', baseline_files)
                 anomalous_files = []
                 for f in host['Files']:
                     if f not in baseline_files:
                         anomalous_files.append(f)
-                #print('\n anomalous files:',anomalous_files)
+                # print('\n anomalous files:',anomalous_files)
                 if anomalous_files:
                     host_anomalies['Files'] = anomalous_files
 
             if 'Processes' in host:
                 baseline_processes = host_baseline.get('Processes', [])
-                #print('\n-> Baseline processes:',baseline_processes)
+                # print('\n-> Baseline processes:',baseline_processes)
                 anomalous_processes = []
                 for p in host['Processes']:
                     if p not in baseline_processes:
                         anomalous_processes.append(p)
                 if anomalous_processes:
                     host_anomalies['Processes'] = anomalous_processes
-                #print('\n anomalous processes:',anomalous_processes)
+                # print('\n anomalous processes:',anomalous_processes)
             if host_anomalies:
                 anomaly_dict[hostid] = host_anomalies
-        print('-------------------------->>>> Anomaly dict is:',anomaly_dict)
+        print('-------------------------->>>> Anomaly dict is:', anomaly_dict)
         return anomaly_dict
 
     def _process_anomalies(self, anomaly_dict):
@@ -144,11 +141,11 @@ class BlueEmulationWrapper():
         return info
 
     def _interpret_connections(self, activity: list):
-        #print("_interpret connections:, activity is:",activity)
+        # print("_interpret connections:, activity is:",activity)
         num_connections = len(activity)
         ports = set([item['Connections'][0]['local_port'] \
                      for item in activity if 'Connections' in item])
-        #print('** ports are:',ports,'num of connections:',num_connections)
+        # print('** ports are:',ports,'num of connections:',num_connections)
         port_focus = len(ports)
 
         remote_ports = set([item['Connections'][0].get('remote_port') \
@@ -167,7 +164,6 @@ class BlueEmulationWrapper():
 
         return anomaly
 
-
     def _create_blue_table(self, success):
         table = PrettyTable([
             'Subnet',
@@ -185,7 +181,7 @@ class BlueEmulationWrapper():
 
     def _create_vector(self, success):
         table = self._create_blue_table(success)._rows
-        #print('From blue table wrapper, table is:',table)
+        # print('From blue table wrapper, table is:',table)
         proto_vector = []
         for row in table:
             # Activity

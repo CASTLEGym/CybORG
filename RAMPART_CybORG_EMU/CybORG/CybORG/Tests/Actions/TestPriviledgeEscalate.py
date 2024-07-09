@@ -2,12 +2,12 @@ from CybORG.Emulator.Actions.Velociraptor.PrivilegeEscalateAction import Privile
 from CybORG.Emulator.Actions.Velociraptor.ExploitAction import ExploitAction
 
 
-credentials_file = "prog_client2.yaml"
-hostname="user-host-1"
+credentials_file = "/home/ubuntu/prog_client.yaml"
+hostname="user0"
 remote_hostname="10.10.10.14"
 remote_username="ubuntu"
 remote_password="ubuntu"
-client_port=4444
+client_port=4494
 
 
 exploit_action= ExploitAction(credentials_file,hostname,remote_hostname,remote_username,remote_password,client_port)
