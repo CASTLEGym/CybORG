@@ -128,7 +128,7 @@ class GetTrueState(GameAction, CybORGLogger):
                                             obs.add_process(hostid=host, path=path if path != '' else None, process_name=r[2], pid=r[3], parent_pid=r[4])
 
                     if 'All' in data['Processes'] or 'Port' in data['Processes']:
-                        result = game_controller.execute_ssh_command("sudo netstat -npl4 | sed 's/LISTEN/ /g' | awk '{print $1,$4,$6}'", host)
+                        result = game_controller.execute_ssh_command("doas netstat -npl4 | sed 's/LISTEN/ /g' | awk '{print $1,$4,$6}'", host)
                         if result == '' or 'command not found' in result or 'Invalid command' in result:
                             #linux command failed so try windows command
                             result2 = game_controller.execute_ssh_command(f"netstat -ano", host)

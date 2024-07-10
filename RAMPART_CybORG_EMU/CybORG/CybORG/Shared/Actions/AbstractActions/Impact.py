@@ -23,7 +23,7 @@ class Impact(Action):
         min_level = 0
         session = None
         for s in sessions:
-            # else find if session is Admin or sudo
+            # else find if session is Admin or doas
             if s.username == 'root' or s.username == 'SYSTEM':
                 session = s.ident
                 obs = Observation(success=True)

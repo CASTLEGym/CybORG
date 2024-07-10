@@ -362,22 +362,31 @@ class RestoreAction(Action):
         # GET ID'S OF ALL EXISTING PORTS TO SEE IF ANY THAT WERE ATTACHED TO THE SERVER STILL EXIST
         existing_port_list = conn.list_ports()
         existing_port_id_set = {existing_port.id for existing_port in existing_port_list}
+        deployed_port_id_set = set()
 
         # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
         network_list = []
         for network_name, port_data_list in network_id_port_data_list_dict.items():
             for port_data in port_data_list:
                 port_id = port_data['port_id']
+
+                # IF port_id SPECIFIED MULTIPLE TIMES, SOMETHING IS WRONG
+                if port_id in deployed_port_id_set:
+                    print(f"WARNING:  PORT WITH ID \"{port_id}\" SPECIFIED MORE THAN ONCE -- SKIPPING")
+                    continue
+
                 # IF PORT EXISTS, PLACE IN LIST TO ATTACH TO RESTORED SERVER
                 if port_id in existing_port_id_set:
                     network_list.append({'port': port_id})
-                    include_network = False
+                    deployed_port_id_set.add(port_id)
+
                 # OTHERWISE, PLACE DATA ABOUT PORT INTO LIST FOR RE-CREATION
                 else:
                     port = conn.create_port(
                         **port_data['port_info']
                     )
                     network_list.append({'port': port.id})
+                    deployed_port_id_set.add(port.id)
 
         #
         # RESTORE THE SERVER
