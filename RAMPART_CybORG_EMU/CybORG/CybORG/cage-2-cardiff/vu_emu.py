@@ -25,6 +25,8 @@ from CybORG.Emulator.Actions.Velociraptor.PrivilegeEscalateAction import Privile
 from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
+from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
+
 #from pprint import pprint
 import ast
 from reward_calculator import RewardCalculator
@@ -104,7 +106,7 @@ def generate_ports(num=50,min=4000,max=5000):
 
 
 class vu_emu():
-   def __init__(self, current_user, password, url,udn,pdn,project):
+   def __init__(self, current_user, password, url,udn,pdn,project,key_name):
       self.old_outcome_blue=None
       self.old_outcome_red=None
       self.last_red_action=None
@@ -114,6 +116,7 @@ class vu_emu():
       #print('\n-> Available port:',self.available_ports)
       self.used_ports={}
       self.exploited_hosts=[]
+      self.priviledged_hosts=[]
       self.old_exploit_outcome={}
       self.network_state={}
       self.reward_cal=RewardCalculator(path)
@@ -123,6 +126,7 @@ class vu_emu():
       self.udn=udn
       self.pdn=pdn
       self.project=project
+      self.key_name= key_name
 
     
 
@@ -203,7 +207,7 @@ class vu_emu():
          if is_host_name == True:
             #print("** True host name **") 
             action_param= ip2host.fetch_alt_name(action_param)
-            print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
+            #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
             
          if agent_type=='red':
             outcome= self.execute_action_client(action_name,action_param)
@@ -407,6 +411,7 @@ class vu_emu():
             outcome.update({'hostname':hostname})
             subnet_ip= self.get_subnet_ip(hostname)
             outcome.update({'subnet':subnet_ip})
+            self.priviledged_hosts.append(action_param)
 
           else: 
             success= False
@@ -415,6 +420,30 @@ class vu_emu():
           outcome.update({'success':success})
 
           #print('\n->outcome of Exploit action is:',outcome)
+       elif action_name=='Impact':
+          outcome={}
+          #print('Self.connection_key:',self.connection_key,'action_param:',action_param)
+          if action_param in self.priviledged_hosts:
+            client_port= self.used_ports[action_param]
+            command='ls -l'
+            action= SSHConnectionImpactAction(credentials_file,red_intial_foothold,self.connection_key[action_param],command)
+            observation=action.execute(None)
+            success = enum_to_boolean(str(observation.success))
+            outcome.update({'action_param':action_param})
+            #outcome.update({'user':observation.user.strip()})
+            #outcome.update({'explored_host':self.fetch_ip(observation.explored_host)})
+            #outcome.update({'pid_string':observation.pid})
+            #hostname=ip2host.fetch_alt_name(action_param)
+            #outcome.update({'hostname':hostname})
+            #subnet_ip= self.get_subnet_ip(hostname)
+            #outcome.update({'subnet':subnet_ip})
+          else: 
+            success= False
+          if success==True:
+            self.update_reward_information_dict(self.network_state,action_param,'root')
+          outcome.update({'success':success})
+
+
 
        ### Blue Actions
        elif action_name in blue_decoys: 
@@ -443,6 +472,7 @@ class vu_emu():
             outcome.update({'success':False})
           if outcome['success']==True:
                if action_param in self.connection_key:del self.connection_key[action_param]
+               self.priviledged_hosts.remove(action_param)
                self.available_ports.append(self.used_ports[action_param])
                del self.used_ports[action_param]
                self.delete_reward_information_dict(self.network_state,action_param,'root')
@@ -470,6 +500,7 @@ class vu_emu():
           if outcome["success"]==True:
              self.delete_reward_information_dict(self.network_state,action_param,'root')
              if action_param in self.connection_key:del self.connection_key[action_param]
+             self.priviledged_hosts.remove(action_param)
 
        elif action_name=='Analyse':
           print('@@'*100, 'In Analyse, host name is:',cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)))

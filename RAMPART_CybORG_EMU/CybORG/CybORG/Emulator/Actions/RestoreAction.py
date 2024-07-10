@@ -26,7 +26,8 @@ class RestoreAction(Action):
             username,
             password,
             user_domain_name,
-            project_domain_name
+            project_domain_name,
+            key_name
     ):
         super().__init__()
 
@@ -36,6 +37,7 @@ class RestoreAction(Action):
         self.project_name = project_name
         self.user_domain_name = user_domain_name
         self.project_domain_name = project_domain_name
+        self.key_name=key_name
 
         self.auth_args = {
             'auth_url': auth_url,
@@ -397,7 +399,7 @@ class RestoreAction(Action):
             flavor_id=flavor_id,
             image_id=image_id,
             networks=network_list,
-            key_name='castle-control'
+            key_name=self.key_name
         )
         # WAIT UNTIL SERVER FULLY RESTORED
         conn.compute.wait_for_server(server=redeployed_instance, wait=1200)

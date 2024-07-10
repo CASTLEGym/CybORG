@@ -63,6 +63,9 @@ if __name__ == "__main__":
     parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')")
     parser.add_argument("-pdn",type=str,default="ISIS", help="The project domain name for openstack (default: 'ISIS')")
     parser.add_argument("-pr", "--project",type=str,default="mvp1a", help="The project name for openstack (default: 'mvp1a')")
+    
+    parser.add_argument("-k", "--key",type=str,default="castle-control", help="The project key  (default: 'castle-control')")
+
 
 
 
@@ -84,9 +87,11 @@ if __name__ == "__main__":
     os_udn= args.udn
     os_pdn=args.pdn
 
+    key_name= args.key
+
     # Print the variables
     print(f"experiment type is: {exp}, steps are {steps}, userid {user} and password is {password}, running agent of team {team}.")
-    print(f"url is: {os_url} , udn is : {os_udn}, pdn is  {os_pdn}, project_name : {project_name}")
+    print(f"url is: {os_url} , udn is : {os_udn}, pdn is  {os_pdn}, project_name : {project_name}, key is {key_name}")
     current_directory = os.getcwd()
     data_dir = 'data'
 
@@ -206,7 +211,7 @@ if __name__ == "__main__":
         red_observation=translate_intial_red_obs(red_observation)
         #print("\n ***** Red observation after reset is:",red_observation)
 
-        cyborg_emu = vu_emu(user,password,os_url,os_udn,os_pdn,project_name )
+        cyborg_emu = vu_emu(user,password,os_url,os_udn,os_pdn,project_name,key_name )
         cyborg_emu.reset()
                
         #read assets

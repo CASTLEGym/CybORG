@@ -16,6 +16,18 @@ class ResetAction(Action):
         super().__init__()
         self.credentials_file = credentials_file
         self.directory = None
+    
+    def spawn_ot(self,hostname=None):
+        self.ot_hostname=hostname
+        print("In execute")
+        ot_process_spawn_action = RunProcessAction(
+            self.credentials_file,
+            self.hostname,
+            # To Do: change the action command need to run it. 
+            f"md5sum $(find \"$(realpath \"{self.directory}\")\" -maxdepth 1 -type f -exec echo \"{{}}\" +)"
+        )
+        ot_process_spawn_observation = ot_process_spawn_action.execute(None)
+
 
     def execute(self, hostname= None,directory='/home/ubuntu', state: Union[State, None]=None) -> Observation:
         self.directory=directory

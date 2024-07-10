@@ -11,18 +11,19 @@ args = parser.parse_args()
 
 #DO it via arg parser
 user_name = args.user
-
+#password='********'
 password = getpass.getpass()
 
 
 restore_action = RestoreAction(
-    hostname='user1',
+    hostname='user2',
     auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
     project_name='mvp1a',
-    username='vardhah',
-    password='Roadies@5*',
+    username=user_name,
+    password=password,
     user_domain_name='ISIS',
-    project_domain_name='ISIS'
+    project_domain_name='ISIS',
+    key_name= 'castle-control'
 )
 
 observation=restore_action.execute(None)
