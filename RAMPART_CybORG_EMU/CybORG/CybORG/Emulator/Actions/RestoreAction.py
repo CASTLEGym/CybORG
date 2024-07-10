@@ -302,7 +302,13 @@ class RestoreAction(Action):
         observation = Observation(False)
 
         # CONNECTION API
-        conn = connection.Connection(**self.auth_args)
+        conn = connection.Connection(
+                auth=self.auth_args,
+                verify=False
+                )
+
+        if conn is None:
+            raise Exception("Cannot connect to openstack")
 
         # GET SERVER TO RESTORE
         server = conn.compute.find_server(self.hostname)

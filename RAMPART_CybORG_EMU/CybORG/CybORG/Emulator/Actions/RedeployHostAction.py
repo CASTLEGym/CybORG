@@ -37,7 +37,7 @@ class RedeployHostAction(Action):
 
         observation = Observation(False)
 
-        conn = connection.Connection(**self.auth_args)
+        conn = connection.Connection(auth=self.auth_args, verify=False)
 
         server = conn.compute.find_server(self.hostname)
 
@@ -70,7 +70,7 @@ class RedeployHostAction(Action):
             flavor_id=flavor_id,
             image_id=image_id,
             networks=network_list,
-            key_name='castle-pem',
+            key_name='castle-control',
         )
 
         conn.compute.wait_for_server(reployed_instance)
