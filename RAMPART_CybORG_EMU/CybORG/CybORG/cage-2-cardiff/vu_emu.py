@@ -541,6 +541,8 @@ class vu_emu():
          return data
        elif action_name=='Restore':
          return data
+       else: 
+         return data
             
    def is_name(self,s):
          return bool(re.match(r"^[A-Za-z]+", s))
