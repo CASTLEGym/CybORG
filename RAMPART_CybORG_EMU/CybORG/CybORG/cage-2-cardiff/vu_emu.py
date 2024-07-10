@@ -490,7 +490,8 @@ class vu_emu():
           username=self.current_user,
           password=self.password,
           user_domain_name=self.udn,
-          project_domain_name=self.pdn)
+          project_domain_name=self.pdn,
+          key_name=self.key_name)
           observation=restore_action.execute(None)
           success = enum_to_boolean(str(observation.success))
           outcome.update({'success':success})
