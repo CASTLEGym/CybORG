@@ -424,6 +424,7 @@ class vu_emu():
           outcome={}
           #print('Self.connection_key:',self.connection_key,'action_param:',action_param)
           if action_param in self.priviledged_hosts:
+            """
             client_port= self.used_ports[action_param]
             command='ls -l'
             action= SSHConnectionImpactAction(credentials_file,red_intial_foothold,self.connection_key[action_param],command)
@@ -437,10 +438,12 @@ class vu_emu():
             #outcome.update({'hostname':hostname})
             #subnet_ip= self.get_subnet_ip(hostname)
             #outcome.update({'subnet':subnet_ip})
+            """
+            success= True
           else: 
             success= False
-          if success==True:
-            self.update_reward_information_dict(self.network_state,action_param,'root')
+          #if success==True:
+          #  self.update_reward_information_dict(self.network_state,action_param,'root')
           outcome.update({'success':success})
 
 

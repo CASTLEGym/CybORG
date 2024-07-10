@@ -41,3 +41,9 @@ We currently using the integrated_game_coordinator.py python script, that is in 
  
  To copy DARTMOUTH agents and classes: 
  scp ~/.ssh/castle.pem -r /home/lab_linux/harsh/CAGE_RL/CybORG_wrapper/RAMPART_CybORG_EMU/CybORG/CybORG/cage-2-cardiff/DARTMOUTH ubuntu@129.59.234.198:~/test_agent/CybORG/RAMPART_CybORG_EMU/CybORG/CybORG/cage-2-cardiff/
+ 
+ 
+ 
+## To reset the environment for next round of game :
+  - Restore all VMs , ( since lot of decoys processes and other malicious processes are spawnwed by both red and blue agent during game play). There is restoreAll.py script that does it for you.  
+  - Go to red foot hold machine ( in this case user0) and kill all SSHConnection processes. 
