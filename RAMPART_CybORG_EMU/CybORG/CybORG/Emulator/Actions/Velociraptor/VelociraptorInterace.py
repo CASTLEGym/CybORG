@@ -217,11 +217,11 @@ SELECT cancel_flow(client_id='{client_id}', flow_id='{flow_id}') FROM scope()
     def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=300, max_retries=4):
 
         num_retries = 0
-        timeouts=[5,20,150,300]
-        timeout=num_retries[num_retries]
-
+        timeouts=[10,30,150,300]
+        
         # TRY UP TO max_tries TIMES TO SUBMIT THE ARTIFACT
         while num_retries < max_retries:
+            timeout=timeouts[num_retries]
             print('***=> Trial: ',num_retries, ", timeout: ",timeout, 'sec') 
             num_retries += 1
 
