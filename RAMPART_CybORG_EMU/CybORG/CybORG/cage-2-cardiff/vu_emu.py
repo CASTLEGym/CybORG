@@ -437,9 +437,8 @@ class vu_emu():
             #hostname=ip2host.fetch_alt_name(action_param)
             #outcome.update({'hostname':hostname})
             #subnet_ip= self.get_subnet_ip(hostname)
-            #outcome.update({'subnet':subnet_ip})
-            """
-            success= True
+            #outcome.update({'subnet':subnet_ip})"""
+            success=True
           else: 
             success= False
           #if success==True:
@@ -475,7 +474,7 @@ class vu_emu():
             outcome.update({'success':False})
           if outcome['success']==True:
                if action_param in self.connection_key:del self.connection_key[action_param]
-               self.priviledged_hosts.remove(action_param)
+               if action_param in self.priviledged_hosts: self.priviledged_hosts.remove(action_param)
                self.available_ports.append(self.used_ports[action_param])
                del self.used_ports[action_param]
                self.delete_reward_information_dict(self.network_state,action_param,'root')
@@ -491,7 +490,7 @@ class vu_emu():
           password=self.password,
           user_domain_name=self.udn,
           project_domain_name=self.pdn,
-          key_name=self.key_name)
+          key_name= self.key_name)
           observation=restore_action.execute(None)
           success = enum_to_boolean(str(observation.success))
           outcome.update({'success':success})
@@ -504,7 +503,8 @@ class vu_emu():
           if outcome["success"]==True:
              self.delete_reward_information_dict(self.network_state,action_param,'root')
              if action_param in self.connection_key:del self.connection_key[action_param]
-             self.priviledged_hosts.remove(action_param)
+             if action_param in self.priviledged_hosts: 
+               self.priviledged_hosts.remove(action_param)
 
        elif action_name=='Analyse':
           print('@@'*100, 'In Analyse, host name is:',cage2os.fetch_alt_name(ip2host.fetch_alt_name(action_param)))
@@ -541,8 +541,8 @@ class vu_emu():
          return data
        elif action_name=='Restore':
          return data
-       else: 
-         return data
+       else:
+          return data
             
    def is_name(self,s):
          return bool(re.match(r"^[A-Za-z]+", s))

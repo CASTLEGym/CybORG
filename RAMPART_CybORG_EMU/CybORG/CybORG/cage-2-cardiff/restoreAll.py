@@ -12,7 +12,7 @@ parser.add_argument( "-url",type=str,default="https://cloud.isislab.vanderbilt.e
 parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')")
 parser.add_argument("-pdn",type=str,default="ISIS", help="The project domain name for openstack (default: 'ISIS')")
 parser.add_argument("-pr", "--project",type=str,default="mvp1a", help="The project name for openstack (default: 'mvp1a')")
-parser.add_argument("-k", "--key",type=str,default="castle-control", help="The project key  (default: 'castle-control')")
+
 
 
 args = parser.parse_args()
@@ -24,9 +24,8 @@ project_name= args.project
 os_url=args.url
 os_udn= args.udn
 os_pdn=args.pdn
-key_name= args.key
 
-print('os_url:',os_url, ' os_udn:',os_udn,' ,os_pdn:',os_pdn, 'Key name :',key_name)
+print('os_url:',os_url, ' os_udn:',os_udn,' ,os_pdn:',os_pdn)
 
 vms=["user0","user1","user2","user3","user4","enterprise0","enterprise1","enterprise2","op_server0","op_host0","op_host1","op_host2"]
 
@@ -40,8 +39,7 @@ for vm in  vms:
     username=user_name,
     password=password,
     user_domain_name=os_udn,
-    project_domain_name=os_pdn,
-    key_name=key_name)
+    project_domain_name=os_pdn)
 
   observation=restore_action.execute(None)
   print('observation success:',observation.success)
