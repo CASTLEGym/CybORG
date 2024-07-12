@@ -18,7 +18,7 @@ To listen on a non-privileged port:
 
 To listen on a privileged port:
 
-```doas ./decoy 22```
+```sudo ./decoy 22```
 
 Connection attempts are logged to a file named ```decoy_connections.log``` that includes the date, source IP address, and port. It looks like the following:
 

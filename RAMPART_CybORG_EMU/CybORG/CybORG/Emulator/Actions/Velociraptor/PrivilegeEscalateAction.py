@@ -29,8 +29,8 @@ class PrivilegeEscalateAction:
        if self.conn_key== None: 
           return PrivilegeEscalateObservation(success=False)
        else: 
-          command = f"doas ss -tunap | grep ':{self.client_port}'"
-          out1=self.run_command("doas whoami")
+          command = f"sudo ss -tunap | grep ':{self.client_port}'"
+          out1=self.run_command("sudo whoami")
           out2=self.run_command("grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' ~/.ssh/known_hosts")
           out3=self.run_command(command)
           return PrivilegeEscalateObservation(success=True,user=out1,explored_host=out2,pid=out3) 

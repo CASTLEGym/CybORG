@@ -45,5 +45,10 @@ We currently using the integrated_game_coordinator.py python script, that is in 
  
  
 ## To reset the environment for next round of game :
-  - Restore all VMs , ( since lot of decoys processes and other malicious processes are spawnwed by both red and blue agent during game play). There is restoreAll.py script that does it for you.  
-  - Go to red foot hold machine ( in this case user0) and kill all SSHConnection processes. 
+ It involves two step process:
+  - Restore all VMs , ( since decoys processes and other malicious processes are spawnwed by both red and blue agent during game play). There is restoreAll.py script that does retore all VMs to original state. It can be run using openstack username and password.   
+  - Go to red foot hold machine ( in this case user0) and kill all SSHConnection processes. Example commands are below. Please change the IPs and PIDs accordingly. 
+      - ssh -i ~/.ssh/castle.pem ubuntu@129.59.234.198 (defender Ip)
+      - ssh -i ~/.ssh/castle.pem ubuntu@10.0.0.12 (User0 ip)
+      - sudo pkill -f SSHConnectionServer.py
+      

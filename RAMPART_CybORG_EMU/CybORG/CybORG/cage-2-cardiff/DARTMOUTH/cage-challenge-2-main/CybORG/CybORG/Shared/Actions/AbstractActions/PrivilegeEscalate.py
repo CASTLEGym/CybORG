@@ -95,7 +95,7 @@ class PrivilegeEscalate(Action):
         target_session = None
         obs = Observation(False)
         for sess in sessions:
-            # else find if session is Admin or doas
+            # else find if session is Admin or sudo
             if sess.username in ('root', 'SYSTEM'):
                 target_session = sess.ident
                 obs = Observation(success=True)
