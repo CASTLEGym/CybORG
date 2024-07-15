@@ -6,19 +6,19 @@ from CybORG.Emulator.Actions.Velociraptor.ExploitAction import ExploitAction
 
 credentials_file = "/home/ubuntu/prog_client.yaml"
 hostname="user0"
-remote_hostname="10.10.10.14"
+remote_hostname="10.0.0.243"
 remote_username="ubuntu"
 remote_password="ubuntu"
-client_port=4444
+client_port=4447
 
 
-from CybORG.Emulator.Actions.Velociraptor.ResetAction import ResetAction
+#from CybORG.Emulator.Actions.Velociraptor.ResetAction import ResetAction
 
-hostname='op_sever0'
-reset_action = ResetAction(credentials_file)
 
-observation=reset_action.spawn_ot(hostname)
-print("observation is :",observation)
+#reset_action = ResetAction(credentials_file)
+
+#observation=reset_action.spawn_ot(hostname)
+#print("observation is :",observation)
 
 
 exploit_action= ExploitAction(credentials_file,hostname,remote_hostname,remote_username,remote_password,client_port)
@@ -35,9 +35,13 @@ print("Any new host explored?:",observation.explored_host)
 print("PID of malicious process?",observation.pid)
 print('!!Please clean the mess after test!!')
 
+
+hostname='test-ot-impact'
 impact_action= ImpactAction(credentials_file,hostname,conn_key)
 observation= impact_action.execute()
 print('Impact success is:',observation.success)
+print('attack id is:',observation.attack_id)
+print('Std out is:',observation.stdout)
 
 print('!! Cleaning mess, just for this testing, in real action cleaning need to be done by Blue Agent!!')
 cleaned= exploit_action.run_command("CLOSE")
