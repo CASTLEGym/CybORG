@@ -207,7 +207,7 @@ if __name__ == "__main__":
                        print('Data is:',self.self.cyborg_ipmap_data)
                     """
                     
-                    action_parts= red_action.split(' ', expand=True)
+                    #action_parts= red_action.split(' ', expand=True)
                     
                     with open(log_file, 'a', newline='') as file:
                       writer = csv.writer(file)
