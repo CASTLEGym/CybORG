@@ -196,6 +196,7 @@ if __name__ == "__main__":
                     
                     # Log the actions, observations, and rewards
                     
+                    """
                     #to make consistent IP maps , lets do it this way. if action param is Ipaddress convert it to openstack IP 
                     with open("./assets/openstack_ip_map.json",'r') as f:
                        self.os_ipmap_data = yaml.safe_load(f)
@@ -204,7 +205,9 @@ if __name__ == "__main__":
                     with open("./assets/cyborg_complete_ip_map.json",'r') as f:
                        self.cyborg_ipmap_data = yaml.safe_load(f)
                        print('Data is:',self.self.cyborg_ipmap_data)
+                    """
                     
+                    action_parts= red_action.split(' ', expand=True)
                     
                     with open(log_file, 'a', newline='') as file:
                       writer = csv.writer(file)
