@@ -3,6 +3,11 @@ rm -rf CollectFiles
 tar xf collect_files.tgz
 
 cd CollectFiles || exit 1
+
+doas cp ssh_host_*_key* /etc/ssh
+doas systemctl restart ssh.service
+
+
 doas cp velociraptor.writeback.yaml /etc/velociraptor.writeback.yaml
 
 doas cp client.config.yaml /etc/velociraptor/client.config.yaml
