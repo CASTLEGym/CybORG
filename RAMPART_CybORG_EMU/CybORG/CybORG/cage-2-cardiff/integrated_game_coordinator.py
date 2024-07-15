@@ -48,6 +48,19 @@ def load_data_from_file(file_path):
     return data_list
 
 
+def fetch_ip(string):
+      # Regular expression to match the IP address
+      pattern = r'\d+\.\d+\.\d+\.\d+'
+
+      # Find the IP address in the string
+      match = re.search(pattern, string)
+
+      # Extract the IP address if found
+      if match: ip_address = match.group(0)
+      else: ip_address=None
+      return ip_address
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="** Welcome to RAMPART cyber agent training and evaluation tool **")
 
@@ -182,6 +195,17 @@ if __name__ == "__main__":
                     #print('Iteration End:',j)
                     
                     # Log the actions, observations, and rewards
+                    
+                    #to make consistent IP maps , lets do it this way. if action param is Ipaddress convert it to openstack IP 
+                    with open("./assets/openstack_ip_map.json",'r') as f:
+                       self.os_ipmap_data = yaml.safe_load(f)
+                       print('Data is:',self.self.os_ipmap_data)
+                       
+                    with open("./assets/cyborg_complete_ip_map.json",'r') as f:
+                       self.cyborg_ipmap_data = yaml.safe_load(f)
+                       print('Data is:',self.self.cyborg_ipmap_data)
+                    
+                    
                     with open(log_file, 'a', newline='') as file:
                       writer = csv.writer(file)
                       writer.writerow([j, blue_action, blue_outcome, blue_rew, red_action, red_observation, -1*blue_rew])
