@@ -114,8 +114,10 @@ if __name__ == "__main__":
         os.makedirs(data_dir_path)
     
     
-    # File setup
-    log_file = './data/'+team+'_'+exp+'_actions_and_observations.csv'
+    # File setup- creating dummy logfile for testing
+    log_file='./data/dummy_data.csv'
+    
+    #log_file = './data/test_'+team+'_'+exp+'_actions_and_observations.csv'
     with open(log_file, 'w', newline='') as file:
       writer = csv.writer(file)
       writer.writerow(['Iteration', 'Blue Action', 'Blue Observation', 'Blue Reward', 
