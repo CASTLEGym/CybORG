@@ -132,14 +132,17 @@ def load_data_from_file(file_path):
 if __name__ == '__main__':
     # File setup
     team='bt_agent'
-    log_file = './data/'+team+'_emu_actions_and_observations.csv'
+    if exp == 'sim':
+        log_file = './data/'+team+'_sim_actions_and_observations.csv'
+    else:
+        log_file = './data/'+team+'_emu_actions_and_observations.csv'
+
     with open(log_file, 'w', newline='') as file:
       writer = csv.writer(file)
       writer.writerow(['Iteration', 'Blue Action', 'Blue Observation', 'Blue Reward',
                        'Red Action', 'Red Observation', 'Red Reward'])
 
-    #Load your own agent
-    #agent = MainAgent()
+     
 
     #file_name = str(inspect.getfile(CybORG))[:-10] + '/cage-2-cardiff/Evaluation/' + f'{agent.__class__.__name__}.txt'
     #print(f'Saving evaluation results to {file_name}')i
@@ -156,19 +159,24 @@ if __name__ == '__main__':
     
     #Initialize Emulator
     emulator = bt_nodes.initialize_emulator()
-    
-    for num_steps in [10]:
+    #emulator.restore()    
+    for num_steps in [50]:
         #emulator = bt_nodes.initialize_run_emulator()
         blackboard = build_blackboard()
-        blackboard.agent = emulator.agent
+        if exp == 'sim':
+            blackboard.agent = MainAgent()
+        else:
+            blackboard.agent = emulator.agent
+        
         blackboard.cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
         blackboard.wrapped_cyborg = wrap(blackboard.cyborg,"cardiff")
-        #IP = blackboard.cyborg.get_ip_map()
-        #print(IP)
         #emulator.blue_observation = emulator.wrapped_cyborg.reset()
         blackboard.observation = blackboard.wrapped_cyborg.reset()
         #emulator.blue_action_space = emulator.wrapped_cyborg.get_action_space(emulator.agent_name)
-        blackboard.action_space = blackboard.wrapped_cyborg.get_action_space(emulator.agent_name)
+        if exp == 'sim':
+            blackboard.action_space = blackboard.wrapped_cyborg.get_action_space(agent_name)
+        else:
+            blackboard.action_space = blackboard.wrapped_cyborg.get_action_space(emulator.agent_name)
         #emulator.red_observation = emulator.cyborg.get_observation('Red')
         #emulator.red_action_space = emulator.cyborg.get_action_space('Red')
         #emulator.red_observation=translate_intial_red_obs(emulator.red_observation)
@@ -177,13 +185,18 @@ if __name__ == '__main__':
         actions = []
 
         for i in range(MAX_EPS):
+            IP = blackboard.cyborg.get_ip_map(agent_name)
+
             for red_agent in [B_lineAgent]:
                 if red_agent != SleepAgent:
                     blackboard.r = []
                     blackboard.a = []
-                    root = build_bt(emulator.agent)
+                    if exp == 'sim':
+                        root = build_bt(agent)
+                    else:
+                        root = build_bt(emulator.agent)
                     #print(root)
-                    print(emulator.wrapped_cyborg.step_counter)
+                    #print(emulator.wrapped_cyborg.step_counter)
                     blackboard.test_counter = 0
                     blackboard.step = 0
                     
@@ -193,80 +206,21 @@ if __name__ == '__main__':
                         print('%%'*100)
                         print('Iteration start:',j)
                         print(blackboard.action)
-                        emulator.run_emulation(blackboard.action,log_file,j)
+                        if exp == 'sim':
+                            #for keys in IP.keys():
+                            #    if str(IP[keys]) in 
+                        else:
+                            emulator.run_emulation(blackboard.action,log_file,j)
                         blackboard.step += 1
                         print('%%'*100)
                         print('Iteration end:',j)
                     emulator.agent.end_episode()
                     #agent.end_episode()
+                    
                     total_reward.append(sum(blackboard.r))
                     actions.append(blackboard.a)
                     # observation = cyborg.reset().observation
                     blackboard.observation = blackboard.wrapped_cyborg.reset()            
-                    #emulator.restore()
-
-    
-
-#   agent = MainAgent()
-
-# Change this line to load your agentobservation
-
-#    print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
-
-#   for num_steps in [10]:
-#       for red_agent in [B_lineAgent]:
-
-            # Create behavior tree 
-#           blackboard = build_blackboard()
-
-#           blackboard.agent = agent
-
-#           blackboard.cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
-#           blackboard.wrapped_cyborg = wrap(blackboard.cyborg)
-
-#           blackboard.observation = blackboard.wrapped_cyborg.reset()
-            # observation = cyborg.reset().observation
-
-#           blackboard.action_space = blackboard.wrapped_cyborg.get_action_space(agent_name)
-
-
-            # action_space = cyborg.get_action_space(agent_name)
-#           total_reward = []
-#           actions = []
-#           if red_agent != SleepAgent:
-#               for i in range(MAX_EPS):
-                    # print(i)
-#                   blackboard.r = []
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
-
-#                   root = build_bt(agent)
-
-#                   blackboard.a = []
+                    emulator.restore()
+                else:
+                    total_reward.extend([0, 0])

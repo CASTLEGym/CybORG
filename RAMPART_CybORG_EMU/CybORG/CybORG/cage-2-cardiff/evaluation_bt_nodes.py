@@ -64,7 +64,7 @@ class initialize_emulator:
         parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')")
         parser.add_argument("-pdn",type=str,default="ISIS", help="The project domain name for openstack (default: 'ISIS')")
         parser.add_argument("-pr", "--project",type=str,default="mvp1a", help="The project name for openstack (default: 'mvp1a')")
-
+        parser.add_argument("-k", "--key",type=str,default="castle-control", help="The project key  (default: 'castle-control')")
         parser.add_argument("-t", "--team", type=str,default="cardiff" , help="Team")
 
         # Parse the arguments
@@ -73,14 +73,17 @@ class initialize_emulator:
         # Access the variables
         exp = args.exp
         steps = args.steps
-        self.user= args.user
-        self.password= args.password
+        #self.user= args.user
+        #self.password= args.password
         team= args.team
+        self.user = "vardhah"
+        self.password = "Roadies@5*"
 
         self.project_name= args.project
         self.os_url=args.url
         self.os_udn= args.udn
         self.os_pdn=args.pdn
+        self.key_name= args.key
 
         cyborg_version = CYBORG_VERSION
         scenario = 'Scenario2'
@@ -113,7 +116,7 @@ class initialize_emulator:
 
         #self.user = user
         #self.password = password
-        self.cyborg_emu = vu_emu(self.user,self.password,self.os_url,self.os_udn,self.os_pdn,self.project_name )
+        self.cyborg_emu = vu_emu(self.user,self.password,self.os_url,self.os_udn,self.os_pdn,self.project_name,self.key_name )
         self.cyborg_emu.reset()
         #cyborg_emu = vu_emu(user,password)
         #cyborg_emu.reset()
@@ -203,7 +206,7 @@ class initialize_emulator:
             username=self.user,
             password=self.password,
             user_domain_name=self.os_udn,
-            project_domain_name=self.os_pdn)
+            project_domain_name=self.os_pdn,key_name=self.key_name)
 
           observation=restore_action.execute(None)
           print('observation success:',observation.success)
@@ -239,7 +242,7 @@ class initialize_emulator:
         for keys in self.ip_addr.keys():
             if str(keys) in str(red_action):
                 inter_form = str(red_action)
-                inter_form = inter_form.replace(str(keys),str(IP[keys]))
+                inter_form = inter_form.replace(str(keys),str(self.ip_addr[keys]))
                 red_action = inter_form
             else:
                 pass
