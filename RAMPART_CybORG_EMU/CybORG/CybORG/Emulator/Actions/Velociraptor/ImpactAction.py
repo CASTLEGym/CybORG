@@ -35,15 +35,15 @@ class ImpactAction:
        ssh_connection_client_observation = ssh_connection_client_action.execute(None)
        return ssh_connection_client_observation.Stdout
 
-    def execute(self, controller='lc1',attack='dos',duration=200,f_value=None) -> Observation:
+    def execute(self, controller='lc1',attack='dos',duration=20,f_value=None) -> Observation:
        if self.conn_key== None: 
           return ImpactObservation(success=False)
        
        else: 
           if attack=='dos':
-            command = f"nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} &"
+            command = f"doas nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} &"
           elif attack=='fdi':
-            command = f"nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
+            command = f"doas nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
           print('***Command:',command)
           ##to do : 
           out=self.run_command(command)

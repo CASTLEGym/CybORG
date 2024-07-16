@@ -9,7 +9,7 @@ hostname="user0"
 remote_hostname="10.0.0.243"
 remote_username="ubuntu"
 remote_password="ubuntu"
-client_port=4447
+client_port=4448
 
 
 #from CybORG.Emulator.Actions.Velociraptor.ResetAction import ResetAction
