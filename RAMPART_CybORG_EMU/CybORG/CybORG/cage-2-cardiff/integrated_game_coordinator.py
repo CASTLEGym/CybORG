@@ -39,13 +39,6 @@ def wrap(env,team):
      return ActionWrapper(ObservationWrapper(RLLibWrapper(env=env, agent_name="Blue")))
       
     
-def load_data_from_file(file_path):
-    data_list = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            line = line.replace("\n", "")
-            data_list.append(line)
-    return data_list
 
 
 def fetch_ip(string):
@@ -59,6 +52,47 @@ def fetch_ip(string):
       if match: ip_address = match.group(0)
       else: ip_address=None
       return ip_address
+
+def is_name(s):
+         return bool(re.match(r"^[A-Za-z]+", s))
+
+
+class load_ipmap_data:
+   def __init__(self,path):
+     with open(path,'r') as f:
+         self.data = yaml.safe_load(f)
+     #print('Data is:',self.data)
+     
+   def fetch_alt_name(self,name):
+     if name in self.data:
+        alt_name = self.data[name]
+     else:
+        for key, value in self.data.items():
+          if value == name:
+            alt_name = key
+     #print(f"The value of '{name}' is: {alt_name}")
+     return alt_name
+
+
+def replace_ip_to_name(action_string,exp_type='sim'):
+    if exp_type=='sim':
+      ip_to_host= load_ipmap_data('./assets/cyborg_complete_ip_map.json')
+    elif exp_type=='emu':
+      ip_to_host= load_ipmap_data('./assets/openstack_ip_map.json')  
+
+    split_action_string=action_string.split(" ")
+    
+    #if action contains the hostname
+    if len(split_action_string)==2:
+      action_param= split_action_string[1]
+      action_name=split_action_string[0]
+     
+      #print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
+      is_host_name= is_name(action_param)
+      if is_host_name == False:
+        #print("** True host name **") 
+        action_param= ip_to_host.fetch_alt_name(action_param)
+        #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
 
 
 if __name__ == "__main__":
@@ -208,7 +242,7 @@ if __name__ == "__main__":
                        self.cyborg_ipmap_data = yaml.safe_load(f)
                        print('Data is:',self.self.cyborg_ipmap_data)
                     """
-                    
+                    print('@@@@@@@@@@@@@@', red_action, blue_action)
                     #action_parts= red_action.split(' ', expand=True)
                     
                     with open(log_file, 'a', newline='') as file:

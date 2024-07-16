@@ -38,16 +38,19 @@ class ImpactAction:
     def execute(self, controller='lc1',attack='dos',duration=200,f_value=None) -> Observation:
        if self.conn_key== None: 
           return ImpactObservation(success=False)
+       
        else: 
           if attack=='dos':
-            command = f"python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} &"
+            command = f"nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} &"
           elif attack=='fdi':
-            command = f"python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
+            command = f"nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
           print('***Command:',command)
           ##to do : 
           out=self.run_command(command)
+          out1= self.run_command("whoami")
           print('out is:',out)
-          return ImpactObservation(success=True, attack_id=self.attack_id,stdout=out) 
+          print('out1 is:',out1)
+          return ImpactObservation(success=True, attack_id=self.attack_id) 
 
 
 if __name__=="__main__":

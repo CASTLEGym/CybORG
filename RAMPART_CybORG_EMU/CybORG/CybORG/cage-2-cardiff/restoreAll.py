@@ -39,7 +39,8 @@ for vm in  vms:
     username=user_name,
     password=password,
     user_domain_name=os_udn,
-    project_domain_name=os_pdn)
+    project_domain_name=os_pdn,
+    key_name='castle-control')
 
   observation=restore_action.execute(None)
   print('observation success:',observation.success)
