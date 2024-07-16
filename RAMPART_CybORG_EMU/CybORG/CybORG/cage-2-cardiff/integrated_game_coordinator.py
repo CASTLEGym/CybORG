@@ -38,7 +38,13 @@ def wrap(env,team):
    elif team == 'punch':
      return ActionWrapper(ObservationWrapper(RLLibWrapper(env=env, agent_name="Blue")))
       
-    
+def load_data_from_file(file_path):
+    data_list = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.replace("\n", "")
+            data_list.append(line)
+    return data_list  
 
 
 def fetch_ip(string):
