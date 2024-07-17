@@ -47,17 +47,7 @@ def load_data_from_file(file_path):
     return data_list  
 
 
-def fetch_ip(string):
-      # Regular expression to match the IP address
-      pattern = r'\d+\.\d+\.\d+\.\d+'
 
-      # Find the IP address in the string
-      match = re.search(pattern, string)
-
-      # Extract the IP address if found
-      if match: ip_address = match.group(0)
-      else: ip_address=None
-      return ip_address
 
 def is_name(s):
          return bool(re.match(r"^[A-Za-z]+", s))
@@ -80,12 +70,9 @@ class load_ipmap_data:
      return alt_name
 
 
-def replace_ip_to_name(action_string,exp_type='sim'):
-    if exp_type=='sim':
-      ip_to_host= load_ipmap_data('./assets/cyborg_complete_ip_map.json')
-    elif exp_type=='emu':
-      ip_to_host= load_ipmap_data('./assets/openstack_ip_map.json')  
-
+def replace_ip_to_name(action_string):
+    
+    print('** Action string is:',action_string)
     split_action_string=action_string.split(" ")
     
     #if action contains the hostname
@@ -98,7 +85,11 @@ def replace_ip_to_name(action_string,exp_type='sim'):
       if is_host_name == False:
         #print("** True host name **") 
         action_param= ip_to_host.fetch_alt_name(action_param)
-        #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
+        print("\n=> action name:: -",action_name, '; action param-',action_param)
+        print('tot:',action_name+' '+action_param)
+        return action_name +' '+action_param 
+      else: 
+        return action_string  
 
 
 if __name__ == "__main__":
@@ -145,6 +136,12 @@ if __name__ == "__main__":
     # Print the variables
     print(f"experiment type is: {exp}, steps are {steps}, userid {user} and password is {password}, running agent of team {team}.")
     print(f"url is: {os_url} , udn is : {os_udn}, pdn is  {os_pdn}, project_name : {project_name}, key is {key_name}")
+    
+    if exp=='sim':
+      ip_to_host= load_ipmap_data('./assets/cyborg_complete_ip_map.json')
+    elif exp=='emu':
+      ip_to_host= load_ipmap_data('./assets/openstack_ip_map.json')  
+    
     current_directory = os.getcwd()
     data_dir = 'data'
 
@@ -155,7 +152,7 @@ if __name__ == "__main__":
     
     
     # File setup- creating dummy logfile for testing
-    log_file='./data/dummy_data.csv'
+    log_file='./data/dummy_data_'+exp+'.csv'
     
     #log_file = './data/test_'+team+'_'+exp+'_actions_and_observations.csv'
     with open(log_file, 'w', newline='') as file:
@@ -238,19 +235,12 @@ if __name__ == "__main__":
                     
                     # Log the actions, observations, and rewards
                     
-                    """
-                    #to make consistent IP maps , lets do it this way. if action param is Ipaddress convert it to openstack IP 
-                    with open("./assets/openstack_ip_map.json",'r') as f:
-                       self.os_ipmap_data = yaml.safe_load(f)
-                       print('Data is:',self.self.os_ipmap_data)
-                       
-                    with open("./assets/cyborg_complete_ip_map.json",'r') as f:
-                       self.cyborg_ipmap_data = yaml.safe_load(f)
-                       print('Data is:',self.self.cyborg_ipmap_data)
-                    """
+                    
                     print('@@@@@@@@@@@@@@', red_action, blue_action)
                     #action_parts= red_action.split(' ', expand=True)
-                    
+                    blue_action=replace_ip_to_name(str(blue_action))
+                    red_action= replace_ip_to_name(str(red_action))
+
                     with open(log_file, 'a', newline='') as file:
                       writer = csv.writer(file)
                       writer.writerow([j, blue_action, blue_outcome, blue_rew, red_action, red_observation, -1*blue_rew])
@@ -329,6 +319,9 @@ if __name__ == "__main__":
             rewards.append(blue_rew)
             
             # Log the actions, observations, and rewards
+            blue_action=replace_ip_to_name(str(blue_action))
+            red_action= replace_ip_to_name(str(red_action))
+
             with open(log_file, 'a', newline='') as file:
                writer = csv.writer(file)
                writer.writerow([i, blue_action, blue_outcome, blue_rew, red_action, red_observation, -1*blue_rew])
