@@ -152,7 +152,7 @@ if __name__ == "__main__":
     
     
     # File setup- creating dummy logfile for testing
-    log_file='./data/dummy_data_'+exp+'.csv'
+    log_file='./data/latest_'+team+'_data_'+exp+'.csv'
     
     #log_file = './data/test_'+team+'_'+exp+'_actions_and_observations.csv'
     with open(log_file, 'w', newline='') as file:

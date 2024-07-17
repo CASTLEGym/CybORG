@@ -162,7 +162,9 @@ class vu_emu():
               self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
           else: 
               print('Reset failed!!')
-              break
+              self.md5[ip2host.fetch_alt_name(vm)]=None
+              # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
+              #break
           
 
 
