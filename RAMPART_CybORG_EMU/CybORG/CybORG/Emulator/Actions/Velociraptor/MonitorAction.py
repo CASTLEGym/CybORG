@@ -5,8 +5,8 @@ import time
 from .RunProcessAction import RunProcessAction
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
-#from ...Observations.Velociraptor.MonitorObservation import MonitorObservation
-from CybORG.Emulator.Observations.Velociraptor.MonitorObservation import MonitorObservation
+from ...Observations.Velociraptor.MonitorObservation import MonitorObservation
+#from CybORG.Emulator.Observations.Velociraptor.MonitorObservation import MonitorObservation
 
 class MonitorAction(RunProcessAction):
 
@@ -34,7 +34,7 @@ class MonitorAction(RunProcessAction):
         print('Stdout is:',observation.Stdout)
         if observation.success== True:
           observation.set_success(True)
-          return MonitorObservation(observation,Observation.Stdout)
+          return MonitorObservation(observation,observation.Stdout)
         
         observation.set_success(False)
         

@@ -8,5 +8,5 @@ class MonitorObservation(ProcessObservation):
         boolean_success = True if process_observation.success == TrinaryEnum.TRUE else False
         super().__init__(process_info=process_observation.artifact_info, success=boolean_success)
 
-        self.connection_list = connection_info
+        self.connection_info = connection_info
 
