@@ -6,7 +6,7 @@ from CybORG.Emulator.Actions.Velociraptor.ExploitAction import ExploitAction
 
 credentials_file = "/home/ubuntu/prog_client.yaml"
 hostname="user0"
-remote_hostname="10.0.0.243"
+remote_hostname="10.0.0.20"
 remote_username="ubuntu"
 remote_password="ubuntu"
 client_port=4448
