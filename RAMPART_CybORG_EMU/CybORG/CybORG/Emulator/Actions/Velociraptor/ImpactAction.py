@@ -35,37 +35,43 @@ class ImpactAction:
        ssh_connection_client_observation = ssh_connection_client_action.execute(None)
        return ssh_connection_client_observation.Stdout
 
-    def execute(self, controller='lc1',attack='dos',duration=20,f_value=None) -> Observation:
+    def execute(self, controller='lc1',attack='dos',duration=500,f_value=None) -> Observation:
        if self.conn_key== None: 
           return ImpactObservation(success=False)
        
        else: 
           if attack=='dos':
-            command = f"doas nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} &"
+            command = f"python /home/ubuntu/OT-Sim/run_user_process.py {controller} {attack} {duration} {self.attack_id} & "
           elif attack=='fdi':
-            command = f"doas nohup python /home/ubuntu/Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
+            command = f"python /home/ubuntu/OT-Sim/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
           print('***Command:',command)
           ##to do : 
+          out1= self.run_command("doas whoami")
           out=self.run_command(command)
-          out1= self.run_command("whoami")
-          print('out is:',out)
+          
+          print('out is:',out, 'Its type is:',type(out))
+          pid = out.split(' ')[-1]
+          print('PID is:',pid)
           print('out1 is:',out1)
-          return ImpactObservation(success=True, attack_id=self.attack_id) 
+          return ImpactObservation(success=True, attack_status=True,attack_id=self.attack_id, pid=pid) 
 
 
-if __name__=="__main__":
-    credentials_file = "/home/ubuntu/prog_client.yaml"
-    hostname = "user0"
-    remote_hostname = "10.10.30.20"
-    remote_username = "ubuntu"
-    remote_password = "ubuntu"
-    client_port = 4444
-
-    pes_action=PrivilegeEscalateAction(
-        credentials_file, connection_key, hostname, remote_hostname, remote_username, remote_password, client_port
-    )
-   
-    observation= pes_action.execute(None)
-    print(observation.user,observation.explored_host,observation.pid)
-    print('Please clean the mess by killing the SSHConnectionServer.py/SSHConnectionServerClient.py')
-
+    def kill_attack(self, pid) -> Observation:
+       if self.conn_key== None: 
+          return ImpactObservation(success=False)
+       
+       else: 
+          #Step1: Check if PID is relevant and running
+          #out1= self.run_command(f"ps -p {pid} > /dev/null && echo 1 || echo 0")
+          #print("out1 from kill is:", out1, 'and its tyoe is:',type(out1))
+          # If step1 is true, execute kill 
+          #
+          out=self.run_command(f"doas kill {pid} 2>/dev/null && echo 'True' || echo 'False'")
+          print('out from kill  is:',out)
+          success = out.split(' ')[-1]
+          print('success is:',success,'its type is ', type(success))
+          if success=='True\n':
+           print('In true ....')
+           return ImpactObservation(success=True, attack_status= False, attack_id=None, pid=None) 
+          else: 
+           return ImpactObservation(success=False)
