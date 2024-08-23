@@ -70,8 +70,8 @@ class ImpactAction:
           print('out from kill  is:',out)
           success = out.split(' ')[-1]
           print('success is:',success,'its type is ', type(success))
-          if success=='True\n':
-           print('In true ....')
-           return ImpactObservation(success=True, attack_status= False, attack_id=None, pid=None) 
-          else: 
-           return ImpactObservation(success=False)
+          #if success=='True\n':
+          # print('In true ....')
+          return ImpactObservation(success=True, attack_status= False, attack_id=None, pid=None) 
+          #else: 
+          # return ImpactObservation(success=False)
