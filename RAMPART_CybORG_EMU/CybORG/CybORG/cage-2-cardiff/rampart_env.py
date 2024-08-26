@@ -13,6 +13,7 @@ from CybORG import CybORG
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 from utils import *
+from env_utils import *
 from ipaddress import IPv4Network, IPv4Address
 import ast
 from CybORG.Emulator.Actions.RestoreAction import RestoreAction
@@ -26,13 +27,19 @@ from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
-
+from reward_calculator import RewardCalculator
 #from pprint import pprint
 import ast
+import json
 from reward_calculator import RewardCalculator
+
+
+file_path = './assets/mod_100steps_cardiff_bline.py'
+machine_config_path='./assets/machine_configs/'
+#c2o= cage2_os()
 import re
 import json
-
+import ast
 
 #from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
 
@@ -40,8 +47,9 @@ ip2host= name_conversion("./assets/openstack_ip_map.json")
 cage2os=name_conversion("./assets/cage2-openstack.yaml")
 
 cage2os_instance=name_conversion("./assets/cage2-openstack_instance.yaml")
-credentials_file = "/home/ubuntu/prog_client.yaml"
 
+credentials_file = "/home/ubuntu/prog_client.yaml"
+#credentials_file = "prog_client2.yaml"
 
 
 blue_action_space= ['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'Restore', 'DecoyFemitter', 'Remove', 'DecoyTomcat', 'DecoyHarakaSMPT','Analyse']
@@ -78,15 +86,44 @@ print('path is:',path)
 
 utils=utils()
 #print(dir(utils))
+env_utils= env_utils()
+print(dir(env_utils))
 
 
+class setup_openstack:
+   # should be called by another function before emulation class is called. emulation uses the attributes
+   def __init__(self, current_user,password,url,udn,pdn,project,key_name):
+      self.current_user= current_user
+      self.password= password
+      self.url=url
+      self.udn=udn
+      self.pdn=pdn
+      self.project=project
+      self.key_name= key_name
 
+class rampart_emu():
+   def __init__(self, game_param):
+      # Parse the Json string into a Python dictionary
+      try:
+        config_dict = json.loads(game_param)
+      except json.JSONDecodeError as e:
+        raise ValueError("Invalid dictionary string format.") from e
 
-
-
-
-class vu_emu():
-   def __init__(self, ):
+      if validate_game_param(config_dict):
+        # Store values in variables
+        self.scenario = config_dict.get('scenario')
+        self.main_agent = config_dict.get('main_agent')
+        self.blue_agent = config_dict.get('blue_agent_0')
+        self.red_agent = config_dict.get('red_agent_0')
+        self.wrapper = config_dict.get('wrapper')
+      
+        # Optional: Print only for testing
+        print(f"Scenario: {self.scenario}")
+        print(f"Main Agent: {self.main_agent}")
+        print(f"Blue Agent: {self.blue_agent}")
+        print(f"Red Agent: {self.red_agent}")
+        print(f"Wrapper: {self.wrapper}")
+      
       self.old_outcome_blue=None
       self.old_outcome_red=None
       self.last_red_action=None
@@ -102,59 +139,70 @@ class vu_emu():
       self.reward_cal=RewardCalculator(path)
       
 
-   def set_openstack(self,current_user, password, url,udn,pdn,project,key_name):
-       self.current_user= current_user
-       self.password= password
-       self.url=url
-       self.udn=udn
-       self.pdn=pdn
-       self.project=project
-       self.key_name= key_name
-
       with open("./assets/openstack_ip_map.json",'r') as f:
          self.os_ip_data = yaml.safe_load(f)
      #print('Data is:',self.data)
-
+   
+   
+   def intialize_game_related_data(self):
+      cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
+      wrapped_cyborg = wrap(cyborg,"cardiff")    # Hardcoding to 'cardiff' to just extract intial data from my version of Cyborg.  
+      reward_calc.reset()
+      #this intialisation information is coming from Cyborg
+      blue_observation = wrapped_cyborg.reset()      
+      blue_action_space = wrapped_cyborg.get_action_space(agent_name)
+        
+      # Getting intial red_observation
+      red_observation=cyborg.get_observation('Red')
+      red_action_space= cyborg.get_action_space('Red')
+      red_observation=translate_intial_red_obs(red_observation)
+      #print("\n ***** Red observation after reset is:",red_observation)
+    
+      #read assets
+      blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
+      with open('./assets/blue_initial_obs.json', 'r') as file:
+        initial_blue_info = json.load(file)
+      initial_blue_info= translate_initial_blue_info(initial_blue_info)
+      # print('\n blue action list:',blue_action_list)
+      # print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
+      #parse_and_store_ips_host_map(initial_blue_obs)
+      if self.wrapper=='ChallengeWrapper':
+        emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
+        # Translate intial obs in vectorised format to feed into NN
+        blue_observation=emu_wrapper.reset(initial_blue_info)
+      return blue_action_list,blue_observation
+   
    def reset(self):
-       with open('./assets/blue_baseline_obs.py','r') as f:
-         baseline= json.load(f)
-       self.baseline= ast.literal_eval(baseline)
-       #print('Self baseline type is:',type(self.baseline))
+      action_list,observation=self.intialize_game_related_data()
+      with open('./assets/blue_baseline_obs.py','r') as f:
+        baseline= json.load(f)
+      self.baseline= ast.literal_eval(baseline)
+      #print('Self baseline type is:',type(self.baseline))
        
-       self.baseline={}
-       for vm in vms:
-          #curr_dir=os.getcwd()
-          #host_dir= os.path.join('./machines/', vm)
-          #print('Host dir is:',host_dir)
+      self.baseline={}
+      for vm in vms:
           self.baseline[vm]=self.get_machine_intial_state(vm)
        
-       reset=ResetAction(credentials_file)
-       self.md5={}
-       for vm in vms:
-          #curr_dir=os.getcwd()
-          #host_dir= os.path.join('./machines/', vm)
+      reset=ResetAction(credentials_file)
+      self.md5={}
+      for vm in vms: 
+        os_vm=cage2os.fetch_alt_name(vm)
+        print('--> VM is:',vm, 'os name is:',os_vm)
+        obs=reset.execute(os_vm)
+
+        if obs.success==True: 
+          self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
+        else: 
+          print('Reset failed!!')
+          self.md5[ip2host.fetch_alt_name(vm)]=None
+          # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
+          #break
           
-          os_vm=cage2os.fetch_alt_name(vm)
-          print('--> VM is:',vm, 'os name is:',os_vm)
-          obs=reset.execute(os_vm)
-
-
-          if obs.success==True: 
-              self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
-          else: 
-              print('Reset failed!!')
-              self.md5[ip2host.fetch_alt_name(vm)]=None
-              # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
-              #break
-          
-
-
-       print("baseline estimated by us is:")
-       #pprint(self.baseline)
-       print("md5 are:",self.md5)
-       #time.sleep(30)  
-       
-       return None, None
+      print("baseline estimated by us is:")
+      #pprint(self.baseline)
+      print("md5 are:",self.md5)
+      #time.sleep(30)   
+      return action_list, observation
        
    def get_action_space(self,agent="Red"):
        return None, None
@@ -356,7 +404,7 @@ class vu_emu():
             return self.old_exploit_outcome[action_param]
           else: 
             port=random.choice(self.available_ports)
-            server_port=22  # To Do: Dynamically select the port absed on selected exploit
+            server_port=22  # To Do: Dynamically select the port based on selected exploit
             print('Action param :',action_param,'port is:',port)
             action= ExploitAction(credentials_file,red_intial_foothold,action_param,'ubuntu','ubuntu',port,server_port)
             observation=action.execute(None)
@@ -559,3 +607,7 @@ class vu_emu():
      return formatted_pid
            
    
+if __name__=='__main__':
+    game_param = '{"mode":"sim","scenario": "Scenario2.yaml","main_agent": "Blue","red_agent": "B_lineAgent",\\
+    "green_agent": "SleepAgent","wrapper": "ChallengeWrapper", "episode_length": EPS_LEN,"max_episodes": MAX_EPS, "seed": 0}'
+     

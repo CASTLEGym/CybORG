@@ -1,5 +1,6 @@
 from Wrappers.ChallengeWrapper2 import ChallengeWrapper2
 from enum import Enum
+import random
 
 # changed to ChallengeWrapper2
 def wrap(env,team):
@@ -72,3 +73,35 @@ def enum_to_boolean(enum_value):
 
 def generate_ports(num=50,min=4000,max=5000):
   return random.sample(range(min, max + 1), num)
+
+
+
+def validate_game_param(config_dict):
+      # Keys and corresponding valid values to check
+      keys_with_valid_values = {
+        'mode':['sim','emu'],
+        'scenario': [ 'Scenario2.yaml'],
+        'main_agent': ['Blue','Red'],         
+        'blue_agent': ['cardiff','dartmouth_ne'],    
+        'red_agent': ['B_lineAgent', 'Sleep'],
+        'wrapper': ['ChallengeWrapper','None']
+         }
+
+      
+      # Check if all required keys' values are valid
+      for key, valid_values in keys_with_valid_values.items():  
+        if config_dict[key] not in valid_values:
+          raise ValueError(f"Invalid value '{config_dict[key]}' for key '{key}'. Valid values are: {valid_values}")
+        else:
+          print(f"Key '{key}' is found with valid value: {config_dict[key]}")    
+
+      # Keys to check
+      required_keys = ['mode','scenario', 'main_agent', 'wrapper','episode_length']
+
+      # Check if all required keys are present
+      for key in required_keys:
+        if key not in config_dict:
+          raise KeyError(f"Required key '{key}' is missing in the dictionary.")
+        else:
+          print(f"Key '{key}' is found with value: {config_dict[key]}")
+      return True
