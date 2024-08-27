@@ -82,7 +82,6 @@ def validate_game_param(config_dict):
         'mode':['sim','emu'],
         'scenario': [ 'Scenario2.yaml'],
         'main_agent': ['Blue','Red'],         
-        'blue_agent': ['cardiff','dartmouth_ne'],    
         'red_agent': ['B_lineAgent', 'Sleep'],
         'wrapper': ['ChallengeWrapper','None']
          }

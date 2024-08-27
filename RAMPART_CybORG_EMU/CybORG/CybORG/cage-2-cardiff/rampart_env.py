@@ -33,6 +33,9 @@ import ast
 import json
 from reward_calculator import RewardCalculator
 
+from CybORG.Agents import B_lineAgent, SleepAgent
+from Wrappers.ChallengeWrapper2 import ChallengeWrapper2
+from Wrappers.BlueEmulationWrapper import BlueEmulationWrapper
 
 file_path = './assets/mod_100steps_cardiff_bline.py'
 machine_config_path='./assets/machine_configs/'
@@ -86,8 +89,8 @@ print('path is:',path)
 
 utils=utils()
 #print(dir(utils))
-env_utils= env_utils()
-print(dir(env_utils))
+#env_utils= env_utils()
+#print(dir(env_utils))
 
 
 class setup_openstack:
@@ -113,8 +116,8 @@ class rampart_emu():
         # Store values in variables
         self.scenario = config_dict.get('scenario')
         self.main_agent = config_dict.get('main_agent')
-        self.blue_agent = config_dict.get('blue_agent_0')
-        self.red_agent = config_dict.get('red_agent_0')
+        self.blue_agent = config_dict.get('blue_agent')
+        self.red_agent = config_dict.get('red_agent')
         self.wrapper = config_dict.get('wrapper')
       
         # Optional: Print only for testing
@@ -123,6 +126,9 @@ class rampart_emu():
         print(f"Blue Agent: {self.blue_agent}")
         print(f"Red Agent: {self.red_agent}")
         print(f"Wrapper: {self.wrapper}")
+      
+      
+      self.red_agent= globals()[self.red_agent]
       
       self.old_outcome_blue=None
       self.old_outcome_red=None
@@ -145,18 +151,24 @@ class rampart_emu():
    
    
    def intialize_game_related_data(self):
-      cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
+      cyborg = CybORG(path, 'sim', agents={'Red': self.red_agent})
       wrapped_cyborg = wrap(cyborg,"cardiff")    # Hardcoding to 'cardiff' to just extract intial data from my version of Cyborg.  
-      reward_calc.reset()
+      #reward_calc.reset()
       #this intialisation information is coming from Cyborg
       blue_observation = wrapped_cyborg.reset()      
-      blue_action_space = wrapped_cyborg.get_action_space(agent_name)
-        
+      blue_action_space = wrapped_cyborg.get_action_space(self.main_agent)
+
+      blue_observation=cyborg.get_observation('Blue')
+      blue_action_space= cyborg.get_action_space('Blue')
+      print('Blue observation:',blue_observation)
+      print('blue_action_space:',blue_action_space)
+
       # Getting intial red_observation
       red_observation=cyborg.get_observation('Red')
       red_action_space= cyborg.get_action_space('Red')
       red_observation=translate_intial_red_obs(red_observation)
-      #print("\n ***** Red observation after reset is:",red_observation)
+      print("\n ***** Red observation after reset is:",red_observation)
+      print("\n ***** Red action space after reset is:",red_action_space)
     
       #read assets
       blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
@@ -174,6 +186,8 @@ class rampart_emu():
    
    def reset(self):
       action_list,observation=self.intialize_game_related_data()
+      print('action list is:',action_list)
+      print('Observation is:',observation)
       with open('./assets/blue_baseline_obs.py','r') as f:
         baseline= json.load(f)
       self.baseline= ast.literal_eval(baseline)
@@ -608,6 +622,6 @@ class rampart_emu():
            
    
 if __name__=='__main__':
-    game_param = '{"mode":"sim","scenario": "Scenario2.yaml","main_agent": "Blue","red_agent": "B_lineAgent",\\
-    "green_agent": "SleepAgent","wrapper": "ChallengeWrapper", "episode_length": EPS_LEN,"max_episodes": MAX_EPS, "seed": 0}'
-     
+    game_param = '{"mode":"sim","scenario": "Scenario2.yaml","main_agent": "Blue","red_agent": "B_lineAgent","green_agent": "SleepAgent","wrapper": "None", "episode_length": 1,"max_episodes": 1, "seed": 0}'
+    emu = rampart_emu(game_param)
+    emu.reset()
