@@ -21,7 +21,7 @@ class BlueTableWrapper(BaseWrapper):
     def reset(self, agent='Blue'):
         result = self.env.reset(agent)
         obs = result.observation
-        
+        print('\n \n Initial observation from BTW is:',obs)
         if not os.path.exists('./assets'):
            os.mkdirs('./assets')
         #data=obs
