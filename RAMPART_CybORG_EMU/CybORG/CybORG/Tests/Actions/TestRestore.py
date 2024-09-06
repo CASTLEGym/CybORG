@@ -1,7 +1,13 @@
-from CybORG.Emulator.Actions.RestoreAction import RestoreAction
+from pathlib import Path
 import argparse
 import getpass
+import sys
 
+
+cyborg_dir = Path(Path(__file__).parent.parent.parent.parent).absolute()
+print(cyborg_dir)
+sys.path.append(str(cyborg_dir))
+from CybORG.Emulator.Actions.RestoreAction import RestoreAction
 
 parser = argparse.ArgumentParser()
 
@@ -16,9 +22,9 @@ password = getpass.getpass()
 
 
 restore_action = RestoreAction(
-    hostname='user2',
+    hostname='user0',
     auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
-    project_name='mvp1a',
+    project_name='castle4',
     username=user_name,
     password=password,
     user_domain_name='ISIS',

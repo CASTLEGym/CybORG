@@ -94,16 +94,18 @@ class RestoreAction(Action):
         print("SSH session failed.")
         return None
 
-    @classmethod
-    def collect_files(cls, ssh_session):
+    def collect_files(self, ssh_session):
 
         sftp_client = ssh_session.open_sftp()
 
+        print(f"Attempting to copy file \"{self.collect_script_name}\" to host \"{self.hostname}\" ...")
+
         max_tries = 10
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.put(str(cls.collect_script_path), cls.collect_script_name)
+                sftp_client.put(str(self.collect_script_path), self.collect_script_name)
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -118,19 +120,26 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Copy {str(cls.collect_script_path)} failed on try {no_tries} out of {max_tries}")
+            print(f"Copy {str(self.collect_script_path)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not copy {str(cls.collect_script_path)}"
+            error = f"Could not copy {str(self.collect_script_path)}"
             print(error)
             raise Exception(error)
 
+        print(f"Succeeded in copying file \"{self.collect_script_name}\" to host \"{self.hostname}\"")
+        print()
+
+        print(f"Attempting to run script \"{self.collect_script_name}\" on host \"{self.hostname}\" ...")
+        stdout = ""
+        stderr = ""
+
         max_tries = 10
         no_tries = 0
-        stdout = None
+
         while no_tries < max_tries:
             try:
-                stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.collect_script_name}")
+                stdin, stdout, stderr = ssh_session.exec_command(f"bash -x {self.collect_script_name} 2>&1")
                 break
             except paramiko.SSHException as sshException:
                 print(f"SSH error: {sshException}")
@@ -140,23 +149,43 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Exec of \"bash {cls.collect_script_name}\" failed on try {no_tries} out of {max_tries}")
+            print(f"Exec of \"bash {self.collect_script_name}\" failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not exec \"bash {cls.collect_script_name}\""
+            error = f"Could not exec \"bash {self.collect_script_name}\""
             print(error)
+            print("stdout:")
+            print("--------------------------------------------------")
+            print(stdout.readlines())
+            print("--------------------------------------------------")
+            print("stderr:")
+            print("--------------------------------------------------")
+            print(stderr.readlines())
+            print("--------------------------------------------------")
+            print()
             raise Exception(error)
 
         output = stdout.readlines()
 
+        print(f"Successfully ran script \"{self.collect_script_name}\" on host \"{self.hostname}\".")
+        print("Output is:")
+        print(output)
+        print()
+
         # WAIT FOR EXEC'D COMMAND TO COMPLETE
         time.sleep(5)
 
+        print(
+            f"Attempting to retrieve file \"{self.tarfile_name}\" from host \"{self.hostname}\" "
+            f"and store as \"{self.tarfile_path}\" ..."
+        )
+
         max_tries = 10
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.get(cls.tarfile_name, str(cls.tarfile_path))
+                sftp_client.get(self.tarfile_name, str(self.tarfile_path))
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -171,27 +200,35 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Retrieval of {str(cls.tarfile_name)} failed on try {no_tries} out of {max_tries}")
+            print(f"Retrieval of {str(self.tarfile_name)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not retrieve {str(cls.tarfile_name)}"
+            error = f"Could not retrieve {str(self.tarfile_name)}"
             print(error)
             raise Exception(error)
+
+        print(
+            f"Succeeded in retrieving file \"{self.tarfile_name}\" from host \"{self.hostname}\" "
+            f"and storing as \"{self.tarfile_path}\"."
+        )
+        print()
 
         sftp_client.close()
 
         return output
 
-    @classmethod
-    def restore_files(cls, ssh_session):
+    def restore_files(self, ssh_session):
 
         sftp_client = ssh_session.open_sftp()
 
-        max_tries = 10
+        print(f"Attempting to copy file \"{self.tarfile_name}\" to host \"{self.hostname}\" ...")
+
+        max_tries = 20
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.put(str(cls.tarfile_path), cls.tarfile_name)
+                sftp_client.put(str(self.tarfile_path), self.tarfile_name)
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -206,18 +243,24 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Copy {str(cls.tarfile_path)} failed on try {no_tries} out of {max_tries}")
+            print(f"Copy {str(self.tarfile_path)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not copy {str(cls.tarfile_path)}"
+            error = f"Could not copy {str(self.tarfile_path)}"
             print(error)
             raise Exception(error)
 
+        print(f"Succeeded in copying file \"{self.tarfile_name}\" to host \"{self.hostname}\"")
+        print()
+
+        print(f"Attempting to copy file \"{self.restore_script_name}\" to host \"{self.hostname}\" ...")
+
         max_tries = 10
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.put(str(cls.restore_script_path), cls.restore_script_name)
+                sftp_client.put(str(self.restore_script_path), self.restore_script_name)
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -232,21 +275,28 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Copy {str(cls.restore_script_path)} failed on try {no_tries} out of {max_tries}")
+            print(f"Copy {str(self.restore_script_path)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not copy {str(cls.restore_script_path)}"
+            error = f"Could not copy {str(self.restore_script_path)}"
             print(error)
             raise Exception(error)
+
+        print(f"Succeeded in copying file \"{self.restore_script_name}\" to host \"{self.hostname}\"")
+        print()
 
         sftp_client.close()
 
+        print(f"Attempting to run script \"{self.restore_script_name}\" on host \"{self.hostname}\" ...")
+        stdout = ""
+        stderr = ""
+
         max_tries = 10
         no_tries = 0
-        stdout = None
+
         while no_tries < max_tries:
             try:
-                stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.restore_script_name}")
+                stdin, stdout, stderr = ssh_session.exec_command(f"bash {self.restore_script_name}")
                 break
             except paramiko.SSHException as sshException:
                 print(f"SSH error: {sshException}")
@@ -256,16 +306,32 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Exec of \"bash {cls.restore_script_name}\" failed on try {no_tries} out of {max_tries}")
+            print(f"Exec of \"bash {self.restore_script_name}\" failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not exec \"bash {cls.restore_script_name}\""
+            error = f"Could not exec \"bash {self.restore_script_name}\""
             print(error)
+            print("stdout:")
+            print("--------------------------------------------------")
+            print(stdout.readlines())
+            print("--------------------------------------------------")
+            print("stderr:")
+            print("--------------------------------------------------")
+            print(stderr.readlines())
+            print("--------------------------------------------------")
+            print()
             raise Exception(error)
+
+        output = stdout.readlines()
+
+        print(f"Successfully ran script \"{self.restore_script_name}\" on host \"{self.hostname}\".")
+        print("Output is:")
+        print(output)
+        print()
 
         # ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
 
-        return stdout.readlines()
+        return output
 
     @staticmethod
     def get_network_id_port_data_list_dict(conn, server):
