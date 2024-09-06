@@ -169,7 +169,7 @@ class RestoreAction(Action):
 
         print(f"Successfully ran script \"{self.collect_script_name}\" on host \"{self.hostname}\".")
         print("Output is:")
-        print(output)
+        print("".join(output))
         print()
 
         # WAIT FOR EXEC'D COMMAND TO COMPLETE
@@ -326,7 +326,7 @@ class RestoreAction(Action):
 
         print(f"Successfully ran script \"{self.restore_script_name}\" on host \"{self.hostname}\".")
         print("Output is:")
-        print(output)
+        print("".join(output))
         print()
 
         # ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
@@ -368,24 +368,41 @@ class RestoreAction(Action):
         observation = Observation(False)
 
         # CONNECTION API
+        print("Establinging connection to openstack ... ", end="")
         conn = connection.Connection(**self.auth_args)
+        print("done.")
+        print()
 
         # GET SERVER TO RESTORE
+        print(f"Getting info about \"{self.hostname}\" ... ", end="")
         server = conn.compute.find_server(self.hostname)
+        print("done.")
+        print()
 
         # IF SERVER DOESN'T EXIST, RETURN FALSE OBSERVATION
         if server is None:
+            print(f"Could not get info about \"{self.hostname}\".  Returning false observation.")
+            print()
             return observation
 
         # GET FLAVOR ID OF SERVER
+
         flavor_name = server.flavor.name
+        print(f"Getting id of flavor about \"{flavor_name}\" ... ", end="")
         flavor = conn.compute.find_flavor(name_or_id=flavor_name)
+        print("done.")
         flavor_id = flavor.id
+        print(f"id of flavor \"{flavor_name}\" is \"{flavor_id}\"")
+        print()
+
 
         # SERVER IMAGE ID
         image_id = server.image.id
+        print(f"id of server image is \"{image_id}\"")
+        print()
 
         # INFO ABOUT SERVER PORTS
+        print(f"Getting control-network ip-address of \"{self.hostname}\" ... ", end="")
         network_id_port_data_list_dict = self.get_network_id_port_data_list_dict(conn, server)
 
         # IF THERE ARE NO PORTS, RETURN FALSE OBSERVATION
@@ -406,35 +423,62 @@ class RestoreAction(Action):
 
         # GET IP ADDRESS FOR SSH CONNECTION
         ssh_ip_address = server_control_network_ip_address_list[0]
+        print("done.")
+        print(f"Control-network ip address of \"{self.hostname}\" is \"{ssh_ip_address}\"")
+        print()
 
         # CREATE AN SSH SESSION WITH SERVER
+        print(
+            f"Attempting to acquire ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" ip-address ... ",
+            end=""
+        )
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
+            print("FAILED.")
+            print("Returning False observation")
+            print()
             return observation
+        print("done.")
+        print()
 
         # COLLECT CRITICAL FILES FROM SERVER, STORE LOCALLY ON THIS MACHINE
+        print(f"Collecting files for \"{self.hostname}\":")
         self.collect_files(ssh_session)
+        print(f"Finished collecting files for \"{self.hostname}\".")
+        print()
 
         # CLOSE THE SESSION
+        print(f"Closing ssh session for \"{self.hostname}\" ... ", end="")
         ssh_session.close()
+        print("done.")
+        print()
 
         #
         # DELETE THE SERVER
         #
+        print(f"Deleting \"{self.hostname}\" ... ", end="")
         instance_id = server.id
         conn.compute.delete_server(instance_id)
+        print("done.")
+        print()
 
         # WAIT UNTIL SERVER IS FULLY DELETED
+        print(f"Waiting for \"{self.hostname}\" to complete deletion ... ", end="")
         conn.compute.wait_for_delete(server_v2.Server(id=instance_id))
+        print("done.")
+        print()
 
         # GET ID'S OF ALL EXISTING PORTS TO SEE IF ANY THAT WERE ATTACHED TO THE SERVER STILL EXIST
+        print(f"Acquiring set of all port ids ... ", end="")
         existing_port_list = conn.list_ports()
         existing_port_id_set = {existing_port.id for existing_port in existing_port_list}
-        
+        print("done.")
+        print()
         
         deployed_port_id_set = set()
 
         # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
+        print(f"Compiling list of port ids for \"{self.hostname}\" ... ", end="")
         network_list = []
         for network_name, port_data_list in network_id_port_data_list_dict.items():
             for port_data in port_data_list:
@@ -458,29 +502,15 @@ class RestoreAction(Action):
                     )
                     network_list.append({'port': port.id})
                     deployed_port_id_set.add(port.id)
-        
-        
-        
-        """
-        # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
-        network_list = []
-        for network_name, port_data_list in network_id_port_data_list_dict.items():
-            for port_data in port_data_list:
-                port_id = port_data['port_id']
-                # IF PORT EXISTS, PLACE IN LIST TO ATTACH TO RESTORED SERVER
-                if port_id in existing_port_id_set:
-                    network_list.append({'port': port_id})
-                    include_network = False
-                # OTHERWISE, PLACE DATA ABOUT PORT INTO LIST FOR RE-CREATION
-                else:
-                    port = conn.create_port(
-                        **port_data['port_info']
-                    )
-                    network_list.append({'port': port.id})
-        """
+        print("done.")
+        print(f"Port ids compiled for \"{self.hostname}\" are:")
+        print(network_list)
+        print()
+
         #
         # RESTORE THE SERVER
         #
+        print(f"Restoring \"{self.hostname}\" ... ", end="")
         redeployed_instance = conn.compute.create_server(
             auto_ip=False,
             name=self.hostname,
@@ -489,15 +519,35 @@ class RestoreAction(Action):
             networks=network_list,
             key_name=self.key_name
         )
-        # WAIT UNTIL SERVER FULLY RESTORED
-        conn.compute.wait_for_server(server=redeployed_instance, wait=1200)
+        print("done.")
+        print()
 
+        # WAIT UNTIL SERVER FULLY RESTORED
+        print(f"Waiting for \"{self.hostname}\" to complete restore ... ", end="")
+        conn.compute.wait_for_server(server=redeployed_instance, wait=1200)
+        print("done.")
+        print()
+
+        print(
+            f"Attempting to acquire (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" "
+            "ip-address ... ",
+            end=""
+        )
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
+            print("FAILED.")
+            print("Returning False observation")
+            print()
             return observation
+        print("done.")
+        print()
 
+        print(f"Restoring files for \"{self.hostname}\":")
         output = self.restore_files(ssh_session)
         observation.Stdout = output
+        print(f"Finished restoring files for \"{self.hostname}\".")
+        print()
+
 
         ssh_session.close()
 
