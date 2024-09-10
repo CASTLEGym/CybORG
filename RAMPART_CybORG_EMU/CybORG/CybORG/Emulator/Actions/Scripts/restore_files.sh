@@ -38,15 +38,14 @@ cd "$collect_dir" || exit 1
 echo "done."
 
 exec_command() {
-      echo "Executing: \"$1\":"
-      eval "$1"
-      exit_status=$?
-      echo
+    echo "Executing: \"$1\":"
+    eval "$1"
+    exit_status=$?
+    echo
 
     if [ $exit_status -ne 0 ]; then
         echo "Error encountered executing:"
         echo "$@"
-        exit 1
     fi
 }
 
