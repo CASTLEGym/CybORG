@@ -100,3 +100,6 @@ cd ..
 echo "Changed to parent directory ($PWD)"
 
 exec_command "rm -rf \"$collect_dir\" \"$collect_archive_file\""
+
+echo "\"$script_name\" complete."
+echo
