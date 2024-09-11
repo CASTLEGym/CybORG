@@ -35,15 +35,21 @@ class ImpactAction:
        ssh_connection_client_observation = ssh_connection_client_action.execute(None)
        return ssh_connection_client_observation.Stdout
 
-    def execute(self, controller='lc1',attack='dos',duration=500,f_value=None) -> Observation:
+    def execute(self, controller='sc',attack='dos',duration=500,f_value=None,local_controller='lc1') -> Observation:
        if self.conn_key== None: 
           return ImpactObservation(success=False)
        
        else: 
-          if attack=='dos':
-            command = f"python /home/ubuntu/OT-Sim/run_user_process.py {controller} {attack} {duration} {self.attack_id} & "
-          elif attack=='fdi':
-            command = f"python /home/ubuntu/OT-Sim/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
+          if controller=='sc':
+            if attack=='dos':
+              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {local_controller} {self.attack_id} & "
+            elif attack=='fdi':
+              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {local_controller} {f_value} {self.attack_id} &"
+          else:   
+            if attack=='dos':
+              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} & "
+            elif attack=='fdi':
+              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
           print('***Command:',command)
           ##to do : 
           out1= self.run_command("doas whoami")
