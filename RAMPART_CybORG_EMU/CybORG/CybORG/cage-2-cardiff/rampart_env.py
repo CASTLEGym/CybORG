@@ -119,6 +119,8 @@ class rampart_emu():
         self.blue_agent = config_dict.get('blue_agent')
         self.red_agent = config_dict.get('red_agent')
         self.wrapper = config_dict.get('wrapper')
+        self.episode_length= config_dict.get('episode_length')
+        self.max_episodes= config_dict.get('max_episodes')
       
         # Optional: Print only for testing
         print(f"Scenario: {self.scenario}")
@@ -127,8 +129,8 @@ class rampart_emu():
         print(f"Red Agent: {self.red_agent}")
         print(f"Wrapper: {self.wrapper}")
       
-      
-      self.red_agent= globals()[self.red_agent]
+      if self.red_agent!= None:
+        self.red_agent= globals()[self.red_agent]
       
       self.old_outcome_blue=None
       self.old_outcome_red=None
@@ -142,6 +144,9 @@ class rampart_emu():
       self.priviledged_hosts=[]
       self.old_exploit_outcome={}
       self.network_state={}
+      self.terminated= False
+      self.done= False
+      self.step_counter=0
       self.reward_cal=RewardCalculator(path)
       
 
@@ -184,7 +189,13 @@ class rampart_emu():
         blue_observation=emu_wrapper.reset(initial_blue_info)
       return blue_action_list,blue_observation
    
-   def reset(self):
+   def reset(self,seed=None,agent=None ):
+      if seed is not None and not isinstance(seed, int):
+        raise TypeError("Parameter 'seed' must be of type 'int' or 'None'.")
+      # Check if agent is either None or a string
+      if agent is not None and not isinstance(agent, str):
+        raise TypeError("Parameter 'agent' must be of type 'str' or 'None'.")
+
       action_list,observation=self.intialize_game_related_data()
       print('action list is:',action_list)
       print('Observation is:',observation)
@@ -238,7 +249,10 @@ class rampart_emu():
 
 
    
-   def step(self,action_string,agent_type):
+   def step(self,action_string: str,agent_type: str):
+       if not isinstance(action_string, str) or not isinstance(agent_type, str):
+            raise TypeError("Both parameters must be of type 'str'.")
+       
        ("In steps")
        split_action_string=action_string.split(" ")
        
@@ -254,7 +268,7 @@ class rampart_emu():
             action_param= ip2host.fetch_alt_name(action_param)
             #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
             
-         if agent_type=='red':
+         if agent_type=='Red':
             outcome= self.execute_action_client(action_name,action_param)
             outcome= self.transfrom_observation(action_name,outcome)
             print('--> transformed outcome is:', outcome)
@@ -263,7 +277,7 @@ class rampart_emu():
             self.last_red_action_param=action_param
             #print('obs is:',outcome)
          
-         elif agent_type=='blue':
+         elif agent_type=='Blue':
           if action_name in blue_action_space :
             #  ->>> Execute 
             outcome= self.execute_action_client(action_name,action_param)
@@ -287,10 +301,16 @@ class rampart_emu():
           if action_string=='Sleep':
                outcome={'success': 'Unknown'}
           else:
-              print('!!! Not Implemented !!!')   
+              print('!!! Not Implemented !!!')  
+       self.step_counter+=1
+       if self.step_counter==self.episode_length:
+          self.done= True 
        reward=self.reward_cal.reward(self.network_state)    
-       return outcome, reward, None, None
+       return outcome, reward, None, self.done
    
+   def close(self):
+       return 0
+
    def modify_blue_by_red(self,blue_outcome,red_outcome,last_red_action,last_red_action_param):
       #print('@@@@@'*100)
       print('-> Blue outcome:',blue_outcome)

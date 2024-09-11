@@ -152,13 +152,18 @@ if __name__ == "__main__":
     
     
     # File setup- creating dummy logfile for testing
-    log_file='./data/latest_'+team+'_data_'+exp+'.csv'
+    log_file='./logs/latest_'+team+'_data_'+exp+'.csv'
     
     #log_file = './data/test_'+team+'_'+exp+'_actions_and_observations.csv'
     with open(log_file, 'w', newline='') as file:
       writer = csv.writer(file)
       writer.writerow(['Iteration', 'Blue Action', 'Blue Observation', 'Blue Reward', 
                      'Red Action', 'Red Observation', 'Red Reward'])
+    
+    log_success= './logs/log_success.csv'
+    with open(log_success, 'w', newline='') as file:
+      writer = csv.writer(file)
+      writer.writerow(['Iteration', 'Blue Action', 'Blue success', 'Red Action', 'Red success'])
     
     if team=='keep':
       ### Import for KEEP agent
@@ -326,7 +331,10 @@ if __name__ == "__main__":
                writer = csv.writer(file)
                writer.writerow([i, blue_action, blue_outcome, blue_rew, red_action, red_observation, -1*blue_rew])
             
-           
+            with open(log_success, 'a', newline='') as file:
+               writer = csv.writer(file)
+               writer.writerow([i, blue_action, blue_outcome['success'], red_action, red_observation['success']])
+
             print('%%'*76)
             print('Iteration End:',i)
         

@@ -1,0 +1,21 @@
+Iteration,Blue Action,Blue success,Red Action,Red success
+0,DecoyFemitter User2,True,DiscoverRemoteSystems user_subnet,True
+1,DecoyTomcat User2,True,DiscoverNetworkServices User1,True
+2,DecoyHarakaSMPT Enterprise0,True,ExploitRemoteService User1,True
+3,DecoyFemitter Enterprise1,True,PrivilegeEscalate User1,True
+4,Analyse User2,True,DiscoverNetworkServices Enterprise1,True
+5,Remove User3,False,ExploitRemoteService Enterprise1,False
+6,Remove User3,False,ExploitRemoteService User1,True
+7,Remove User3,False,PrivilegeEscalate User1,True
+8,Remove User3,False,DiscoverNetworkServices Enterprise1,True
+9,Remove User3,False,ExploitRemoteService Enterprise1,True
+10,Restore Enterprise1,True,PrivilegeEscalate Enterprise1,True
+11,Restore Enterprise1,True,DiscoverRemoteSystems enterprise_subnet,True
+12,Remove User3,False,DiscoverNetworkServices Enterprise2,True
+13,Restore Enterprise1,True,ExploitRemoteService Enterprise2,True
+14,Restore Enterprise1,True,PrivilegeEscalate Enterprise2,True
+15,Restore Enterprise2,True,DiscoverNetworkServices Op_Server0,True
+16,Restore Enterprise2,True,ExploitRemoteService Op_Server0,True
+17,DecoyFemitter Enterprise1,True,PrivilegeEscalate Op_Server0,True
+18,Remove User1,True,Impact Op_Server0,True
+19,Remove User1,False,Impact Op_Server0,True

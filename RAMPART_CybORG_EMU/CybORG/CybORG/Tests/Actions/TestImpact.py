@@ -9,7 +9,7 @@ hostname="user0"
 remote_hostname="10.10.30.20"
 remote_username="ubuntu"
 remote_password="ubuntu"
-client_port=3406
+client_port=3411
 
 
 
