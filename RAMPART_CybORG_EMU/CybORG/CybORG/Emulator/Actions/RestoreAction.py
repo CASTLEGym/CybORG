@@ -69,8 +69,11 @@ class RestoreAction(Action):
 
         ssh_session.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
 
+        max_tries = 120
+        wait_seconds = 5
+
         session_success = False
-        for ix in range(30):
+        for ix in range(max_tries):
             try:
                 ssh_session.connect(hostname=ip_address, username='vagrant', password='vagrant')
                 session_success = True
@@ -82,11 +85,13 @@ class RestoreAction(Action):
                 print(f"SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
                 return None
             except paramiko.SSHException as ssh_exception:
-                print(f"SSH connection try {ix} failed: SSHException ({str(ssh_exception)})")
+                print(f"SSH connection try {ix} of {max_tries} failed: SSHException ({str(ssh_exception)})", flush=True)
             except socket.error:
-                print(f"SSH connection try {ix} failed: socker.error ({str(socket.error)})")
+                print(f"SSH connection try {ix} of {max_tries} failed: socker.error ({str(socket.error)})", flush=True)
 
-            time.sleep(5)
+            print(f"Waiting {wait_seconds} seconds to try to establish ssh session again ... ", flush=True)
+            time.sleep(wait_seconds)
+            print("done.", flush=True)
 
         if session_success:
             return ssh_session
@@ -524,7 +529,7 @@ class RestoreAction(Action):
 
         # WAIT UNTIL SERVER FULLY RESTORED
         print(f"Waiting for \"{self.hostname}\" to complete restore ... ", end="", flush=True)
-        conn.compute.wait_for_server(server=redeployed_instance, wait=1200)
+        conn.compute.wait_for_server(server=redeployed_instance, wait=7200)
         print("done.")
         print()
 

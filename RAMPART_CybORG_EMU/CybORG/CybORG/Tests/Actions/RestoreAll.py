@@ -1,12 +1,12 @@
 from CybORG.Emulator.Actions.RestoreAction import RestoreAction
 import argparse
+import getpass
 
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-u", "--user", type=str, default="dummy", help="The user name for openstack (default:'dummy')")
-parser.add_argument("-p", "--password", type=str,default="dummy" , help="The password for openstack (default: 'dummy')")
-    
+
     
 parser.add_argument( "-url",type=str,default="https://cloud.isislab.vanderbilt.edu:5000/v3", help="The url for openstack (dafault: Vanderbilt's opensctack cluster")
 parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')")
@@ -18,12 +18,13 @@ parser.add_argument("-pr", "--project",type=str,default="castle4", help="The pro
 args = parser.parse_args()
 
 #DO it via arg parser
-user_name=args.user
-password= args.password
-project_name= args.project
-os_url=args.url
-os_udn= args.udn
-os_pdn=args.pdn
+user_name = args.user
+password = getpass.getpass()
+
+project_name = args.project
+os_url = args.url
+os_udn = args.udn
+os_pdn = args.pdn
 
 print('os_url:',os_url, ' os_udn:',os_udn,' ,os_pdn:',os_pdn)
 
