@@ -91,7 +91,7 @@ class RestoreAction(Action):
                 )
             except socket.error:
                 print(
-                    f"    SSH connection try {ix} of {max_tries} failed: socker.error ({str(socket.error)})",
+                    f"    SSH connection try {ix} of {max_tries} failed: socket.error ({str(socket.error)})",
                     flush=True
                 )
 
@@ -540,7 +540,7 @@ class RestoreAction(Action):
         print()
 
         print(
-            f"Attempting to acquire (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\""
+            f"Attempting to acquire (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" "
             "ip-address:",
             flush=True
         )
