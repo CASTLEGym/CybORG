@@ -79,17 +79,23 @@ class RestoreAction(Action):
                 session_success = True
                 break
             except paramiko.BadHostKeyException as bad_host_key_exception:
-                print(f"SSH connection try {ix} failed: BadHostKeyException ({str(bad_host_key_exception)})")
+                print(f"    SSH connection try {ix} failed: BadHostKeyException ({str(bad_host_key_exception)})")
                 return None
             except paramiko.AuthenticationException as authentication_exception:
-                print(f"SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
+                print(f"    SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
                 return None
             except paramiko.SSHException as ssh_exception:
-                print(f"SSH connection try {ix} of {max_tries} failed: SSHException ({str(ssh_exception)})", flush=True)
+                print(
+                    f"    SSH connection try {ix} of {max_tries} failed: SSHException ({str(ssh_exception)})",
+                    flush=True
+                )
             except socket.error:
-                print(f"SSH connection try {ix} of {max_tries} failed: socker.error ({str(socket.error)})", flush=True)
+                print(
+                    f"    SSH connection try {ix} of {max_tries} failed: socker.error ({str(socket.error)})",
+                    flush=True
+                )
 
-            print(f"Waiting {wait_seconds} seconds to try to establish ssh session again ... ", flush=True)
+            print(f"    Waiting {wait_seconds} seconds to try to establish ssh session again ... ", end="", flush=True)
             time.sleep(wait_seconds)
             print("done.", flush=True)
 
@@ -534,9 +540,9 @@ class RestoreAction(Action):
         print()
 
         print(
-            f"Attempting to acquire (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" "
-            "ip-address ... ",
-            end="", flush=True
+            f"Attempting to acquire (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\""
+            "ip-address:",
+            flush=True
         )
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
@@ -544,7 +550,7 @@ class RestoreAction(Action):
             print("Returning False observation")
             print()
             return observation
-        print("done.")
+        print(f"SUCCESS: Acquired (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" ip-address.")
         print()
 
         print(f"Restoring files for \"{self.hostname}\":")
