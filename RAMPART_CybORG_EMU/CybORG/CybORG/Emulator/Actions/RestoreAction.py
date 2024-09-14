@@ -69,24 +69,35 @@ class RestoreAction(Action):
 
         ssh_session.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
 
+        max_tries = 120
+        wait_seconds = 5
+
         session_success = False
-        for ix in range(30):
+        for ix in range(max_tries):
             try:
                 ssh_session.connect(hostname=ip_address, username='vagrant', password='vagrant')
                 session_success = True
                 break
             except paramiko.BadHostKeyException as bad_host_key_exception:
-                print(f"SSH connection try {ix} failed: BadHostKeyException ({str(bad_host_key_exception)})")
+                print(f"    SSH connection try {ix} failed: BadHostKeyException ({str(bad_host_key_exception)})")
                 return None
             except paramiko.AuthenticationException as authentication_exception:
-                print(f"SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
+                print(f"    SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
                 return None
             except paramiko.SSHException as ssh_exception:
-                print(f"SSH connection try {ix} failed: SSHException ({str(ssh_exception)})")
+                print(
+                    f"    SSH connection try {ix} of {max_tries} failed: SSHException ({str(ssh_exception)})",
+                    flush=True
+                )
             except socket.error:
-                print(f"SSH connection try {ix} failed: socker.error ({str(socket.error)})")
+                print(
+                    f"    SSH connection try {ix} of {max_tries} failed: socket.error ({str(socket.error)})",
+                    flush=True
+                )
 
-            time.sleep(5)
+            print(f"    Waiting {wait_seconds} seconds to try to establish ssh session again ... ", end="", flush=True)
+            time.sleep(wait_seconds)
+            print("done.", flush=True)
 
         if session_success:
             return ssh_session
@@ -94,16 +105,18 @@ class RestoreAction(Action):
         print("SSH session failed.")
         return None
 
-    @classmethod
-    def collect_files(cls, ssh_session):
+    def collect_files(self, ssh_session):
 
         sftp_client = ssh_session.open_sftp()
 
+        print(f"Attempting to copy file \"{self.collect_script_name}\" to host \"{self.hostname}\" ...")
+
         max_tries = 10
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.put(str(cls.collect_script_path), cls.collect_script_name)
+                sftp_client.put(str(self.collect_script_path), self.collect_script_name)
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -118,19 +131,26 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Copy {str(cls.collect_script_path)} failed on try {no_tries} out of {max_tries}")
+            print(f"Copy {str(self.collect_script_path)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not copy {str(cls.collect_script_path)}"
+            error = f"Could not copy {str(self.collect_script_path)}"
             print(error)
             raise Exception(error)
 
+        print(f"Succeeded in copying file \"{self.collect_script_name}\" to host \"{self.hostname}\"")
+        print()
+
+        print(f"Attempting to run script \"{self.collect_script_name}\" on host \"{self.hostname}\" ...")
+        stdout = ""
+        stderr = ""
+
         max_tries = 10
         no_tries = 0
-        stdout = None
+
         while no_tries < max_tries:
             try:
-                stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.collect_script_name}")
+                stdin, stdout, stderr = ssh_session.exec_command(f"bash -x {self.collect_script_name} 2>&1")
                 break
             except paramiko.SSHException as sshException:
                 print(f"SSH error: {sshException}")
@@ -140,23 +160,43 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Exec of \"bash {cls.collect_script_name}\" failed on try {no_tries} out of {max_tries}")
+            print(f"Exec of \"bash {self.collect_script_name}\" failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not exec \"bash {cls.collect_script_name}\""
+            error = f"Could not exec \"bash {self.collect_script_name}\""
             print(error)
+            print("stdout:")
+            print("--------------------------------------------------")
+            print(stdout.readlines())
+            print("--------------------------------------------------")
+            print("stderr:")
+            print("--------------------------------------------------")
+            print(stderr.readlines())
+            print("--------------------------------------------------")
+            print()
             raise Exception(error)
 
         output = stdout.readlines()
 
+        print(f"Successfully ran script \"{self.collect_script_name}\" on host \"{self.hostname}\".")
+        print("Output is:")
+        print("".join(output))
+        print()
+
         # WAIT FOR EXEC'D COMMAND TO COMPLETE
         time.sleep(5)
 
+        print(
+            f"Attempting to retrieve file \"{self.tarfile_name}\" from host \"{self.hostname}\" "
+            f"and store as \"{self.tarfile_path}\" ..."
+        )
+
         max_tries = 10
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.get(cls.tarfile_name, str(cls.tarfile_path))
+                sftp_client.get(self.tarfile_name, str(self.tarfile_path))
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -171,27 +211,35 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Retrieval of {str(cls.tarfile_name)} failed on try {no_tries} out of {max_tries}")
+            print(f"Retrieval of {str(self.tarfile_name)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not retrieve {str(cls.tarfile_name)}"
+            error = f"Could not retrieve {str(self.tarfile_name)}"
             print(error)
             raise Exception(error)
+
+        print(
+            f"Succeeded in retrieving file \"{self.tarfile_name}\" from host \"{self.hostname}\" "
+            f"and storing as \"{self.tarfile_path}\"."
+        )
+        print()
 
         sftp_client.close()
 
         return output
 
-    @classmethod
-    def restore_files(cls, ssh_session):
+    def restore_files(self, ssh_session):
 
         sftp_client = ssh_session.open_sftp()
 
-        max_tries = 10
+        print(f"Attempting to copy file \"{self.tarfile_name}\" to host \"{self.hostname}\" ...")
+
+        max_tries = 20
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.put(str(cls.tarfile_path), cls.tarfile_name)
+                sftp_client.put(str(self.tarfile_path), self.tarfile_name)
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -206,18 +254,24 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Copy {str(cls.tarfile_path)} failed on try {no_tries} out of {max_tries}")
+            print(f"Copy {str(self.tarfile_path)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not copy {str(cls.tarfile_path)}"
+            error = f"Could not copy {str(self.tarfile_path)}"
             print(error)
             raise Exception(error)
 
+        print(f"Succeeded in copying file \"{self.tarfile_name}\" to host \"{self.hostname}\"")
+        print()
+
+        print(f"Attempting to copy file \"{self.restore_script_name}\" to host \"{self.hostname}\" ...")
+
         max_tries = 10
         no_tries = 0
+
         while no_tries < max_tries:
             try:
-                sftp_client.put(str(cls.restore_script_path), cls.restore_script_name)
+                sftp_client.put(str(self.restore_script_path), self.restore_script_name)
                 break
             except FileNotFoundError as fileNotFoundError:
                 print(f"File not found error: {fileNotFoundError}")
@@ -232,21 +286,28 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Copy {str(cls.restore_script_path)} failed on try {no_tries} out of {max_tries}")
+            print(f"Copy {str(self.restore_script_path)} failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not copy {str(cls.restore_script_path)}"
+            error = f"Could not copy {str(self.restore_script_path)}"
             print(error)
             raise Exception(error)
+
+        print(f"Succeeded in copying file \"{self.restore_script_name}\" to host \"{self.hostname}\"")
+        print()
 
         sftp_client.close()
 
+        print(f"Attempting to run script \"{self.restore_script_name}\" on host \"{self.hostname}\" ...")
+        stdout = ""
+        stderr = ""
+
         max_tries = 10
         no_tries = 0
-        stdout = None
+
         while no_tries < max_tries:
             try:
-                stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.restore_script_name}")
+                stdin, stdout, stderr = ssh_session.exec_command(f"bash {self.restore_script_name}")
                 break
             except paramiko.SSHException as sshException:
                 print(f"SSH error: {sshException}")
@@ -256,16 +317,32 @@ class RestoreAction(Action):
             time.sleep(1)
 
             no_tries += 1
-            print(f"Exec of \"bash {cls.restore_script_name}\" failed on try {no_tries} out of {max_tries}")
+            print(f"Exec of \"bash {self.restore_script_name}\" failed on try {no_tries} out of {max_tries}")
 
         if no_tries >= max_tries:
-            error = f"Could not exec \"bash {cls.restore_script_name}\""
+            error = f"Could not exec \"bash {self.restore_script_name}\""
             print(error)
+            print("stdout:")
+            print("--------------------------------------------------")
+            print(stdout.readlines())
+            print("--------------------------------------------------")
+            print("stderr:")
+            print("--------------------------------------------------")
+            print(stderr.readlines())
+            print("--------------------------------------------------")
+            print()
             raise Exception(error)
+
+        output = stdout.readlines()
+
+        print(f"Successfully ran script \"{self.restore_script_name}\" on host \"{self.hostname}\".")
+        print("Output is:")
+        print("".join(output))
+        print()
 
         # ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
 
-        return stdout.readlines()
+        return output
 
     @staticmethod
     def get_network_id_port_data_list_dict(conn, server):
@@ -302,24 +379,41 @@ class RestoreAction(Action):
         observation = Observation(False)
 
         # CONNECTION API
+        print("Establinging connection to openstack ... ", end="", flush=True)
         conn = connection.Connection(**self.auth_args)
+        print("done.")
+        print()
 
         # GET SERVER TO RESTORE
+        print(f"Getting info about \"{self.hostname}\" ... ", end="", flush=True)
         server = conn.compute.find_server(self.hostname)
+        print("done.")
+        print()
 
         # IF SERVER DOESN'T EXIST, RETURN FALSE OBSERVATION
         if server is None:
+            print(f"Could not get info about \"{self.hostname}\".  Returning false observation.")
+            print()
             return observation
 
         # GET FLAVOR ID OF SERVER
+
         flavor_name = server.flavor.name
+        print(f"Getting id of flavor about \"{flavor_name}\" ... ", end="", flush=True)
         flavor = conn.compute.find_flavor(name_or_id=flavor_name)
+        print("done.")
         flavor_id = flavor.id
+        print(f"id of flavor \"{flavor_name}\" is \"{flavor_id}\"")
+        print()
+
 
         # SERVER IMAGE ID
         image_id = server.image.id
+        print(f"id of server image is \"{image_id}\"")
+        print()
 
         # INFO ABOUT SERVER PORTS
+        print(f"Getting control-network ip-address of \"{self.hostname}\" ... ", end="", flush=True)
         network_id_port_data_list_dict = self.get_network_id_port_data_list_dict(conn, server)
 
         # IF THERE ARE NO PORTS, RETURN FALSE OBSERVATION
@@ -340,35 +434,62 @@ class RestoreAction(Action):
 
         # GET IP ADDRESS FOR SSH CONNECTION
         ssh_ip_address = server_control_network_ip_address_list[0]
+        print("done.")
+        print(f"Control-network ip address of \"{self.hostname}\" is \"{ssh_ip_address}\"")
+        print()
 
         # CREATE AN SSH SESSION WITH SERVER
+        print(
+            f"Attempting to acquire ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" ip-address ... ",
+            end="", flush=True
+        )
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
+            print("FAILED.")
+            print("Returning False observation")
+            print()
             return observation
+        print("done.")
+        print()
 
         # COLLECT CRITICAL FILES FROM SERVER, STORE LOCALLY ON THIS MACHINE
+        print(f"Collecting files for \"{self.hostname}\":")
         self.collect_files(ssh_session)
+        print(f"Finished collecting files for \"{self.hostname}\".")
+        print()
 
         # CLOSE THE SESSION
+        print(f"Closing ssh session for \"{self.hostname}\" ... ", end="", flush=True)
         ssh_session.close()
+        print("done.")
+        print()
 
         #
         # DELETE THE SERVER
         #
+        print(f"Deleting \"{self.hostname}\" ... ", end="", flush=True)
         instance_id = server.id
         conn.compute.delete_server(instance_id)
+        print("done.")
+        print()
 
         # WAIT UNTIL SERVER IS FULLY DELETED
+        print(f"Waiting for \"{self.hostname}\" to complete deletion ... ", end="", flush=True)
         conn.compute.wait_for_delete(server_v2.Server(id=instance_id))
+        print("done.")
+        print()
 
         # GET ID'S OF ALL EXISTING PORTS TO SEE IF ANY THAT WERE ATTACHED TO THE SERVER STILL EXIST
+        print(f"Acquiring set of all port ids ... ", end="", flush=True)
         existing_port_list = conn.list_ports()
         existing_port_id_set = {existing_port.id for existing_port in existing_port_list}
-        
+        print("done.")
+        print()
         
         deployed_port_id_set = set()
 
         # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
+        print(f"Compiling list of port ids for \"{self.hostname}\" ... ", end="", flush=True)
         network_list = []
         for network_name, port_data_list in network_id_port_data_list_dict.items():
             for port_data in port_data_list:
@@ -392,29 +513,15 @@ class RestoreAction(Action):
                     )
                     network_list.append({'port': port.id})
                     deployed_port_id_set.add(port.id)
-        
-        
-        
-        """
-        # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
-        network_list = []
-        for network_name, port_data_list in network_id_port_data_list_dict.items():
-            for port_data in port_data_list:
-                port_id = port_data['port_id']
-                # IF PORT EXISTS, PLACE IN LIST TO ATTACH TO RESTORED SERVER
-                if port_id in existing_port_id_set:
-                    network_list.append({'port': port_id})
-                    include_network = False
-                # OTHERWISE, PLACE DATA ABOUT PORT INTO LIST FOR RE-CREATION
-                else:
-                    port = conn.create_port(
-                        **port_data['port_info']
-                    )
-                    network_list.append({'port': port.id})
-        """
+        print("done.")
+        print(f"Port ids compiled for \"{self.hostname}\" are:")
+        print(network_list)
+        print()
+
         #
         # RESTORE THE SERVER
         #
+        print(f"Restoring \"{self.hostname}\" ... ", end="", flush=True)
         redeployed_instance = conn.compute.create_server(
             auto_ip=False,
             name=self.hostname,
@@ -423,15 +530,35 @@ class RestoreAction(Action):
             networks=network_list,
             key_name=self.key_name
         )
-        # WAIT UNTIL SERVER FULLY RESTORED
-        conn.compute.wait_for_server(server=redeployed_instance, wait=1200)
+        print("done.")
+        print()
 
+        # WAIT UNTIL SERVER FULLY RESTORED
+        print(f"Waiting for \"{self.hostname}\" to complete restore ... ", end="", flush=True)
+        conn.compute.wait_for_server(server=redeployed_instance, wait=7200)
+        print("done.")
+        print()
+
+        print(
+            f"Attempting to acquire (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" "
+            "ip-address:",
+            flush=True
+        )
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
+            print("FAILED.")
+            print("Returning False observation")
+            print()
             return observation
+        print(f"SUCCESS: Acquired (another) ssh session with \"{self.hostname}\" via \"{ssh_ip_address}\" ip-address.")
+        print()
 
+        print(f"Restoring files for \"{self.hostname}\":")
         output = self.restore_files(ssh_session)
         observation.Stdout = output
+        print(f"Finished restoring files for \"{self.hostname}\".")
+        print()
+
 
         ssh_session.close()
 
