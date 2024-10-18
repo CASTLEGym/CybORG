@@ -42,14 +42,14 @@ class ImpactAction:
        else: 
           if controller=='sc':
             if attack=='dos':
-              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {local_controller} {self.attack_id} & "
+              command = f"python /home/ubuntu/Git/OT-Network/run_user_process.py {controller} {attack} {duration} {local_controller} {self.attack_id} & "
             elif attack=='fdi':
-              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {local_controller} {f_value} {self.attack_id} &"
+              command = f"python /home/ubuntu/Git/OT-Network/run_user_process.py {controller} {attack} {duration} {local_controller} {f_value} {self.attack_id} &"
           else:   
             if attack=='dos':
-              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {self.attack_id} & "
+              command = f"python /home/ubuntu/Git/OT-Network/run_user_process.py {controller} {attack} {duration} {self.attack_id} & "
             elif attack=='fdi':
-              command = f"python /home/ubuntu//Git/OT-Networks/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
+              command = f"python /home/ubuntu/Git/OT-Network/run_user_process.py {controller} {attack} {duration} {f_value} {self.attack_id} &"
           print('***Command:',command)
           ##to do : 
           out1= self.run_command("doas whoami")
@@ -58,7 +58,7 @@ class ImpactAction:
           print('out is:',out, 'Its type is:',type(out))
           pid = out.split(' ')[-1]
           print('PID is:',pid)
-          print('out1 is:',out1)
+          #print('out1 is:',out1)
           return ImpactObservation(success=True, attack_status=True,attack_id=self.attack_id, pid=pid) 
 
 

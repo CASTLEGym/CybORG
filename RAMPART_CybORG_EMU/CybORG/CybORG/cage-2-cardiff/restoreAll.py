@@ -27,8 +27,8 @@ os_pdn=args.pdn
 
 print('os_url:',os_url, ' os_udn:',os_udn,' ,os_pdn:',os_pdn)
 
-vms=["user0","user1","user2","user3","user4","enterprise0","enterprise1","enterprise2","op_server0","op_host0","op_host1","op_host2"]
-
+#vms=["user0","user1","user2","user3","user4","enterprise0","enterprise1","enterprise2","op_server0","op_host0","op_host1","op_host2"]
+vms=["user1", "enterprise1","enterprise2"]
 for vm in  vms:
   print(f"resetting VM: {vm} .... ")
 

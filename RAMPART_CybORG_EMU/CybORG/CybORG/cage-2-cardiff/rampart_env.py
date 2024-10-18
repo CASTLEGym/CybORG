@@ -152,7 +152,7 @@ class rampart_emu():
 
       with open("./assets/openstack_ip_map.json",'r') as f:
          self.os_ip_data = yaml.safe_load(f)
-     #print('Data is:',self.data)
+      #print('Data is:',self.data)
    
    
    def intialize_game_related_data(self):

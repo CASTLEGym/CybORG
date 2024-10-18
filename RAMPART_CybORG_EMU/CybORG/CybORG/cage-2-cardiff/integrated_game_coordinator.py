@@ -299,19 +299,23 @@ if __name__ == "__main__":
             #print('\n from gc, Blue obs is:',blue_observation, 'n its action space is:',blue_action_space)
             #print(blue_observation,blue_action_space)
             action = ml.get_action(blue_observation, blue_action_space)
-            #print('\n **** blue action code is:',action)
+            #action=0
+            
             
             ##Transform blue action
             blue_action= blue_action_list[action] 
+            print('\n **** blue action code is:',action, 'and action is:',blue_action)
+
             blue_action = blue_action.replace("'", '"')
             blue_action = json.loads(blue_action)
-            
+            print('blue action:',blue_action)
             action_name = blue_action['action_name']
             if 'hostname' in blue_action:
                hostname = blue_action['hostname']
                blue_action= action_name+" "+hostname
             else:
                blue_action= action_name
+               print('In else , blue action is:',blue_action)
             
             # Red AGENT  
             # Get action from B-line
@@ -324,8 +328,9 @@ if __name__ == "__main__":
             rewards.append(blue_rew)
             
             # Log the actions, observations, and rewards
-            blue_action=replace_ip_to_name(str(blue_action))
-            red_action= replace_ip_to_name(str(red_action))
+            if 'hostname' in blue_action:
+              blue_action=replace_ip_to_name(str(blue_action))
+              red_action= replace_ip_to_name(str(red_action))
 
             with open(log_file, 'a', newline='') as file:
                writer = csv.writer(file)

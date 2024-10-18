@@ -5,7 +5,7 @@ import argparse
 # Initialize Flask application
 app = Flask(__name__)
 
-# Dummy Class 
+# Placeholder Class to test he front end, will be replaced by the actual one. 
 class rampart_emu:
     def __init__(self):
         self.action_space = "1.0"  # Class attribute for version
@@ -16,13 +16,23 @@ class rampart_emu:
         return x 
 
     def reset(self, x, y):
+        #### KW docs ###
+        # seed: x: int or None; y :  agent: str or AgentType or None 
+        # Returns: initial observation - Blue, Red. 
+
         return x - y
 
     def step(self, x, y):
+        #### KW docs ###
+        # Inputs: x: int or str (action); y :  str or AgentType 
+        # Returns: observation (ObsType) ,rewards (float), terminated (bool), truncated (bool), info (dict), done (bool)
         return x * y
 
     def close(self):
-        return x**2
+        #### KW docs ###
+        # Inputs: None
+        # Returns: done (bool)
+        return True
 
 
 # Instantiate the class
@@ -46,10 +56,10 @@ def get_action_space():
 @app.route('/observation_space', methods=['GET'])
 def get_observation_space():
     return jsonify({
-        "observation_sapce": rampart_env.observation_space
+        "observation_space": rampart_env.observation_space
     })
 
-# API route to return available attribute observation_space (class attribute)
+# API route to return available attribute action mapping dictionary (class attribute)
 @app.route('/action_mapping_dict', methods=['GET'])
 def get_action_mapping_dict():
     return jsonify({
@@ -82,6 +92,7 @@ def rampart(operation):
         
         # Call the method with extracted arguments
         result = method(*args)
+        print('result')
         return jsonify({"operation": operation, "result": result})
     else:
         return jsonify({"error": f"Operation '{operation}' not found."}), 400

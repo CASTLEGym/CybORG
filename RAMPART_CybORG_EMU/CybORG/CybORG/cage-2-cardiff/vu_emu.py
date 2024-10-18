@@ -26,7 +26,7 @@ from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
-
+from CybORG.Emulator.Actions.Velociraptor.ImpactAction import ImpactAction
 #from pprint import pprint
 import ast
 from reward_calculator import RewardCalculator
@@ -424,23 +424,11 @@ class vu_emu():
           #print('\n->outcome of Exploit action is:',outcome)
        elif action_name=='Impact':
           outcome={}
-          #print('Self.connection_key:',self.connection_key,'action_param:',action_param)
+          print('Self.connection_key:',self.connection_key,'action_param:',action_param)
           if action_param in self.priviledged_hosts:
-            """
-            client_port= self.used_ports[action_param]
-            command='ls -l'
-            action= SSHConnectionImpactAction(credentials_file,red_intial_foothold,self.connection_key[action_param],command)
-            observation=action.execute(None)
-            success = enum_to_boolean(str(observation.success))
-            outcome.update({'action_param':action_param})
-            #outcome.update({'user':observation.user.strip()})
-            #outcome.update({'explored_host':self.fetch_ip(observation.explored_host)})
-            #outcome.update({'pid_string':observation.pid})
-            #hostname=ip2host.fetch_alt_name(action_param)
-            #outcome.update({'hostname':hostname})
-            #subnet_ip= self.get_subnet_ip(hostname)
-            #outcome.update({'subnet':subnet_ip})"""
-            success=True
+            impact_action= ImpactAction(credentials_file,red_intial_foothold, self.connection_key[action_param])
+            observation= impact_action.execute(controller='sc',attack='dos',duration=30,f_value=None,local_controller='lc1')
+            success=observation.success
           else: 
             success= False
           #if success==True:

@@ -160,7 +160,7 @@ if __name__ == '__main__':
     #Initialize Emulator
     emulator = bt_nodes.initialize_emulator()
     #emulator.restore()    
-    for num_steps in [50]:
+    for num_steps in [10]:
         #emulator = bt_nodes.initialize_run_emulator()
         blackboard = build_blackboard()
         if exp == 'sim':
@@ -206,11 +206,11 @@ if __name__ == '__main__':
                         print('%%'*100)
                         print('Iteration start:',j)
                         print(blackboard.action)
-                        if exp == 'sim':
+                        #if exp == 'sim':
                             #for keys in IP.keys():
                             #    if str(IP[keys]) in 
-                        else:
-                            emulator.run_emulation(blackboard.action,log_file,j)
+                        #else:
+                        emulator.run_emulation(blackboard.action,log_file,j)
                         blackboard.step += 1
                         print('%%'*100)
                         print('Iteration end:',j)
