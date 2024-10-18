@@ -104,13 +104,18 @@ class setup_openstack:
       self.project=project
       self.key_name= key_name
 
-class rampart_emu():
+class rampart_emulator():
    def __init__(self, game_param):
       # Parse the Json string into a Python dictionary
-      try:
+      print('In Rampart emulator',game_param)
+
+      # If game_param is already a dictionary, use it as-is
+      if isinstance(game_param, dict):
+        config_dict = game_param
+      else:
+        # Otherwise, assume it's a JSON string and parse it
         config_dict = json.loads(game_param)
-      except json.JSONDecodeError as e:
-        raise ValueError("Invalid dictionary string format.") from e
+
 
       if validate_game_param(config_dict):
         # Store values in variables
@@ -153,7 +158,18 @@ class rampart_emu():
       with open("./assets/openstack_ip_map.json",'r') as f:
          self.os_ip_data = yaml.safe_load(f)
       #print('Data is:',self.data)
-   
+      
+
+      # Intialising openstack specific 
+      self.openstack_setup= setup_openstack(current_user= 'vardhah',
+                                              password= 'Roadies@5*',
+                                              url="https://cloud.isislab.vanderbilt.edu:5000/v3",
+                                              udn="ISIS",
+                                              pdn="ISIS",
+                                              project="castle3",
+                                              key_name= "castle-control")
+      
+
    
    def intialize_game_related_data(self):
       cyborg = CybORG(path, 'sim', agents={'Red': self.red_agent})
