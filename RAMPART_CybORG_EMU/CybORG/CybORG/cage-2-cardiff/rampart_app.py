@@ -29,7 +29,6 @@ class rampart_emu:
         # Input:: seed: int or None; agent: str or AgentType or None 
         # Returns: action_space, observation_space,intial_obs, action_mapping_dict - Blue, Red.
         action_space,observation_space, obs, self.action_mapping_dict=self.env.reset(seed,agent)
-
         return action_space,observation_space, obs, self.action_mapping_dict
 
     def step(self, x, y):

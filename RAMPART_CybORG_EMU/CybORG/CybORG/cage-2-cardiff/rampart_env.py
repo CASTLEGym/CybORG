@@ -253,6 +253,7 @@ class rampart_emulator():
       # Step3: Intilaize game using simulator to fetch related obs, action, mapping 
       blue_obs, blue_action_space, action_mapping =self.intialize_game_related_data()
       
+      #Step4 : i dont know why I did it.. 
       with open('./assets/blue_baseline_obs.py','r') as f:
         baseline= json.load(f)
       self.baseline= ast.literal_eval(baseline)
@@ -263,8 +264,9 @@ class rampart_emulator():
           self.baseline[vm]=self.get_machine_intial_state(vm)
       print('self.baseline:',self.baseline) 
       
-      # New script need to run to get intial observation
+      # Step5 : New script need to run to get intial observation
       observation={}
+      
       
       """
       # The current reset action just run md5 checksums
