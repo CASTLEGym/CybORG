@@ -10,20 +10,27 @@ app = Flask(__name__)
 class rampart_emu:
     def __init__(self):
         # Exposed attributes need to fill it by running emulation.
-        self.action_space = "1.0"  # Class attribute for version
-        self.observation_space = ["add", "subtract", "multiply", "divide"]
-        self.action_mapping_dict = {'key': 'value'}
-        self.env = None  # Placeholder for environment
+        self.action_space = "Intial placeholder for action space"  # Class attribute for version
+        self.observation_space = 'Intial placeholder for observation space'
+        self.action_mapping_dict = 'Intial placeholder for action mapping'
+        self.env = rampart_emulator()  # Placeholder for environment
 
     def make(self, game_param):
-        self.env = rampart_emulator(game_param)
-        return True
-
-    def reset(self, x, y):
         # KW docs ###
-        # seed: x: int or None; y: agent: str or AgentType or None 
-        # Returns: initial observation - Blue, Red.
-        return x - y
+        # Input:: game param  (json)
+        # Returns: None ( we are returing True and False abot success)
+        print('calling make!')
+        # Currnelty just making placeholder for action space and observation space
+        success=self.env.make(game_param)
+        return success
+
+    def reset(self, seed=0, agent='Blue'):
+        # KW docs ###
+        # Input:: seed: int or None; agent: str or AgentType or None 
+        # Returns: action_space, observation_space,intial_obs, action_mapping_dict - Blue, Red.
+        action_space,observation_space, obs, self.action_mapping_dict=self.env.reset(seed,agent)
+
+        return action_space,observation_space, obs, self.action_mapping_dict
 
     def step(self, x, y):
         # KW docs ###
@@ -87,13 +94,13 @@ def make():
 # Static API route for `reset` method
 @app.route('/rampart/reset', methods=['GET'])
 def reset():
-    x = request.args.get('x', type=float)
-    y = request.args.get('y', type=float)
-    if x is not None and y is not None:
-        result = rampart_env.reset(x, y)
+    seed = request.args.get('seed', type=int)
+    agent = request.args.get('agent', type=str)
+    if seed is not None and agent is not None:
+        result = rampart_env.reset(seed, agent)
         return jsonify({"operation": "reset", "result": result})
     else:
-        return jsonify({"error": "Invalid input. x and y are required."}), 400
+        return jsonify({"error": "Invalid input. seed and agent are required."}), 400
 
 
 # Static API route for `step` method

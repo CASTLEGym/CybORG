@@ -27,24 +27,28 @@ from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
+
 from reward_calculator import RewardCalculator
 #from pprint import pprint
 import ast
 import json
 from reward_calculator import RewardCalculator
-
+import time
 from CybORG.Agents import B_lineAgent, SleepAgent
 from Wrappers.ChallengeWrapper2 import ChallengeWrapper2
 from Wrappers.BlueEmulationWrapper import BlueEmulationWrapper
 
-file_path = './assets/mod_100steps_cardiff_bline.py'
-machine_config_path='./assets/machine_configs/'
+
 #c2o= cage2_os()
 import re
 import json
 import ast
 
 #from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
+
+
+file_path = './assets/mod_100steps_cardiff_bline.py'
+machine_config_path='./assets/machine_configs/'
 
 ip2host= name_conversion("./assets/openstack_ip_map.json")
 cage2os=name_conversion("./assets/cage2-openstack.yaml")
@@ -80,11 +84,8 @@ service_ports = {
 
 #print(service_ports)
 
-scenario = 'Scenario2'
-path = str(inspect.getfile(CybORG))
-print("path is:",path)
-path = path[:-10] + f'/Shared/Scenarios/{scenario}.yaml'
-print('path is:',path)
+#scenario = 'Scenario2'
+
 
 
 utils=utils()
@@ -105,17 +106,17 @@ class setup_openstack:
       self.key_name= key_name
 
 class rampart_emulator():
-   def __init__(self, game_param):
-      # Parse the Json string into a Python dictionary
-      print('In Rampart emulator',game_param)
+  def __init__(self):
+    print('In Rampart emulator!!')
 
+  def make(self,game_param):
+    try:
       # If game_param is already a dictionary, use it as-is
       if isinstance(game_param, dict):
         config_dict = game_param
       else:
         # Otherwise, assume it's a JSON string and parse it
         config_dict = json.loads(game_param)
-
 
       if validate_game_param(config_dict):
         # Store values in variables
@@ -133,10 +134,106 @@ class rampart_emulator():
         print(f"Blue Agent: {self.blue_agent}")
         print(f"Red Agent: {self.red_agent}")
         print(f"Wrapper: {self.wrapper}")
-      
+        print('-----------------------')
+        
+      # Establising the game scenario file path based on input scenario: 
+      self.path = str(inspect.getfile(CybORG))
+      self.path = self.path[:-10] + f'/Shared/Scenarios/{self.scenario}'
+      print('Scenario file path is:',self.path)
+
       if self.red_agent!= None:
         self.red_agent= globals()[self.red_agent]
+    
+      self.reward_cal=RewardCalculator(self.path)
       
+      with open("./assets/openstack_ip_map.json",'r') as f:
+         self.os_ip_data = yaml.safe_load(f)
+      #print('Data is:',self.data)
+
+      # Intialising openstack specific 
+      self.openstack_setup= setup_openstack(current_user= 'vardhah',
+                                              password= 'Roadies@5*',
+                                              url="https://cloud.isislab.vanderbilt.edu:5000/v3",
+                                              udn="ISIS",
+                                              pdn="ISIS",
+                                              project="castle3",
+                                              key_name= "castle-control")
+      
+      print('openstack User:',self.openstack_setup.current_user)
+      #currently passing blue observaton space and action space that is derived from Cyborg (need to modify it in future)
+      # Action mapping is good as it is static map and same for simulatior and emulator. 
+      
+      return True
+    except Exception as e:
+        # If there is any exception, log it or handle it
+        print(f"Error occurred: {e}")
+        # Return False in case of failure
+        return False
+   
+  def intialize_game_related_data(self):
+      cyborg = CybORG(self.path, 'sim', agents={'Red': self.red_agent})
+      wrapped_cyborg = wrap(cyborg,"cardiff")    # Hardcoding to 'cardiff' to just extract intial data from my version of Cyborg.  
+      #reward_calc.reset()
+      #this intialisation information is coming from Cyborg
+      wrapped_cyborg.reset() 
+
+      blue_observation=cyborg.get_observation(self.main_agent)
+      blue_action_space= cyborg.get_action_space(self.main_agent)
+      print('Blue observation:',blue_observation)
+      print('blue_action_space:',blue_action_space)
+      
+      # Getting intial red_observation
+      red_observation=cyborg.get_observation('Red')
+      red_action_space= cyborg.get_action_space('Red')
+
+      red_observation=translate_intial_red_obs(red_observation)
+      print("\n ***** Red observation after reset is:",red_observation)
+      print("\n ***** Red action space after reset is:",red_action_space)
+    
+      #read assets
+      self.blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
+      # Converting the list to a dictionary with index as the key
+      action_mapping_dict_with_index = {i: item for i, item in enumerate(self.blue_action_list)}
+      
+      
+      with open('./assets/blue_initial_obs.json', 'r') as file:
+        initial_blue_info = json.load(file)
+      self.initial_blue_info= translate_initial_blue_info(initial_blue_info)
+      
+      print('\n blue action list:',self.blue_action_list)
+
+      # print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
+      #parse_and_store_ips_host_map(initial_blue_obs)
+      if self.wrapper=='ChallengeWrapper':
+        self.emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
+        blue_observation=self.emu_wrapper.reset(initial_blue_info)
+        # Translate intial obs in vectorised format to feed into NN
+      
+      return blue_observation, blue_action_space,action_mapping_dict_with_index 
+     
+
+  def reset(self,seed=None,agent=None ):
+      if seed is not None and not isinstance(seed, int):
+        raise TypeError("Parameter 'seed' must be of type 'int' or 'None'.")
+      # Check if agent is either None or a string
+      if agent is not None and not isinstance(agent, str):
+        raise TypeError("Parameter 'agent' must be of type 'str' or 'None'.")
+      
+      # Step1: Restore all machines 
+      for vm in  vms:
+        print(f"resetting VM: {vm} .... ")
+        restore_action = RestoreAction( hostname=vm,
+                                       auth_url=self.openstack_setup.url,
+                                       project_name=self.openstack_setup.project,
+                                       username=self.openstack_setup.current_user,
+                                       password=self.openstack_setup.password,
+                                       user_domain_name=self.openstack_setup.udn,
+                                       project_domain_name=self.openstack_setup.pdn,
+                                       key_name=self.openstack_setup.key_name)
+        observation=restore_action.execute(None)
+        print('Reset success:',observation.success)
+      
+      #Step 2: Intializing placeholders
       self.old_outcome_blue=None
       self.old_outcome_red=None
       self.last_red_action=None
@@ -152,108 +249,51 @@ class rampart_emulator():
       self.terminated= False
       self.done= False
       self.step_counter=0
-      self.reward_cal=RewardCalculator(path)
+
+      # Step3: Intilaize game using simulator to fetch related obs, action, mapping 
+      blue_obs, blue_action_space, action_mapping =self.intialize_game_related_data()
       
-
-      with open("./assets/openstack_ip_map.json",'r') as f:
-         self.os_ip_data = yaml.safe_load(f)
-      #print('Data is:',self.data)
-      
-
-      # Intialising openstack specific 
-      self.openstack_setup= setup_openstack(current_user= 'vardhah',
-                                              password= 'Roadies@5*',
-                                              url="https://cloud.isislab.vanderbilt.edu:5000/v3",
-                                              udn="ISIS",
-                                              pdn="ISIS",
-                                              project="castle3",
-                                              key_name= "castle-control")
-      
-
-   
-   def intialize_game_related_data(self):
-      cyborg = CybORG(path, 'sim', agents={'Red': self.red_agent})
-      wrapped_cyborg = wrap(cyborg,"cardiff")    # Hardcoding to 'cardiff' to just extract intial data from my version of Cyborg.  
-      #reward_calc.reset()
-      #this intialisation information is coming from Cyborg
-      blue_observation = wrapped_cyborg.reset()      
-      blue_action_space = wrapped_cyborg.get_action_space(self.main_agent)
-
-      blue_observation=cyborg.get_observation('Blue')
-      blue_action_space= cyborg.get_action_space('Blue')
-      print('Blue observation:',blue_observation)
-      print('blue_action_space:',blue_action_space)
-
-      # Getting intial red_observation
-      red_observation=cyborg.get_observation('Red')
-      red_action_space= cyborg.get_action_space('Red')
-      red_observation=translate_intial_red_obs(red_observation)
-      print("\n ***** Red observation after reset is:",red_observation)
-      print("\n ***** Red action space after reset is:",red_action_space)
-    
-      #read assets
-      blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
-      with open('./assets/blue_initial_obs.json', 'r') as file:
-        initial_blue_info = json.load(file)
-      initial_blue_info= translate_initial_blue_info(initial_blue_info)
-      # print('\n blue action list:',blue_action_list)
-      # print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
-      #parse_and_store_ips_host_map(initial_blue_obs)
-      if self.wrapper=='ChallengeWrapper':
-        emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
-        # Translate intial obs in vectorised format to feed into NN
-        blue_observation=emu_wrapper.reset(initial_blue_info)
-      return blue_action_list,blue_observation
-   
-   def reset(self,seed=None,agent=None ):
-      if seed is not None and not isinstance(seed, int):
-        raise TypeError("Parameter 'seed' must be of type 'int' or 'None'.")
-      # Check if agent is either None or a string
-      if agent is not None and not isinstance(agent, str):
-        raise TypeError("Parameter 'agent' must be of type 'str' or 'None'.")
-
-      action_list,observation=self.intialize_game_related_data()
-      print('action list is:',action_list)
-      print('Observation is:',observation)
       with open('./assets/blue_baseline_obs.py','r') as f:
         baseline= json.load(f)
       self.baseline= ast.literal_eval(baseline)
       #print('Self baseline type is:',type(self.baseline))
-       
+
       self.baseline={}
       for vm in vms:
           self.baseline[vm]=self.get_machine_intial_state(vm)
-       
+      print('self.baseline:',self.baseline) 
+      
+      # New script need to run to get intial observation
+      observation={}
+      
+      """
+      # The current reset action just run md5 checksums
       reset=ResetAction(credentials_file)
       self.md5={}
       for vm in vms: 
         os_vm=cage2os.fetch_alt_name(vm)
         print('--> VM is:',vm, 'os name is:',os_vm)
         obs=reset.execute(os_vm)
-
         if obs.success==True: 
           self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
         else: 
           print('Reset failed!!')
           self.md5[ip2host.fetch_alt_name(vm)]=None
           # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
-          #break
-          
-      print("baseline estimated by us is:")
-      #pprint(self.baseline)
+          #break     
       print("md5 are:",self.md5)
-      #time.sleep(30)   
-      return action_list, observation
+      """
+      
+      return blue_obs, blue_action_space,observation, action_mapping 
        
-   def get_action_space(self,agent="Red"):
-       return None, None
 
-   def update_reward_information_dict(self,info_dict, server_name, username):
+
+  def update_reward_information_dict(self,info_dict, server_name, username):
     if server_name not in info_dict:
         info_dict[server_name] = {'Sessions': []}
     info_dict[server_name]['Sessions'].append({'Username': username})
    
-   def delete_reward_information_dict(self,info_dict, server_name, username):
+  def delete_reward_information_dict(self,info_dict, server_name, username):
     if server_name in info_dict:
         sessions = info_dict[server_name]['Sessions']
         info_dict[server_name]['Sessions'] = [session for session in sessions if session['Username'] != username]
@@ -263,9 +303,8 @@ class rampart_emulator():
             del info_dict[server_name]
     return info_dict
 
-
    
-   def step(self,action_string: str,agent_type: str):
+  def step(self,action_string: str,agent_type: str):
        if not isinstance(action_string, str) or not isinstance(agent_type, str):
             raise TypeError("Both parameters must be of type 'str'.")
        
@@ -324,10 +363,10 @@ class rampart_emulator():
        reward=self.reward_cal.reward(self.network_state)    
        return outcome, reward, None, self.done
    
-   def close(self):
+  def close(self):
        return 0
 
-   def modify_blue_by_red(self,blue_outcome,red_outcome,last_red_action,last_red_action_param):
+  def modify_blue_by_red(self,blue_outcome,red_outcome,last_red_action,last_red_action_param):
       #print('@@@@@'*100)
       print('-> Blue outcome:',blue_outcome)
       if last_red_action=='DiscoverNetworkServices':
@@ -365,7 +404,7 @@ class rampart_emulator():
       return blue_outcome
   
    
-   def convert_red_exploit_dict(self,template_dict):
+  def convert_red_exploit_dict(self,template_dict):
     # Iterate over all the keys of connections to find attacker_ip
     for process in template_dict.get('Processes', []):
       for connection in process.get('Connections', []):
@@ -403,7 +442,7 @@ class rampart_emulator():
 
 
    
-   def fetch_ip(self,string):
+  def fetch_ip(self,string):
       # Regular expression to match the IP address
       pattern = r'\d+\.\d+\.\d+\.\d+'
 
@@ -416,7 +455,7 @@ class rampart_emulator():
       return ip_address
   
    
-   def execute_action_client(self,action_name,action_param,running_from=None):
+  def execute_action_client(self,action_name,action_param,running_from=None):
        #print('@'*80, '\n ==>action name is:',action_name, 'action_params is:',action_param)
        
        ### Red Actions
@@ -591,7 +630,7 @@ class rampart_emulator():
        print('--> Outcome of action is:',outcome)
        return outcome
 
-   def transfrom_observation(self,action_name,data):
+  def transfrom_observation(self,action_name,data):
        if action_name=='DiscoverRemoteSystems':
          return utils.transform_DiscoverRemoteSystems(data)    
        elif action_name=='DiscoverNetworkServices':
@@ -611,10 +650,10 @@ class rampart_emulator():
        else:
           return data
             
-   def is_name(self,s):
+  def is_name(self,s):
          return bool(re.match(r"^[A-Za-z]+", s))
    
-   def get_subnet_ip(self,hostname):
+  def get_subnet_ip(self,hostname):
     # Reverse the dictionary to map names to IPs
     #to do : load the 
     ip_to_name= self.os_ip_data
@@ -643,7 +682,7 @@ class rampart_emulator():
     return None
       
    
-   def get_machine_intial_state(self,path):
+  def get_machine_intial_state(self,path):
      file_path= './machines/config_'+path+'.yaml'
      #print('file path is:',file_path)
      try:
@@ -658,6 +697,6 @@ class rampart_emulator():
            
    
 if __name__=='__main__':
-    game_param = '{"mode":"sim","scenario": "Scenario2.yaml","main_agent": "Blue","red_agent": "B_lineAgent","green_agent": "SleepAgent","wrapper": "None", "episode_length": 1,"max_episodes": 1, "seed": 0}'
-    emu = rampart_emu(game_param)
-    emu.reset()
+  game_param = '{"mode":"sim","scenario": "Scenario2.yaml","main_agent": "Blue","red_agent": "B_lineAgent","green_agent": "SleepAgent","wrapper": "None", "episode_length": 1,"max_episodes": 1, "seed": 0}'
+  emu = rampart_emu(game_param)
+  emu.reset()
