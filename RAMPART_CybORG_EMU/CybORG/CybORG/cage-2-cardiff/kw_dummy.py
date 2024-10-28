@@ -25,7 +25,7 @@ game_param = {
     "red_agent": "B_lineAgent",
     "green_agent": "SleepAgent",
     "wrapper": "None",
-    "episode_length": 1,
+    "episode_length": 10,
     "max_episodes": 1,
     "seed": 0
 }
@@ -39,17 +39,24 @@ print("Response JSON:", response.json())
 
 
 # Invoke the 'reset' method with x=10 and y=5
-#print('calling reset!!')
-#response = requests.get(f'{url}/rampart/reset', params={'seed': 10, 'agent': 'Blue'})
-#print(response.json())
+print('calling reset!!')
+response = requests.get(f'{url}/rampart/reset', params={'seed': 10, 'agent': 'Blue'})
+print(response.json())
 
-"""
+
+# Fetch action_mapping_dict
+response = requests.get(f'{url}/action_mapping_dict')
+print(response.json())
+
+
 # Invoke the 'step' method with x=4 and y=2
-response = requests.get(f'{url}/rampart/step', params={'x': 4, 'y': 2})
+response = requests.get(f'{url}/rampart/step', params={'action': 'DecoyTomcat User0', 'agent': 'Blue'})
+print(response.json())
+
+# Invoke the 'step' method with x=4 and y=2
+response = requests.get(f'{url}/rampart/step', params={'action': 'DiscoverRemoteSystems 10.10.10.0/24', 'agent': 'Red'})
 print(response.json())
 
 # Invoke the 'close' method
 response = requests.get(f'{url}/rampart/close')
 print(response.json())
-
-"""

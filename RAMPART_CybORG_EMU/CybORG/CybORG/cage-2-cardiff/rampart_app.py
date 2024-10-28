@@ -31,17 +31,19 @@ class rampart_emu:
         action_space,observation_space, obs, self.action_mapping_dict=self.env.reset(seed,agent)
         return action_space,observation_space, obs, self.action_mapping_dict
 
-    def step(self, x, y):
+    def step(self, action, agent):
         # KW docs ###
-        # Inputs: x: int or str (action); y: str or AgentType 
+        # Inputs: action: int or str (action); agent: str or AgentType 
         # Returns: observation (ObsType), rewards (float), terminated (bool), truncated (bool), info (dict), done (bool)
-        return x * y
+        observation,reward,terminated,truncated,info,done=self.env.step(action,agent) 
+        return observation,reward,terminated,truncated,info,done
 
     def close(self):
         # KW docs ###
         # Inputs: None
         # Returns: done (bool)
-        return True
+        closed,current_user=self.env.close() 
+        return closed,current_user
 
 
 # Instantiate the class
@@ -96,20 +98,30 @@ def reset():
     seed = request.args.get('seed', type=int)
     agent = request.args.get('agent', type=str)
     if seed is not None and agent is not None:
-        result = rampart_env.reset(seed, agent)
-        return jsonify({"operation": "reset", "result": result})
+        _,_,obs,_ = rampart_env.reset(seed, agent)
+        return jsonify({
+            "operation": "reset",
+            "observation": obs,
+        })
     else:
         return jsonify({"error": "Invalid input. seed and agent are required."}), 400
+
 
 
 # Static API route for `step` method
 @app.route('/rampart/step', methods=['GET'])
 def step():
-    x = request.args.get('x', type=float)
-    y = request.args.get('y', type=float)
-    if x is not None and y is not None:
-        result = rampart_env.step(x, y)
-        return jsonify({"operation": "step", "result": result})
+    action = request.args.get('action', type=str)
+    agent = request.args.get('agent', type=str)
+    if action is not None and agent is not None:
+        observation,reward,terminated,truncated,info,done = rampart_env.step(action, agent)
+        return jsonify({"operation": "step", 
+                        "observation":str(observation),
+                        "reward": reward,
+                        "truncated":truncated,
+                        "terminated": terminated,
+                        "info": info,
+                        "done": done})
     else:
         return jsonify({"error": "Invalid input. x and y are required."}), 400
 
@@ -117,7 +129,8 @@ def step():
 # Static API route for `close` method
 @app.route('/rampart/close', methods=['GET'])
 def close():
-    result = rampart_env.close()
+    result,user = rampart_env.close()
+    print('->> Current user is:',user)
     return jsonify({"operation": "close", "result": result})
 
 

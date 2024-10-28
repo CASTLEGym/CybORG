@@ -27,7 +27,7 @@ from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
-
+from CybORG.Emulator.Actions.Velociraptor.FetchInitialObservationAction import FetchInitialObservationAction
 from reward_calculator import RewardCalculator
 #from pprint import pprint
 import ast
@@ -62,7 +62,10 @@ credentials_file = "/home/ubuntu/prog_client.yaml"
 blue_action_space= ['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'Restore', 'DecoyFemitter', 'Remove', 'DecoyTomcat', 'DecoyHarakaSMPT','Analyse']
 blue_decoys=['DecoyApache', 'DecoySSHD', 'DecoyVsftpd', 'DecoyTomcat', 'DecoyFemitter','DecoyHarakaSMPT'] # windows specific decoys are faked. 
 red_action_space = ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverRemoteSystems', 'DiscoverNetworkServices']
-vms=["User0","User1","User2","User3","User4","Enterprise0","Enterprise1","Enterprise2","Op_Host0","Op_Host1","Op_Host2","Op_Server0","Defender"]
+
+# Scoping the reset and md5: Currently defender is out of scope of md5 and reset, 
+# Add "Defender" to the VMs list if want to bring it in the game. 
+vms=["User0","User1","User2","User3","User4","Enterprise0","Enterprise1","Enterprise2","Op_Host0","Op_Host1","Op_Host2","Op_Server0"] 
 red_info={"User0"}
 blue_info={}
 #Store action and resultant result (True/False) 
@@ -193,8 +196,10 @@ class rampart_emulator():
       #read assets
       self.blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
       # Converting the list to a dictionary with index as the key
-      action_mapping_dict_with_index = {i: item for i, item in enumerate(self.blue_action_list)}
-      
+      self.blue_action_list = self.transform_data(self.blue_action_list)
+      action_mapping_dict_with_index= {i: item for i, item in enumerate(self.blue_action_list)}
+
+      print(action_mapping_dict_with_index)
       
       with open('./assets/blue_initial_obs.json', 'r') as file:
         initial_blue_info = json.load(file)
@@ -222,7 +227,8 @@ class rampart_emulator():
       # Step1: Restore all machines 
       for vm in  vms:
         print(f"resetting VM: {vm} .... ")
-        restore_action = RestoreAction( hostname=vm,
+        os_vm=cage2os.fetch_alt_name(vm)
+        restore_action = RestoreAction( hostname=os_vm,
                                        auth_url=self.openstack_setup.url,
                                        project_name=self.openstack_setup.project,
                                        username=self.openstack_setup.current_user,
@@ -247,6 +253,8 @@ class rampart_emulator():
       self.old_exploit_outcome={}
       self.network_state={}
       self.terminated= False
+      self.truncated= False
+      self.info={}
       self.done= False
       self.step_counter=0
 
@@ -264,8 +272,23 @@ class rampart_emulator():
           self.baseline[vm]=self.get_machine_intial_state(vm)
       print('self.baseline:',self.baseline) 
       
-      # Step5 : New script need to run to get intial observation
-      observation={}
+      # Step5 : New script need to run to get intial observation for Blue agent (if red's support
+      # also needed in future, need to extend this and make it conditional )
+      if agent=='Blue':
+        observation={}
+        fetch_intial_obs_action = FetchInitialObservationAction(credentials_file=credentials_file)
+        for vm in vms:
+          os_vm=cage2os.fetch_alt_name(vm)
+          print('-> os_vm is:',os_vm)
+          obs= fetch_intial_obs_action.execute(os_vm)
+          if obs.success==True: 
+            obs= ast.literal_eval(obs.Stdout)
+            print('--> obs is:',obs)
+            observation[vm]=obs
+        print('-> Reset_obs for Blue:',observation) 
+      else:
+         observation={}
+         
       
       
       """
@@ -286,7 +309,7 @@ class rampart_emulator():
       print("md5 are:",self.md5)
       """
       
-      return blue_obs, blue_action_space,observation, action_mapping 
+      return None, None,observation, action_mapping 
        
 
 
@@ -307,34 +330,34 @@ class rampart_emulator():
 
    
   def step(self,action_string: str,agent_type: str):
-       if not isinstance(action_string, str) or not isinstance(agent_type, str):
-            raise TypeError("Both parameters must be of type 'str'.")
-       
-       ("In steps")
-       split_action_string=action_string.split(" ")
-       
-       #if action contains the hostname
-       if len(split_action_string)==2:
-         action_param= split_action_string[1]
-         action_name=split_action_string[0]
+    if self.done==False: 
+      if not isinstance(action_string, str) or not isinstance(agent_type, str):
+        raise TypeError("Both parameters must be of type 'str'.")
+  
+      ("In steps")
+      split_action_string=action_string.split(" ")
+      #if action contains the hostname
+      if len(split_action_string)==2:
+        action_param= split_action_string[1]
+        action_name=split_action_string[0]
          
-         #print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
-         is_host_name= self.is_name(action_param)
-         if is_host_name == True:
-            #print("** True host name **") 
-            action_param= ip2host.fetch_alt_name(action_param)
-            #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
+        #print("\n in vu_emu=> Action name:",action_name,";action parameter is:",action_param)
+        is_host_name= self.is_name(action_param)
+        if is_host_name == True:
+          #print("** True host name **") 
+          action_param= ip2host.fetch_alt_name(action_param)
+          #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
             
-         if agent_type=='Red':
-            outcome= self.execute_action_client(action_name,action_param)
-            outcome= self.transfrom_observation(action_name,outcome)
-            print('--> transformed outcome is:', outcome)
-            self.old_outcome_red=outcome
-            self.last_red_action=action_name
-            self.last_red_action_param=action_param
-            #print('obs is:',outcome)
+        if agent_type=='Red':
+          outcome= self.execute_action_client(action_name,action_param)
+          outcome= self.transfrom_observation(action_name,outcome)
+          print('--> transformed outcome is:', outcome)
+          self.old_outcome_red=outcome
+          self.last_red_action=action_name
+          self.last_red_action_param=action_param
+          #print('obs is:',outcome)
          
-         elif agent_type=='Blue':
+        elif agent_type=='Blue':
           if action_name in blue_action_space :
             #  ->>> Execute 
             outcome= self.execute_action_client(action_name,action_param)
@@ -352,21 +375,36 @@ class rampart_emulator():
             print("Invalid action!!")
             sys.exit(1)
           self.old_outcome_blue=outcome
-       #if action doesnot contains the hostname (like sleep/monitor) 
-       else: 
-          #print('In else:',action_string)
-          if action_string=='Sleep':
-               outcome={'success': 'Unknown'}
-          else:
-              print('!!! Not Implemented !!!')  
-       self.step_counter+=1
-       if self.step_counter==self.episode_length:
-          self.done= True 
-       reward=self.reward_cal.reward(self.network_state)    
-       return outcome, reward, None, self.done
-   
+      #if action doesnot contains the hostname (like sleep/monitor) 
+      else: 
+        #print('In else:',action_string)
+        if action_string=='Sleep':
+          outcome={'success': 'Unknown'}
+        else:
+          print('!!! Not Implemented !!!')  
+      self.step_counter+=1
+      if self.step_counter==self.episode_length:
+        self.done= True 
+      reward=self.reward_cal.reward(self.network_state) 
+         
+      return outcome,reward,self.terminated,self.truncated,self.info,self.done
+    else: 
+      return None,None,self.terminated,self.truncated,self.info,self.done
+    
+
   def close(self):
-       return 0
+    # Cleaning the openstack specific credentials so that you can not get access 
+    # unless user call `make` a new game. 
+    self.openstack_setup= setup_openstack(current_user= None,
+                                          password= None,
+                                          url=None,
+                                          udn=None,
+                                          pdn=None,
+                                          project=None,
+                                          key_name= None)
+      
+    print('openstack User:',self.openstack_setup.current_user)
+    return True,self.openstack_setup.current_user
 
   def modify_blue_by_red(self,blue_outcome,red_outcome,last_red_action,last_red_action_param):
       #print('@@@@@'*100)
@@ -441,6 +479,33 @@ class rampart_emulator():
     converted_dict['Processes'][1]['PID'] = 27893
 
     return converted_dict
+
+  
+  # Function to transform the data
+  def transform_data(self,data):
+    transformed = []
+    print('@@@'*78)
+    print('-> Data is:',data)
+    for entry in data:
+      entry=ast.literal_eval(entry)
+      if isinstance(entry, dict):  
+        print('--> entry is:',entry)
+        # Remove session and agent keys
+        if 'session' in entry:
+            del entry['session']
+        if 'agent' in entry:
+            del entry['agent']
+        if 'hostname' in entry:
+            transformed.append(f"{entry['action_name']} {entry['hostname']}")
+        else:
+            transformed.append(entry['action_name'])
+      else:
+        # If it's not a dictionary, handle it differently or log the issue
+        print(f"Non-dictionary entry found: {entry}")  
+        # Construct the string combining action_name and hostname (if available)
+    print(transformed)
+    return transformed
+
 
 
    
@@ -588,9 +653,7 @@ class rampart_emulator():
                self.delete_reward_information_dict(self.network_state,action_param,'root')
        
        elif action_name=='Restore':
-          
           outcome={}
-
           restore_action = RestoreAction(hostname=cage2os_instance.fetch_alt_name(ip2host.fetch_alt_name(action_param)),
           auth_url=self.url,
           project_name=self.project,
