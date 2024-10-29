@@ -65,7 +65,7 @@ red_action_space = ['PrivilegeEscalate', 'ExploitRemoteService', 'DiscoverRemote
 
 # Scoping the reset and md5: Currently defender is out of scope of md5 and reset, 
 # Add "Defender" to the VMs list if want to bring it in the game. 
-vms=["User0","User1","User2","User3","User4","Enterprise0","Enterprise1","Enterprise2","Op_Host0","Op_Host1","Op_Host2","Op_Server0"] 
+vms=["User0","User1","User2","User3","User4","Enterprise0","Enterprise1","Enterprise2","Op_Host0","Op_Host1","Op_Host2","Op_Server0","Defender"] 
 red_info={"User0"}
 blue_info={}
 #Store action and resultant result (True/False) 
@@ -224,7 +224,10 @@ class rampart_emulator():
       if agent is not None and not isinstance(agent, str):
         raise TypeError("Parameter 'agent' must be of type 'str' or 'None'.")
       
-      # Step1: Restore all machines 
+      # Step1: Restore all machines (ignoring for now , due to two reasons: 
+      # 1. openstack is flaky , some machine takes very long time or sometimes shut down , 
+      # 2. Defender if reseted , needs fresh build, Need to move code execution out of defender.)
+      """
       for vm in  vms:
         print(f"resetting VM: {vm} .... ")
         os_vm=cage2os.fetch_alt_name(vm)
@@ -238,7 +241,8 @@ class rampart_emulator():
                                        key_name=self.openstack_setup.key_name)
         observation=restore_action.execute(None)
         print('Reset success:',observation.success)
-      
+      """
+
       #Step 2: Intializing placeholders
       self.old_outcome_blue=None
       self.old_outcome_red=None
@@ -261,7 +265,8 @@ class rampart_emulator():
       # Step3: Intilaize game using simulator to fetch related obs, action, mapping 
       blue_obs, blue_action_space, action_mapping =self.intialize_game_related_data()
       
-      #Step4 : i dont know why I did it.. 
+      #Step4 : i dont know (now I know ) why I did it (currenly used for blue's initial observation )..
+      # But can be moved away in current development effort.  
       with open('./assets/blue_baseline_obs.py','r') as f:
         baseline= json.load(f)
       self.baseline= ast.literal_eval(baseline)
@@ -291,7 +296,7 @@ class rampart_emulator():
          
       
       
-      """
+      
       # The current reset action just run md5 checksums
       reset=ResetAction(credentials_file)
       self.md5={}
@@ -307,7 +312,7 @@ class rampart_emulator():
           # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
           #break     
       print("md5 are:",self.md5)
-      """
+      
       
       return None, None,observation, action_mapping 
        

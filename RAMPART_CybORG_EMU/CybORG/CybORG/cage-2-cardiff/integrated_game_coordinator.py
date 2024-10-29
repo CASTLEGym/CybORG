@@ -98,6 +98,7 @@ if __name__ == "__main__":
     # Add the arguments
     parser.add_argument("-e", "--exp", type=str, default="sim",choices=["sim", "emu"], help="The experiment mode  (default: 'sim')")
     parser.add_argument("-s", "--steps", type=int,default=5 , help="The number of steps of game (default: 5 steps).")
+    parser.add_argument("-w", "--wrapper", type=str, default="BlueTableWrapper", help="The wrapper used for observation (default:'BlueTableWrapper')")
     
     parser.add_argument("-u", "--user", type=str, default="dummy", help="The user name for openstack (default:'dummy')")
     parser.add_argument("-p", "--password", type=str,default="dummy" , help="The password for openstack (default: 'dummy')")
@@ -122,6 +123,8 @@ if __name__ == "__main__":
     # Access the variables
     exp = args.exp
     steps = args.steps
+    wrapper= args.wrapper
+
     user= args.user
     password= args.password
     team= args.team
@@ -276,22 +279,29 @@ if __name__ == "__main__":
         #print("\n ***** Red observation after reset is:",red_observation)
 
         cyborg_emu = vu_emu(user,password,os_url,os_udn,os_pdn,project_name,key_name )
-        cyborg_emu.reset()
+        
+        _,_,obs,_=cyborg_emu.reset()
                
         #read assets
         blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
         with open('./assets/blue_initial_obs.json', 'r') as file:
            initial_blue_info = json.load(file)
         initial_blue_info= translate_initial_blue_info(initial_blue_info)
+        
         # print('\n blue action list:',blue_action_list)
         # print('\n\n->  Blue info after reset, in game coordinator::',initial_blue_info)
         #parse_and_store_ips_host_map(initial_blue_obs)
-        emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
+        if wrapper=='BlueTableWrapper':
+          emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
+          # Translate intial obs in vectorised format to feed into NN
+          blue_observation=emu_wrapper.reset(initial_blue_info)
+        else: 
+          blue_observation= obs    
         
-        # Translate intial obs in vectorised format to feed into NN
-        blue_observation=emu_wrapper.reset(initial_blue_info)
+        print('->** Intial observation is:',obs)
         red_agent=red_agent()
         total_reward=0
+        
         rewards=[]
         for i in range(steps):
             print('%%'*76)
@@ -320,10 +330,11 @@ if __name__ == "__main__":
             # Red AGENT  
             # Get action from B-line
             red_action=red_agent.get_action(red_observation, red_action_space)
+            red_observation,rew, done, info = cyborg_emu.step(str(red_action),agent_type='Red')
             
-            red_observation,rew, done, info = cyborg_emu.step(str(red_action),agent_type='red')
+            # Blue action and  actuation
+            blue_outcome, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='Blue')
             
-            blue_outcome, blue_rew, done, info = cyborg_emu.step(blue_action,agent_type='blue')
             blue_observation= emu_wrapper.step(blue_action,blue_outcome)
             rewards.append(blue_rew)
             

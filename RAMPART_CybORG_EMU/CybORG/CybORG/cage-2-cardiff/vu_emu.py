@@ -27,6 +27,7 @@ from CybORG.Emulator.Actions.Velociraptor.AnalyseAction import AnalyseAction
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
 from CybORG.Emulator.Actions.Velociraptor.ImpactAction import ImpactAction
+from CybORG.Emulator.Actions.Velociraptor.FetchInitialObservationAction import FetchInitialObservationAction
 #from pprint import pprint
 import ast
 from reward_calculator import RewardCalculator
@@ -135,45 +136,51 @@ class vu_emu():
      #print('Data is:',self.data)
 
    def reset(self):
-       with open('./assets/blue_baseline_obs.py','r') as f:
+      with open('./assets/blue_baseline_obs.py','r') as f:
          baseline= json.load(f)
-       self.baseline= ast.literal_eval(baseline)
+      self.baseline= ast.literal_eval(baseline)
        #print('Self baseline type is:',type(self.baseline))
        
-       self.baseline={}
-       for vm in vms:
+      self.baseline={}
+      for vm in vms:
           #curr_dir=os.getcwd()
           #host_dir= os.path.join('./machines/', vm)
           #print('Host dir is:',host_dir)
           self.baseline[vm]=self.get_machine_intial_state(vm)
        
-       reset=ResetAction(credentials_file)
-       self.md5={}
-       for vm in vms:
-          #curr_dir=os.getcwd()
-          #host_dir= os.path.join('./machines/', vm)
-          
-          os_vm=cage2os.fetch_alt_name(vm)
-          print('--> VM is:',vm, 'os name is:',os_vm)
-          obs=reset.execute(os_vm)
+      reset=ResetAction(credentials_file)
+      self.md5={}
+      for vm in vms:
+        os_vm=cage2os.fetch_alt_name(vm)
+        print('--> VM is:',vm, 'os name is:',os_vm)
+        obs=reset.execute(os_vm)
+        if obs.success==True: 
+          self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
+        else: 
+          print('Reset failed!!')
+          self.md5[ip2host.fetch_alt_name(vm)]=None
+          # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
+          #break
+
+      observation={}
+      fetch_intial_obs_action = FetchInitialObservationAction(credentials_file=credentials_file)
+      for vm in vms:
+        os_vm=cage2os.fetch_alt_name(vm)
+        print('-> os_vm is:',os_vm)
+        obs= fetch_intial_obs_action.execute(os_vm)
+        if obs.success==True: 
+          obs= obs
+          print('--> obs is:',obs)
+          observation[vm]=obs
+        print('-> Reset_obs for Blue:',observation)    
 
 
-          if obs.success==True: 
-              self.md5[ip2host.fetch_alt_name(vm)]=obs.md5
-          else: 
-              print('Reset failed!!')
-              self.md5[ip2host.fetch_alt_name(vm)]=None
-              # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
-              #break
-          
-
-
-       print("baseline estimated by us is:")
-       #pprint(self.baseline)
-       print("md5 are:",self.md5)
-       #time.sleep(30)  
+      print("baseline estimated by us is:")
+      #pprint(self.baseline)
+      print("md5 are:",self.md5)
+      #time.sleep(30)  
        
-       return None, None
+      return  None, None,observation, None
        
    def get_action_space(self,agent="Red"):
        return None, None
@@ -211,7 +218,7 @@ class vu_emu():
             action_param= ip2host.fetch_alt_name(action_param)
             #print("\n=>Blue action:: Action name -",action_name, '; action param-',action_param)
             
-         if agent_type=='red':
+         if agent_type=='Red':
             outcome= self.execute_action_client(action_name,action_param)
             outcome= self.transfrom_observation(action_name,outcome)
             print('--> transformed outcome is:', outcome)
@@ -220,7 +227,7 @@ class vu_emu():
             self.last_red_action_param=action_param
             #print('obs is:',outcome)
          
-         elif agent_type=='blue':
+         elif agent_type=='Blue':
           if action_name in blue_action_space :
             #  ->>> Execute 
             outcome= self.execute_action_client(action_name,action_param)
