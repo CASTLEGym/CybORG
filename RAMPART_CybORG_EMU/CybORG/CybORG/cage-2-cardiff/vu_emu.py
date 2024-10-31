@@ -33,7 +33,7 @@ import ast
 from reward_calculator import RewardCalculator
 
 
-file_path = './assets/mod_100steps_cardiff_bline.py'
+
 machine_config_path='./assets/machine_configs/'
 #c2o= cage2_os()
 import re
@@ -169,7 +169,7 @@ class vu_emu():
         print('-> os_vm is:',os_vm)
         obs= fetch_intial_obs_action.execute(os_vm)
         if obs.success==True: 
-          obs= obs
+          obs= ast.literal_eval(obs.Stdout)
           print('--> obs is:',obs)
           observation[vm]=obs
         print('-> Reset_obs for Blue:',observation)    

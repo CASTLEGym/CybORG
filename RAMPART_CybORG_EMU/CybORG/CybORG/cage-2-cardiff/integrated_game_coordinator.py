@@ -21,6 +21,8 @@ from copy import deepcopy
 from statistics import mean, stdev
 from typing import Optional
 
+
+
 import csv
 
 
@@ -28,15 +30,16 @@ MAX_EPS = 1
 agent_name = 'Blue'
 random.seed(0)
 
+emu_log_file = open("log_output_file.txt", "w")
 
 # changed to ChallengeWrapper2
 def wrap(env,team):
-   if team=='cardiff' or team=='dart_ne':
-     return ChallengeWrapper2(env=env, agent_name='Blue')
-   elif team=='keep':
-     return GraphWrapper('Blue', env)
-   elif team == 'punch':
-     return ActionWrapper(ObservationWrapper(RLLibWrapper(env=env, agent_name="Blue")))
+  if team=='cardiff' or team=='dart_ne':
+    return ChallengeWrapper2(env=env, agent_name='Blue')
+  elif team=='keep':
+    return InductiveGraphWrapper('Blue', env)
+  elif team == 'punch':
+    return ActionWrapper(ObservationWrapper(RLLibWrapper(env=env, agent_name="Blue")))
       
 def load_data_from_file(file_path):
     data_list = []
@@ -170,7 +173,9 @@ if __name__ == "__main__":
     
     if team=='keep':
       ### Import for KEEP agent
-      from KEEP.graph_wrapper.wrapper import GraphWrapper
+      from KEEP.agents.keep_agent import load_agent
+      from KEEP.graph_wrapper.wrapper import InductiveGraphWrapper
+
     elif team == 'punch':
       ### Import for PUNCH agent
       import gymnasium as gym
@@ -281,7 +286,7 @@ if __name__ == "__main__":
         cyborg_emu = vu_emu(user,password,os_url,os_udn,os_pdn,project_name,key_name )
         
         _,_,obs,_=cyborg_emu.reset()
-               
+        print(f"After reset, Initial observation is:\n {obs}", file=emu_log_file)       
         #read assets
         blue_action_list=load_data_from_file('./assets/blue_enum_action.txt')
         with open('./assets/blue_initial_obs.json', 'r') as file:
@@ -306,6 +311,8 @@ if __name__ == "__main__":
         for i in range(steps):
             print('%%'*76)
             print('Iteration start:',i)
+            print('%%'*76,file=emu_log_file)
+            print(f"Iteration start:',{i}", file=emu_log_file)
             #print('\n from gc, Blue obs is:',blue_observation, 'n its action space is:',blue_action_space)
             #print(blue_observation,blue_action_space)
             action = ml.get_action(blue_observation, blue_action_space)
@@ -338,6 +345,13 @@ if __name__ == "__main__":
             blue_observation= emu_wrapper.step(blue_action,blue_outcome)
             rewards.append(blue_rew)
             
+            #Printing to file
+            print(f"-> Blue action is: {blue_action}", file=emu_log_file) 
+            print(f"-> Blue observation is: {blue_outcome}", file=emu_log_file) 
+            print(f"-> Red action is: {red_action}", file=emu_log_file) 
+            print(f"-> Red observation is: {red_observation}", file=emu_log_file) 
+
+
             # Log the actions, observations, and rewards
             if 'hostname' in blue_action:
               blue_action=replace_ip_to_name(str(blue_action))
@@ -353,5 +367,5 @@ if __name__ == "__main__":
 
             print('%%'*76)
             print('Iteration End:',i)
-        
+        emu_log_file.close()    
         print('----->>>> Rewards:',rewards)         

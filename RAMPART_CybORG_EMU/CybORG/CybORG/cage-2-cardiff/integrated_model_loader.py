@@ -28,9 +28,13 @@ class model_loader:
     
     elif team=='keep':
       print("***** Loading KEEP *****")
-      from KEEP.keep_agent import load_pretrained
-      self.agent = load_pretrained('KEEP/model_weights/graph_ppo.pt')
-      self.agent.set_deterministic(True) 
+      from KEEP.agents.keep_agent import load_agent
+      # Loading a pretrained graph  agent
+      self.agent = load_agent('model_weights/inductive_agent.pt') # Default rewards model
+      self.agent.set_deterministic(True)
+      
+      print(f'Using agent {self.agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
+  
     elif team=='punch':
       
       checkpoint = "/home/ubuntu/Git/CybORG-wrappers/CybORG/CybORG/cage-2-cardiff/PUNCH/checkpoint_000250/"
