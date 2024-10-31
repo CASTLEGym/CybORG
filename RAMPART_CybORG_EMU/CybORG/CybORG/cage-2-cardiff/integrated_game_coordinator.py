@@ -101,25 +101,27 @@ if __name__ == "__main__":
     # Add the arguments
     parser.add_argument("-e", "--exp", type=str, default="sim",choices=["sim", "emu"], help="The experiment mode  (default: 'sim')")
     parser.add_argument("-s", "--steps", type=int,default=5 , help="The number of steps of game (default: 5 steps).")
-    parser.add_argument("-w", "--wrapper", type=str, default="BlueTableWrapper", help="The wrapper used for observation (default:'BlueTableWrapper')")
+    parser.add_argument("-t", "--team", type=str,choices=["cardiff", "dart_ne", "keep"],required=True,default="cardiff" , help="Team")
+
+   
+    parser.add_argument("-w", "--wrapper", type=str, default="BlueTableWrapper", help="The wrapper used for observation (default:'BlueTableWrapper')-only used in emu with KW REA")
     
-    parser.add_argument("-u", "--user", type=str, default="dummy", help="The user name for openstack (default:'dummy')")
-    parser.add_argument("-p", "--password", type=str,default="dummy" , help="The password for openstack (default: 'dummy')")
+    parser.add_argument("-u", "--user", type=str, default="dummy", help="The user name for openstack (default:'dummy')-In EMU only")
+    parser.add_argument("-p", "--password", type=str,default="dummy" , help="The password for openstack (default: 'dummy')-In EMU only")
     
     
-    parser.add_argument( "-url",type=str,default="https://cloud.isislab.vanderbilt.edu:5000/v3", help="The url for openstack (dafault: Vanderbilt's openstack cluster URL)")
-    parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')")
-    parser.add_argument("-pdn",type=str,default="ISIS", help="The project domain name for openstack (default: 'ISIS')")
-    parser.add_argument("-pr", "--project",type=str,default="mvp1a", help="The project name for openstack (default: 'mvp1a')")
+    parser.add_argument( "-url",type=str,default="https://cloud.isislab.vanderbilt.edu:5000/v3", help="The url for openstack (dafault: Vanderbilt's openstack cluster URL)-In EMU only")
+    parser.add_argument("-udn",type=str,default="ISIS", help="The user domain name for openstack (default: 'ISIS')-In EMU only")
+    parser.add_argument("-pdn",type=str,default="ISIS", help="The project domain name for openstack (default: 'ISIS')-In EMU only")
+    parser.add_argument("-pr", "--project",type=str,default="mvp1a", help="The project name for openstack (default: 'mvp1a')-In EMU only")
     
-    parser.add_argument("-k", "--key",type=str,default="castle-control", help="The project key  (default: 'castle-control')")
+    parser.add_argument("-k", "--key",type=str,default="castle-control", help="The project key  (default: 'castle-control')-In EMU only")
 
 
 
 
 
-    parser.add_argument("-t", "--team", type=str,default="cardiff" , help="Team")
-
+   
     # Parse the arguments
     args = parser.parse_args()
 
