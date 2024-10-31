@@ -105,7 +105,7 @@ def reset():
             "observation": obs['observation'],
         })
         """
-        return jsonify({obs})
+        return jsonify(obs)
     else:
         return jsonify({"error": "Invalid input. seed and agent are required."}), 400
 
