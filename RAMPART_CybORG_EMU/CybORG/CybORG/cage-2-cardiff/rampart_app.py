@@ -99,10 +99,13 @@ def reset():
     agent = request.args.get('agent', type=str)
     if seed is not None and agent is not None:
         _,_,obs,_ = rampart_env.reset(seed, agent)
+        """
         return jsonify({
             "operation": "reset",
-            "observation": obs,
+            "observation": obs['observation'],
         })
+        """
+        return jsonify({obs})
     else:
         return jsonify({"error": "Invalid input. seed and agent are required."}), 400
 

@@ -280,7 +280,7 @@ class rampart_emulator():
       # Step5 : New script need to run to get intial observation for Blue agent (if red's support
       # also needed in future, need to extend this and make it conditional )
       if agent=='Blue':
-        observation={}
+        observation={'success': 'Unknown'}
         fetch_intial_obs_action = FetchInitialObservationAction(credentials_file=credentials_file)
         for vm in vms:
           os_vm=cage2os.fetch_alt_name(vm)
@@ -292,10 +292,8 @@ class rampart_emulator():
             observation[vm]=obs
         print('-> Reset_obs for Blue:',observation) 
       else:
-         observation={}
+        observation
          
-      
-      
       
       # The current reset action just run md5 checksums
       reset=ResetAction(credentials_file)
@@ -312,8 +310,6 @@ class rampart_emulator():
           # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
           #break     
       print("md5 are:",self.md5)
-      
-      
       return None, None,observation, action_mapping 
        
 

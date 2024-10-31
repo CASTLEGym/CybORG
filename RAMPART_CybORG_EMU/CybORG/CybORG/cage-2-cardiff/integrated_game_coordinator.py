@@ -30,7 +30,8 @@ MAX_EPS = 1
 agent_name = 'Blue'
 random.seed(0)
 
-emu_log_file = open("log_output_file.txt", "w")
+emu_log_file = open("./logs/emu_log_file.txt", "w")
+sim_log_file = open("./logs/sim_log_file.txt", "w")
 
 # changed to ChallengeWrapper2
 def wrap(env,team):
@@ -210,64 +211,67 @@ if __name__ == "__main__":
     if exp=='sim':
       for num_steps in [steps]:
         for red_agent in [B_lineAgent]:
+          cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
+          wrapped_cyborg = wrap(cyborg,team)
 
-            cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
-            wrapped_cyborg = wrap(cyborg,team)
+          observation = wrapped_cyborg.reset()
+          action_space = wrapped_cyborg.get_action_space(agent_name)
 
-            observation = wrapped_cyborg.reset()
-
-            action_space = wrapped_cyborg.get_action_space(agent_name)
-
-            total_reward = []
-            actions = []
-            for i in range(MAX_EPS):
-                r = []
-                a = []
+          total_reward = []
+          actions = []
+          for i in range(MAX_EPS):
+            r = []
+            a = []
                 
-                for j in range(num_steps):
-                    print("\n")
-                    print('%%'*76)
-                    print('Iteration :',j)
+            for j in range(num_steps):
+              print("\n")
+              print('%%'*76)
+              print('Iteration :',j)
                     
-                    red_observation=cyborg.get_observation('Red')
-                  
-                    #print(observation,"---",action_space)
-                    action = ml.get_action(observation, action_space)
-                    # print('action is:',action, 'action space is:',action_space)
-                    observation, blue_rew, done, info = wrapped_cyborg.step(action)
+              red_observation=cyborg.get_observation('Red')
+              print(f"After reset, Initial observation is:\n {observation}", file=sim_log_file)     
+              #print(observation,"---",action_space)
+              action = ml.get_action(observation, action_space)
+              # print('action is:',action, 'action space is:',action_space)
+              observation, blue_rew, done, info = wrapped_cyborg.step(action)
                     
-                    red_action_space=cyborg.get_action_space('Red')
+              red_action_space=cyborg.get_action_space('Red')
                     
-                    red_observation=cyborg.get_observation('Red')
-                    blue_outcome=cyborg.get_observation('Blue')
-                    blue_action= cyborg.get_last_action('Blue')
-                    red_action= cyborg.get_last_action('Red')
-                    r.append(blue_rew)
+              red_observation=cyborg.get_observation('Red')
+              blue_outcome=cyborg.get_observation('Blue')
+              blue_action= cyborg.get_last_action('Blue')
+              red_action= cyborg.get_last_action('Red')
+              r.append(blue_rew)
                  
-                    a.append((str(cyborg.get_last_action('Blue')), str(cyborg.get_last_action('Red'))))
-                    #print('%%'*76)
-                    #print('Iteration End:',j)
+              a.append((str(cyborg.get_last_action('Blue')), str(cyborg.get_last_action('Red'))))
+              #print('%%'*76)
+              #print('Iteration End:',j)
                     
-                    # Log the actions, observations, and rewards
-                    print('@@@@@@@@@@@@@@', red_action, blue_action)
-                    if team !='keep': 
-                      blue_action=replace_ip_to_name(str(blue_action))
-                      red_action= replace_ip_to_name(str(red_action))
+              # Log the actions, observations, and rewards
+              print('@@@@@@@@@@@@@@', red_action, blue_action)
+              if team !='keep': 
+                blue_action=replace_ip_to_name(str(blue_action))
+                red_action= replace_ip_to_name(str(red_action))
 
-                    with open(log_file, 'a', newline='') as file:
-                      writer = csv.writer(file)
-                      writer.writerow([j, blue_action, blue_outcome, blue_rew, red_action, red_observation, -1*blue_rew])
+              with open(log_file, 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([j, blue_action, blue_outcome, blue_rew, red_action, red_observation, -1*blue_rew])
+
+              #Printing to file
+              print(f"-> Blue action is: {blue_action}", file=sim_log_file) 
+              print(f"-> Blue observation is: {blue_outcome}", file=sim_log_file) 
+              print(f"-> Red action is: {red_action}", file=sim_log_file) 
+              print(f"-> Red observation is: {red_observation}", file=sim_log_file)       
                     
                     
-                    
-                ml.end_episode()
-                total_reward.append(sum(r))
-                actions.append(a)
-                # observation = cyborg.reset().observation
-                #observation = wrapped_cyborg.reset()
-            #print(f'Average reward for red agent {red_agent.__name__} and steps {num_steps} is: {mean(total_reward)} with a standard deviation of {stdev(total_reward)}')
-            print('%%'*76)
-            print('=> total reward is:',total_reward,'reward r is:',r)
+          ml.end_episode()
+          total_reward.append(sum(r))
+          actions.append(a)
+          # observation = cyborg.reset().observation
+          #observation = wrapped_cyborg.reset()
+          #print(f'Average reward for red agent {red_agent.__name__} and steps {num_steps} is: {mean(total_reward)} with a standard deviation of {stdev(total_reward)}')
+          print('%%'*76)
+          print('=> total reward is:',total_reward,'reward r is:',r)
     elif exp=='emu':
       for red_agent in [B_lineAgent]:
         cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
@@ -369,5 +373,7 @@ if __name__ == "__main__":
 
             print('%%'*76)
             print('Iteration End:',i)
-        emu_log_file.close()    
-        print('----->>>> Rewards:',rewards)         
+        print('-->> Reward is :',rewards)      
+    emu_log_file.close() 
+    sim_log_file.close()   
+    print('----->>>> Done <<<<-----')         

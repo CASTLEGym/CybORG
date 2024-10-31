@@ -14,6 +14,8 @@ pip install pyvelociraptor
 conda install -c conda-forge grpcio -y
 pip install zmq
 pip install torch-geometric
+pip install Flask
+
 pip install -e .
 
 cd CybORG/cage-2-cardiff
