@@ -33,7 +33,7 @@ class model_loader:
       self.agent = load_agent('model_weights/inductive_agent.pt') # Default rewards model
       self.agent.set_deterministic(True)
       
-      print(f'Using agent {self.agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
+      #print(f'Using agent {self.agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
   
     elif team=='punch':
       

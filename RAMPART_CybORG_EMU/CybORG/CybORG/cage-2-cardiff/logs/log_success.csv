@@ -1,11 +1,1 @@
 Iteration,Blue Action,Blue success,Red Action,Red success
-0,DecoyFemitter User2,True,DiscoverRemoteSystems 10.10.10.0/24,True
-1,DecoyTomcat User2,True,DiscoverNetworkServices 10.10.10.11,True
-2,DecoyHarakaSMPT Enterprise0,True,ExploitRemoteService 10.10.10.11,False
-3,Remove User2,False,ExploitRemoteService 10.10.10.11,True
-4,DecoyFemitter Enterprise1,True,PrivilegeEscalate User1,True
-5,Analyse User2,True,DiscoverNetworkServices 10.10.20.11,True
-6,Remove User3,False,ExploitRemoteService 10.10.20.11,True
-7,Restore Enterprise1,True,PrivilegeEscalate Enterprise1,True
-8,Restore Enterprise1,True,DiscoverRemoteSystems 10.10.20.0/24,True
-9,Remove User3,False,DiscoverNetworkServices 10.10.20.12,True

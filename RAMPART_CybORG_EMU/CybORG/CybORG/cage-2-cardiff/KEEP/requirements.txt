@@ -1,0 +1,4 @@
+numpy
+torch==2.0.1
+torch_geometric==2.3.1
+tqdm==4.65.0
