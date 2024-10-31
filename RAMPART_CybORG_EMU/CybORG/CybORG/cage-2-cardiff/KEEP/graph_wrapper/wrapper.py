@@ -21,7 +21,7 @@ from CybORG.Agents.Wrappers.EnumActionWrapper import EnumActionWrapper
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
 from CybORG.Shared.Actions import *
 
-from graph_wrapper.observation_graph import ObservationGraph
+from .observation_graph import ObservationGraph
 
 class GraphWrapper(ChallengeWrapper):
     def __init__(self, agent_name: str, env, agent=None, reward_threshold=None, max_steps=None):

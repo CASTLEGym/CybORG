@@ -22,7 +22,7 @@ import torch
 from CybORG.Shared.Actions.AbstractActions import Remove, Restore, Analyse, Monitor
 from CybORG.Shared.Actions.ConcreteActions import *
 from CybORG.Shared.Enums import TrinaryEnum
-from graph_wrapper.nodes import *
+from .nodes import *
 
 class NodeTracker:
     '''

@@ -30,7 +30,7 @@ class model_loader:
       print("***** Loading KEEP *****")
       from KEEP.agents.keep_agent import load_agent
       # Loading a pretrained graph  agent
-      self.agent = load_agent('model_weights/inductive_agent.pt') # Default rewards model
+      self.agent = load_agent('./KEEP/model_weights/inductive_agent.pt') # Default rewards model
       self.agent.set_deterministic(True)
       
       #print(f'Using agent {self.agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')

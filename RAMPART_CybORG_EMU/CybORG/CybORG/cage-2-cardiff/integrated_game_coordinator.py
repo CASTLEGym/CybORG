@@ -247,12 +247,10 @@ if __name__ == "__main__":
                     #print('Iteration End:',j)
                     
                     # Log the actions, observations, and rewards
-                    
-                    
                     print('@@@@@@@@@@@@@@', red_action, blue_action)
-                    #action_parts= red_action.split(' ', expand=True)
-                    blue_action=replace_ip_to_name(str(blue_action))
-                    red_action= replace_ip_to_name(str(red_action))
+                    if team !='keep': 
+                      blue_action=replace_ip_to_name(str(blue_action))
+                      red_action= replace_ip_to_name(str(red_action))
 
                     with open(log_file, 'a', newline='') as file:
                       writer = csv.writer(file)
@@ -353,9 +351,11 @@ if __name__ == "__main__":
 
 
             # Log the actions, observations, and rewards
-            if 'hostname' in blue_action:
-              blue_action=replace_ip_to_name(str(blue_action))
-              red_action= replace_ip_to_name(str(red_action))
+            if team!='keep':
+              print('***Not keep team ***')
+              if 'hostname' in blue_action:
+                blue_action=replace_ip_to_name(str(blue_action))
+                red_action= replace_ip_to_name(str(red_action))
 
             with open(log_file, 'a', newline='') as file:
                writer = csv.writer(file)

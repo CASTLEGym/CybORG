@@ -20,7 +20,7 @@ from torch.distributions import Categorical
 from torch.optim import Adam
 from torch_geometric.nn import GCNConv
 
-
+from .transductive_keep_agent import PPOMemory, GraphPPOAgent, combine_subgraphs
 
 def pad_and_pack(x, batches, max_batch=None):
     n_batches = batches.size(0)-1
@@ -296,7 +296,7 @@ class InductiveGraphPPOAgent(GraphPPOAgent):
         return total_loss.item()
 
 
-def load_agent(in_f='model_weights/inductive_agent.pt'):
+def load_agent(in_f='./KEEP/model_weights/inductive_agent.pt'):
     data = torch.load(in_f)
     args,kwargs = data['agent']
 
