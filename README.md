@@ -51,4 +51,9 @@ We currently using the integrated_game_coordinator.py python script, that is in 
       - ssh -i ~/.ssh/castle.pem ubuntu@129.59.234.198 (defender Ip)
       - ssh -i ~/.ssh/castle.pem ubuntu@10.0.0.12 (User0 ip)
       - sudo pkill -f SSHConnectionServer.py
-      
+
+## To integrate other agent : 
+Since each one has different dependecies , it genrally crashes the env . So moving other pkg seperately in diff env for development. Removing it from the `install_test_run.sh` script.  
+- KEEP : torch-geometric (pip install torch-geometric)
+- KW api : Flask  (pip install Flask)
+- PUNCH :  ray with rllib (need to test) 
