@@ -304,7 +304,8 @@ if __name__ == "__main__":
           emu_wrapper=BlueEmulationWrapper(cyborg_emu.baseline)
           # Translate intial obs in vectorised format to feed into NN
           blue_observation=emu_wrapper.reset(initial_blue_info)
-        else: 
+        elif wrapper=='InductiveGraphWrapper':
+          InductiveGraphWrapper('Blue', env)
           blue_observation= obs    
         
         print('->** Intial observation is:',obs)

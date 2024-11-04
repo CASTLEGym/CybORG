@@ -162,7 +162,7 @@ class vu_emu():
           # if md5 fails due to grpc issue , just returning None. Need to ponder how to manage it. 
           #break
 
-      observation={}
+      observation={'success': 'UNKNOWN'}
       fetch_intial_obs_action = FetchInitialObservationAction(credentials_file=credentials_file)
       for vm in vms:
         os_vm=cage2os.fetch_alt_name(vm)

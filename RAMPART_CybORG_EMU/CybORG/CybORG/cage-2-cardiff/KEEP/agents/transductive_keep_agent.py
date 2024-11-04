@@ -211,7 +211,10 @@ class GraphPPOAgent:
 
     @torch.no_grad()
     def get_action(self, x_ei):
+        print('*****'*100)
+        print('x_ei is:',x_ei)
         x,ei = x_ei
+        print('*****'*100)
         distro = self.actor(x,ei)
 
         # I don't know why this would ever be called
