@@ -13,8 +13,6 @@ pip install openstackclient
 pip install pyvelociraptor
 conda install -c conda-forge grpcio -y
 pip install zmq
-pip install torch-geometric
-pip install Flask
 
 pip install --use-pep517 -e .
 
