@@ -16,7 +16,7 @@ pip install zmq
 pip install torch-geometric
 pip install Flask
 
-pip install -e .
+pip install --use-pep517 -e .
 
 cd CybORG/cage-2-cardiff
-python integrated_game_coordinator.py 
+python integrated_game_coordinator.py -t cardiff
