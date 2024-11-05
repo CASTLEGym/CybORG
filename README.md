@@ -56,4 +56,5 @@ We currently using the integrated_game_coordinator.py python script, that is in 
 Since each one has different dependecies , it genrally crashes the env . So moving other pkg seperately in diff env for development. Removing it from the `install_test_run.sh` script.  
 - KEEP : torch-geometric (pip install torch-geometric)
 - KW api : Flask  (pip install Flask)
-- PUNCH :  ray with rllib (need to test) 
+- PUNCH :  ray with rllib (need to test) pip install --upgrade prettytable
+

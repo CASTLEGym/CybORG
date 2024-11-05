@@ -19,7 +19,13 @@ conda init
 rm -rf ~/miniconda.sh 
 # Verify installation
 conda --version
+
+
 conda create --name test_env python=3.10 -y
 
 
 
+# Clone the required Git repository
+git clone -b wrappers https://github.com/CASTLEGym/CybORG.git
+
+conda env create -f CybORG/RAMPART_CybORG_EMU/CybORG/CybORG/cage-2-cardiff/PUNCH/environment.yml
