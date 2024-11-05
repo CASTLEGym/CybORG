@@ -18,3 +18,7 @@ pip install --use-pep517 -e .
 
 cd CybORG/cage-2-cardiff
 python integrated_game_coordinator.py -t cardiff
+
+
+# for punch additional install 
+# sudo apt install libffi7

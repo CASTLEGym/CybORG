@@ -35,12 +35,11 @@ sim_log_file = open("./logs/sim_log_file.txt", "w")
 
 # changed to ChallengeWrapper2
 def wrap(env,team):
-  if team=='cardiff' or team=='dart_ne':
+  if team=='cardiff' or team=='dart_ne' or team=='punch':
     return ChallengeWrapper2(env=env, agent_name='Blue')
   elif team=='keep':
     return InductiveGraphWrapper('Blue', env)
-  elif team == 'punch':
-    return ActionWrapper(ObservationWrapper(RLLibWrapper(env=env, agent_name="Blue")))
+
       
 def load_data_from_file(file_path):
     data_list = []
@@ -102,7 +101,7 @@ if __name__ == "__main__":
     # Add the arguments
     parser.add_argument("-e", "--exp", type=str, default="sim",choices=["sim", "emu"], help="The experiment mode  (default: 'sim')")
     parser.add_argument("-s", "--steps", type=int,default=5 , help="The number of steps of game (default: 5 steps).")
-    parser.add_argument("-t", "--team", type=str,choices=["cardiff", "dart_ne", "keep"],required=True,default="cardiff" , help="Team")
+    parser.add_argument("-t", "--team", type=str,choices=["cardiff", "dart_ne", "keep","punch"],required=True,default="cardiff" , help="Team")
 
    
     parser.add_argument("-w", "--wrapper", type=str, default="BlueTableWrapper", help="The wrapper used for observation (default:'BlueTableWrapper')-only used in emu with KW REA")
@@ -181,13 +180,7 @@ if __name__ == "__main__":
 
     elif team == 'punch':
       ### Import for PUNCH agent
-      import gymnasium as gym
-      import numpy as np      
-      from PUNCH.evaluation import LoadBlueAgent,eval_env_creator, ActionWrapper, ObservationWrapper, RLLibWrapper
-      from gymnasium.envs.registration import EnvSpec
-      from gymnasium.spaces import Box
-      from ray import tune
-      import ray.rllib.algorithms.ppo as ppo  
+      print('Import ray , may be !!')
       
     elif team=='dart_ne': 
       from DARTMOUTH.Agents.BlueAgents.GenericAgent import GenericAgent
