@@ -256,8 +256,11 @@ if __name__ == "__main__":
               print(f"-> Red action is: {red_action}", file=sim_log_file) 
               print(f"-> Red observation is: {red_observation}", file=sim_log_file)       
                     
-                    
-          ml.end_episode()
+          if team!= 'punch':          
+            ml.end_episode()
+          else: 
+            print("Episode ended")          
+          
           total_reward.append(sum(r))
           actions.append(a)
           # observation = cyborg.reset().observation
